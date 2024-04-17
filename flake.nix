@@ -20,14 +20,17 @@
     rust-overlay,
     ...
   }: let
-      inherit (flake-utils.lib) eachDefaultSystem eachSystem;
-    in
-    (eachDefaultSystem (system: let
-      overlays = [(import rust-overlay)];
+    inherit (flake-utils.lib) eachDefaultSystem eachSystem;
+  in (eachDefaultSystem (system: let
+      overlays = [
+        (import rust-overlay)
+        (import ./overlay.nix)
+      ];
       pkgs = (import nixpkgs) {
         inherit system overlays;
       };
       lib = pkgs.lib;
+      inherit (builtins) listToAttrs fromTOML readFile;
 
       hostTarget = pkgs.hostPlatform.config;
       targets = [
@@ -45,10 +48,8 @@
       assetNameForTarget = target: "parser-${builtins.replaceStrings ["-unknown" "-gnu" "-musl" "eabihf" "-pc"] ["" "" "" "" ""] target}${cross-naersk'.execSufficForTarget target}";
 
       cross-naersk' = pkgs.callPackage cross-naersk {inherit naersk;};
-      src = lib.sources.sourceByRegex (lib.cleanSource ./.) ["Cargo.*" "(src|benches|tests|test_data)(/.*)?"];
       nearskOpt = {
-        pname = "dispenser";
-        root = src;
+        inherit (pkgs.demostf-parser) pname src;
       };
 
       buildMatrix = targets: {
@@ -61,6 +62,16 @@
           targets;
       };
       hostNaersk = cross-naersk'.hostNaersk;
+
+      msrv = (fromTOML (readFile ./Cargo.toml)).package.rust-version;
+      msrvToolchain = pkgs.rust-bin.stable."${msrv}".default;
+      naerskMsrv = let
+        toolchain = msrvToolchain;
+      in
+        pkgs.callPackage naersk {
+          cargo = toolchain;
+          rustc = toolchain;
+        };
 
       mkHydraJobs = system: {
         parser = derivation {
@@ -90,7 +101,7 @@
                 };
             }))
         // rec {
-          tf-demo-parser = packages.${hostTarget};
+          inherit (pkgs) demostf-parser demostf-parser-codegen demostf-parser-codegen-events demostf-parser-codegen-props;
           check = hostNaersk.buildPackage (nearskOpt
             // {
               mode = "check";
@@ -104,7 +115,11 @@
               release = false;
               mode = "test";
             });
-          default = tf-demo-parser;
+          msrv = naerskMsrv.buildPackage (nearskOpt
+            // {
+              mode = "check";
+            });
+          default = demostf-parser;
         };
 
       inherit targets;
@@ -141,8 +156,9 @@
       };
     })
     // {
+      overlays.default = import ./overlay.nix;
       hydraJobs = eachSystem ["x86_64-linux" "aarch64-linux"] (system: {
-        parser = self.packages.${system}.tf-demo-parser;
+        parser = self.packages.${system}.demostf-parser;
       });
     });
 }

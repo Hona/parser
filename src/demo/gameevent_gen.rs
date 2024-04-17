@@ -1,4 +1,6 @@
-use super::gamevent::{EventValue, GameEventDefinition, GameEventEntry, RawGameEvent};
+use super::gamevent::{
+    EventValue, GameEventDefinition, GameEventEntry, RawGameEvent, GameEventValue,
+};
 use crate::demo::Stream;
 use crate::{ParseError, Result};
 use bitbuffer::{BitRead, LittleEndian, BitWrite, BitWriteStream};
@@ -21,7 +23,7 @@ fn read_value<'a, T: EventValue + BitRead<'a, LittleEndian> + Default>(
     Ok(T::read(stream)?)
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ServerSpawnEvent {
     pub hostname: MaybeUtf8String,
     pub address: MaybeUtf8String,
@@ -37,51 +39,153 @@ pub struct ServerSpawnEvent {
 impl ServerSpawnEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ServerSpawnEvent {
-            hostname: read_value::<MaybeUtf8String>(stream, iter.next(), "hostname")?,
-            address: read_value::<MaybeUtf8String>(stream, iter.next(), "address")?,
-            ip: read_value::<u32>(stream, iter.next(), "ip")?,
-            port: read_value::<u16>(stream, iter.next(), "port")?,
-            game: read_value::<MaybeUtf8String>(stream, iter.next(), "game")?,
-            map_name: read_value::<MaybeUtf8String>(stream, iter.next(), "map_name")?,
-            max_players: read_value::<u32>(stream, iter.next(), "max_players")?,
-            os: read_value::<MaybeUtf8String>(stream, iter.next(), "os")?,
-            dedicated: read_value::<bool>(stream, iter.next(), "dedicated")?,
-            password: read_value::<bool>(stream, iter.next(), "password")?,
+            hostname: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("hostname"), "hostname")?,
+            address: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("address"), "address")?,
+            ip: read_value::<u32>(stream, definition.get_entry("ip"), "ip")?,
+            port: read_value::<u16>(stream, definition.get_entry("port"), "port")?,
+            game: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("game"), "game")?,
+            map_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("mapname"), "map_name")?,
+            max_players: read_value::<
+                u32,
+            >(stream, definition.get_entry("maxplayers"), "max_players")?,
+            os: read_value::<MaybeUtf8String>(stream, definition.get_entry("os"), "os")?,
+            dedicated: read_value::<
+                bool,
+            >(stream, definition.get_entry("dedicated"), "dedicated")?,
+            password: read_value::<
+                bool,
+            >(stream, definition.get_entry("password"), "password")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "hostname" => Ok(self.hostname.clone().into()),
+            "address" => Ok(self.address.clone().into()),
+            "ip" => Ok(self.ip.clone().into()),
+            "port" => Ok(self.port.clone().into()),
+            "game" => Ok(self.game.clone().into()),
+            "mapname" => Ok(self.map_name.clone().into()),
+            "maxplayers" => Ok(self.max_players.clone().into()),
+            "os" => Ok(self.os.clone().into()),
+            "dedicated" => Ok(self.dedicated.clone().into()),
+            "password" => Ok(self.password.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ServerSpawn",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ServerChangeLevelFailedEvent {
     pub level_name: MaybeUtf8String,
 }
 impl ServerChangeLevelFailedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ServerChangeLevelFailedEvent {
-            level_name: read_value::<MaybeUtf8String>(stream, iter.next(), "level_name")?,
+            level_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("levelname"), "level_name")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "levelname" => Ok(self.level_name.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ServerChangeLevelFailed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ServerShutdownEvent {
     pub reason: MaybeUtf8String,
 }
 impl ServerShutdownEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ServerShutdownEvent {
-            reason: read_value::<MaybeUtf8String>(stream, iter.next(), "reason")?,
+            reason: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("reason"), "reason")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "reason" => Ok(self.reason.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ServerShutdown",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ServerCvarEvent {
     pub cvar_name: MaybeUtf8String,
     pub cvar_value: MaybeUtf8String,
@@ -89,29 +193,86 @@ pub struct ServerCvarEvent {
 impl ServerCvarEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ServerCvarEvent {
-            cvar_name: read_value::<MaybeUtf8String>(stream, iter.next(), "cvar_name")?,
-            cvar_value: read_value::<MaybeUtf8String>(stream, iter.next(), "cvar_value")?,
+            cvar_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("cvarname"), "cvar_name")?,
+            cvar_value: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("cvarvalue"), "cvar_value")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "cvarname" => Ok(self.cvar_name.clone().into()),
+            "cvarvalue" => Ok(self.cvar_value.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ServerCvar",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ServerMessageEvent {
     pub text: MaybeUtf8String,
 }
 impl ServerMessageEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ServerMessageEvent {
-            text: read_value::<MaybeUtf8String>(stream, iter.next(), "text")?,
+            text: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("text"), "text")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "text" => Ok(self.text.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ServerMessage",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ServerAddBanEvent {
     pub name: MaybeUtf8String,
     pub user_id: u16,
@@ -124,22 +285,59 @@ pub struct ServerAddBanEvent {
 impl ServerAddBanEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ServerAddBanEvent {
-            name: read_value::<MaybeUtf8String>(stream, iter.next(), "name")?,
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("name"), "name")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
             network_id: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "network_id")?,
-            ip: read_value::<MaybeUtf8String>(stream, iter.next(), "ip")?,
-            duration: read_value::<MaybeUtf8String>(stream, iter.next(), "duration")?,
-            by: read_value::<MaybeUtf8String>(stream, iter.next(), "by")?,
-            kicked: read_value::<bool>(stream, iter.next(), "kicked")?,
+            >(stream, definition.get_entry("networkid"), "network_id")?,
+            ip: read_value::<MaybeUtf8String>(stream, definition.get_entry("ip"), "ip")?,
+            duration: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("duration"), "duration")?,
+            by: read_value::<MaybeUtf8String>(stream, definition.get_entry("by"), "by")?,
+            kicked: read_value::<bool>(stream, definition.get_entry("kicked"), "kicked")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "name" => Ok(self.name.clone().into()),
+            "userid" => Ok(self.user_id.clone().into()),
+            "networkid" => Ok(self.network_id.clone().into()),
+            "ip" => Ok(self.ip.clone().into()),
+            "duration" => Ok(self.duration.clone().into()),
+            "by" => Ok(self.by.clone().into()),
+            "kicked" => Ok(self.kicked.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ServerAddBan",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ServerRemoveBanEvent {
     pub network_id: MaybeUtf8String,
     pub ip: MaybeUtf8String,
@@ -148,18 +346,45 @@ pub struct ServerRemoveBanEvent {
 impl ServerRemoveBanEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ServerRemoveBanEvent {
             network_id: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "network_id")?,
-            ip: read_value::<MaybeUtf8String>(stream, iter.next(), "ip")?,
-            by: read_value::<MaybeUtf8String>(stream, iter.next(), "by")?,
+            >(stream, definition.get_entry("networkid"), "network_id")?,
+            ip: read_value::<MaybeUtf8String>(stream, definition.get_entry("ip"), "ip")?,
+            by: read_value::<MaybeUtf8String>(stream, definition.get_entry("by"), "by")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "networkid" => Ok(self.network_id.clone().into()),
+            "ip" => Ok(self.ip.clone().into()),
+            "by" => Ok(self.by.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ServerRemoveBan",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerConnectEvent {
     pub name: MaybeUtf8String,
     pub index: u8,
@@ -171,21 +396,57 @@ pub struct PlayerConnectEvent {
 impl PlayerConnectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerConnectEvent {
-            name: read_value::<MaybeUtf8String>(stream, iter.next(), "name")?,
-            index: read_value::<u8>(stream, iter.next(), "index")?,
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("name"), "name")?,
+            index: read_value::<u8>(stream, definition.get_entry("index"), "index")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
             network_id: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "network_id")?,
-            address: read_value::<MaybeUtf8String>(stream, iter.next(), "address")?,
-            bot: read_value::<u16>(stream, iter.next(), "bot")?,
+            >(stream, definition.get_entry("networkid"), "network_id")?,
+            address: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("address"), "address")?,
+            bot: read_value::<u16>(stream, definition.get_entry("bot"), "bot")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "name" => Ok(self.name.clone().into()),
+            "index" => Ok(self.index.clone().into()),
+            "userid" => Ok(self.user_id.clone().into()),
+            "networkid" => Ok(self.network_id.clone().into()),
+            "address" => Ok(self.address.clone().into()),
+            "bot" => Ok(self.bot.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerConnect",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerConnectClientEvent {
     pub name: MaybeUtf8String,
     pub index: u8,
@@ -196,20 +457,53 @@ pub struct PlayerConnectClientEvent {
 impl PlayerConnectClientEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerConnectClientEvent {
-            name: read_value::<MaybeUtf8String>(stream, iter.next(), "name")?,
-            index: read_value::<u8>(stream, iter.next(), "index")?,
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("name"), "name")?,
+            index: read_value::<u8>(stream, definition.get_entry("index"), "index")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
             network_id: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "network_id")?,
-            bot: read_value::<u16>(stream, iter.next(), "bot")?,
+            >(stream, definition.get_entry("networkid"), "network_id")?,
+            bot: read_value::<u16>(stream, definition.get_entry("bot"), "bot")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "name" => Ok(self.name.clone().into()),
+            "index" => Ok(self.index.clone().into()),
+            "userid" => Ok(self.user_id.clone().into()),
+            "networkid" => Ok(self.network_id.clone().into()),
+            "bot" => Ok(self.bot.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerConnectClient",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerInfoEvent {
     pub name: MaybeUtf8String,
     pub index: u8,
@@ -220,20 +514,53 @@ pub struct PlayerInfoEvent {
 impl PlayerInfoEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerInfoEvent {
-            name: read_value::<MaybeUtf8String>(stream, iter.next(), "name")?,
-            index: read_value::<u8>(stream, iter.next(), "index")?,
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("name"), "name")?,
+            index: read_value::<u8>(stream, definition.get_entry("index"), "index")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
             network_id: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "network_id")?,
-            bot: read_value::<bool>(stream, iter.next(), "bot")?,
+            >(stream, definition.get_entry("networkid"), "network_id")?,
+            bot: read_value::<bool>(stream, definition.get_entry("bot"), "bot")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "name" => Ok(self.name.clone().into()),
+            "index" => Ok(self.index.clone().into()),
+            "userid" => Ok(self.user_id.clone().into()),
+            "networkid" => Ok(self.network_id.clone().into()),
+            "bot" => Ok(self.bot.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerInfo",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerDisconnectEvent {
     pub user_id: u16,
     pub reason: MaybeUtf8String,
@@ -244,34 +571,96 @@ pub struct PlayerDisconnectEvent {
 impl PlayerDisconnectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerDisconnectEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            reason: read_value::<MaybeUtf8String>(stream, iter.next(), "reason")?,
-            name: read_value::<MaybeUtf8String>(stream, iter.next(), "name")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            reason: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("reason"), "reason")?,
+            name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("name"), "name")?,
             network_id: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "network_id")?,
-            bot: read_value::<u16>(stream, iter.next(), "bot")?,
+            >(stream, definition.get_entry("networkid"), "network_id")?,
+            bot: read_value::<u16>(stream, definition.get_entry("bot"), "bot")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "reason" => Ok(self.reason.clone().into()),
+            "name" => Ok(self.name.clone().into()),
+            "networkid" => Ok(self.network_id.clone().into()),
+            "bot" => Ok(self.bot.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerDisconnect",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerActivateEvent {
     pub user_id: u16,
 }
 impl PlayerActivateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerActivateEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerActivate",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerSayEvent {
     pub user_id: u16,
     pub text: MaybeUtf8String,
@@ -279,29 +668,86 @@ pub struct PlayerSayEvent {
 impl PlayerSayEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerSayEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            text: read_value::<MaybeUtf8String>(stream, iter.next(), "text")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            text: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("text"), "text")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "text" => Ok(self.text.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerSay",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ClientDisconnectEvent {
     pub message: MaybeUtf8String,
 }
 impl ClientDisconnectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ClientDisconnectEvent {
-            message: read_value::<MaybeUtf8String>(stream, iter.next(), "message")?,
+            message: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("message"), "message")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "message" => Ok(self.message.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ClientDisconnect",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ClientBeginConnectEvent {
     pub address: MaybeUtf8String,
     pub ip: u32,
@@ -311,17 +757,49 @@ pub struct ClientBeginConnectEvent {
 impl ClientBeginConnectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ClientBeginConnectEvent {
-            address: read_value::<MaybeUtf8String>(stream, iter.next(), "address")?,
-            ip: read_value::<u32>(stream, iter.next(), "ip")?,
-            port: read_value::<u16>(stream, iter.next(), "port")?,
-            source: read_value::<MaybeUtf8String>(stream, iter.next(), "source")?,
+            address: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("address"), "address")?,
+            ip: read_value::<u32>(stream, definition.get_entry("ip"), "ip")?,
+            port: read_value::<u16>(stream, definition.get_entry("port"), "port")?,
+            source: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("source"), "source")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "address" => Ok(self.address.clone().into()),
+            "ip" => Ok(self.ip.clone().into()),
+            "port" => Ok(self.port.clone().into()),
+            "source" => Ok(self.source.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ClientBeginConnect",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ClientConnectedEvent {
     pub address: MaybeUtf8String,
     pub ip: u32,
@@ -330,16 +808,45 @@ pub struct ClientConnectedEvent {
 impl ClientConnectedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ClientConnectedEvent {
-            address: read_value::<MaybeUtf8String>(stream, iter.next(), "address")?,
-            ip: read_value::<u32>(stream, iter.next(), "ip")?,
-            port: read_value::<u16>(stream, iter.next(), "port")?,
+            address: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("address"), "address")?,
+            ip: read_value::<u32>(stream, definition.get_entry("ip"), "ip")?,
+            port: read_value::<u16>(stream, definition.get_entry("port"), "port")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "address" => Ok(self.address.clone().into()),
+            "ip" => Ok(self.ip.clone().into()),
+            "port" => Ok(self.port.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ClientConnected",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ClientFullConnectEvent {
     pub address: MaybeUtf8String,
     pub ip: u32,
@@ -348,25 +855,79 @@ pub struct ClientFullConnectEvent {
 impl ClientFullConnectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ClientFullConnectEvent {
-            address: read_value::<MaybeUtf8String>(stream, iter.next(), "address")?,
-            ip: read_value::<u32>(stream, iter.next(), "ip")?,
-            port: read_value::<u16>(stream, iter.next(), "port")?,
+            address: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("address"), "address")?,
+            ip: read_value::<u32>(stream, definition.get_entry("ip"), "ip")?,
+            port: read_value::<u16>(stream, definition.get_entry("port"), "port")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "address" => Ok(self.address.clone().into()),
+            "ip" => Ok(self.ip.clone().into()),
+            "port" => Ok(self.port.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ClientFullConnect",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HostQuitEvent {}
 impl HostQuitEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HostQuitEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HostQuit",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamInfoEvent {
     pub team_id: u8,
     pub team_name: MaybeUtf8String,
@@ -374,15 +935,45 @@ pub struct TeamInfoEvent {
 impl TeamInfoEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamInfoEvent {
-            team_id: read_value::<u8>(stream, iter.next(), "team_id")?,
-            team_name: read_value::<MaybeUtf8String>(stream, iter.next(), "team_name")?,
+            team_id: read_value::<
+                u8,
+            >(stream, definition.get_entry("teamid"), "team_id")?,
+            team_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("teamname"), "team_name")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "teamid" => Ok(self.team_id.clone().into()),
+            "teamname" => Ok(self.team_name.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamInfo",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamScoreEvent {
     pub team_id: u8,
     pub score: u16,
@@ -390,33 +981,95 @@ pub struct TeamScoreEvent {
 impl TeamScoreEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamScoreEvent {
-            team_id: read_value::<u8>(stream, iter.next(), "team_id")?,
-            score: read_value::<u16>(stream, iter.next(), "score")?,
+            team_id: read_value::<
+                u8,
+            >(stream, definition.get_entry("teamid"), "team_id")?,
+            score: read_value::<u16>(stream, definition.get_entry("score"), "score")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "teamid" => Ok(self.team_id.clone().into()),
+            "score" => Ok(self.score.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamScore",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayBroadcastAudioEvent {
     pub team: u8,
     pub sound: MaybeUtf8String,
     pub additional_flags: u16,
+    pub player: u16,
 }
 impl TeamPlayBroadcastAudioEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayBroadcastAudioEvent {
-            team: read_value::<u8>(stream, iter.next(), "team")?,
-            sound: read_value::<MaybeUtf8String>(stream, iter.next(), "sound")?,
-            additional_flags: read_value::<u16>(stream, iter.next(), "additional_flags")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            sound: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("sound"), "sound")?,
+            additional_flags: read_value::<
+                u16,
+            >(stream, definition.get_entry("additional_flags"), "additional_flags")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "team" => Ok(self.team.clone().into()),
+            "sound" => Ok(self.sound.clone().into()),
+            "additional_flags" => Ok(self.additional_flags.clone().into()),
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayBroadcastAudio",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerTeamEvent {
     pub user_id: u16,
     pub team: u8,
@@ -429,20 +1082,63 @@ pub struct PlayerTeamEvent {
 impl PlayerTeamEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerTeamEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            team: read_value::<u8>(stream, iter.next(), "team")?,
-            old_team: read_value::<u8>(stream, iter.next(), "old_team")?,
-            disconnect: read_value::<bool>(stream, iter.next(), "disconnect")?,
-            auto_team: read_value::<bool>(stream, iter.next(), "auto_team")?,
-            silent: read_value::<bool>(stream, iter.next(), "silent")?,
-            name: read_value::<MaybeUtf8String>(stream, iter.next(), "name")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            old_team: read_value::<
+                u8,
+            >(stream, definition.get_entry("oldteam"), "old_team")?,
+            disconnect: read_value::<
+                bool,
+            >(stream, definition.get_entry("disconnect"), "disconnect")?,
+            auto_team: read_value::<
+                bool,
+            >(stream, definition.get_entry("autoteam"), "auto_team")?,
+            silent: read_value::<
+                bool,
+            >(stream, definition.get_entry("silent"), "silent")?,
+            name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("name"), "name")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "team" => Ok(self.team.clone().into()),
+            "oldteam" => Ok(self.old_team.clone().into()),
+            "disconnect" => Ok(self.disconnect.clone().into()),
+            "autoteam" => Ok(self.auto_team.clone().into()),
+            "silent" => Ok(self.silent.clone().into()),
+            "name" => Ok(self.name.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerTeam",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerClassEvent {
     pub user_id: u16,
     pub class: MaybeUtf8String,
@@ -450,15 +1146,45 @@ pub struct PlayerClassEvent {
 impl PlayerClassEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerClassEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            class: read_value::<MaybeUtf8String>(stream, iter.next(), "class")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            class: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("class"), "class")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "class" => Ok(self.class.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerClass",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerDeathEvent {
     pub user_id: u16,
     pub victim_ent_index: u32,
@@ -490,63 +1216,153 @@ pub struct PlayerDeathEvent {
 impl PlayerDeathEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerDeathEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
             victim_ent_index: read_value::<
                 u32,
-            >(stream, iter.next(), "victim_ent_index")?,
+            >(stream, definition.get_entry("victim_entindex"), "victim_ent_index")?,
             inflictor_ent_index: read_value::<
                 u32,
-            >(stream, iter.next(), "inflictor_ent_index")?,
-            attacker: read_value::<u16>(stream, iter.next(), "attacker")?,
-            weapon: read_value::<MaybeUtf8String>(stream, iter.next(), "weapon")?,
-            weapon_id: read_value::<u16>(stream, iter.next(), "weapon_id")?,
-            damage_bits: read_value::<u32>(stream, iter.next(), "damage_bits")?,
-            custom_kill: read_value::<u16>(stream, iter.next(), "custom_kill")?,
-            assister: read_value::<u16>(stream, iter.next(), "assister")?,
+            >(
+                stream,
+                definition.get_entry("inflictor_entindex"),
+                "inflictor_ent_index",
+            )?,
+            attacker: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
+            weapon: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("weapon"), "weapon")?,
+            weapon_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            damage_bits: read_value::<
+                u32,
+            >(stream, definition.get_entry("damagebits"), "damage_bits")?,
+            custom_kill: read_value::<
+                u16,
+            >(stream, definition.get_entry("customkill"), "custom_kill")?,
+            assister: read_value::<
+                u16,
+            >(stream, definition.get_entry("assister"), "assister")?,
             weapon_log_class_name: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "weapon_log_class_name")?,
-            stun_flags: read_value::<u16>(stream, iter.next(), "stun_flags")?,
-            death_flags: read_value::<u16>(stream, iter.next(), "death_flags")?,
-            silent_kill: read_value::<bool>(stream, iter.next(), "silent_kill")?,
+            >(
+                stream,
+                definition.get_entry("weapon_logclassname"),
+                "weapon_log_class_name",
+            )?,
+            stun_flags: read_value::<
+                u16,
+            >(stream, definition.get_entry("stun_flags"), "stun_flags")?,
+            death_flags: read_value::<
+                u16,
+            >(stream, definition.get_entry("death_flags"), "death_flags")?,
+            silent_kill: read_value::<
+                bool,
+            >(stream, definition.get_entry("silent_kill"), "silent_kill")?,
             player_penetrate_count: read_value::<
                 u16,
-            >(stream, iter.next(), "player_penetrate_count")?,
+            >(
+                stream,
+                definition.get_entry("playerpenetratecount"),
+                "player_penetrate_count",
+            )?,
             assister_fallback: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "assister_fallback")?,
+            >(stream, definition.get_entry("assister_fallback"), "assister_fallback")?,
             kill_streak_total: read_value::<
                 u16,
-            >(stream, iter.next(), "kill_streak_total")?,
-            kill_streak_wep: read_value::<u16>(stream, iter.next(), "kill_streak_wep")?,
+            >(stream, definition.get_entry("kill_streak_total"), "kill_streak_total")?,
+            kill_streak_wep: read_value::<
+                u16,
+            >(stream, definition.get_entry("kill_streak_wep"), "kill_streak_wep")?,
             kill_streak_assist: read_value::<
                 u16,
-            >(stream, iter.next(), "kill_streak_assist")?,
+            >(stream, definition.get_entry("kill_streak_assist"), "kill_streak_assist")?,
             kill_streak_victim: read_value::<
                 u16,
-            >(stream, iter.next(), "kill_streak_victim")?,
-            ducks_streaked: read_value::<u16>(stream, iter.next(), "ducks_streaked")?,
+            >(stream, definition.get_entry("kill_streak_victim"), "kill_streak_victim")?,
+            ducks_streaked: read_value::<
+                u16,
+            >(stream, definition.get_entry("ducks_streaked"), "ducks_streaked")?,
             duck_streak_total: read_value::<
                 u16,
-            >(stream, iter.next(), "duck_streak_total")?,
+            >(stream, definition.get_entry("duck_streak_total"), "duck_streak_total")?,
             duck_streak_assist: read_value::<
                 u16,
-            >(stream, iter.next(), "duck_streak_assist")?,
+            >(stream, definition.get_entry("duck_streak_assist"), "duck_streak_assist")?,
             duck_streak_victim: read_value::<
                 u16,
-            >(stream, iter.next(), "duck_streak_victim")?,
-            rocket_jump: read_value::<bool>(stream, iter.next(), "rocket_jump")?,
+            >(stream, definition.get_entry("duck_streak_victim"), "duck_streak_victim")?,
+            rocket_jump: read_value::<
+                bool,
+            >(stream, definition.get_entry("rocket_jump"), "rocket_jump")?,
             weapon_def_index: read_value::<
                 u32,
-            >(stream, iter.next(), "weapon_def_index")?,
-            crit_type: read_value::<u16>(stream, iter.next(), "crit_type")?,
+            >(stream, definition.get_entry("weapon_def_index"), "weapon_def_index")?,
+            crit_type: read_value::<
+                u16,
+            >(stream, definition.get_entry("crit_type"), "crit_type")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
+            "inflictor_entindex" => Ok(self.inflictor_ent_index.clone().into()),
+            "attacker" => Ok(self.attacker.clone().into()),
+            "weapon" => Ok(self.weapon.clone().into()),
+            "weaponid" => Ok(self.weapon_id.clone().into()),
+            "damagebits" => Ok(self.damage_bits.clone().into()),
+            "customkill" => Ok(self.custom_kill.clone().into()),
+            "assister" => Ok(self.assister.clone().into()),
+            "weapon_logclassname" => Ok(self.weapon_log_class_name.clone().into()),
+            "stun_flags" => Ok(self.stun_flags.clone().into()),
+            "death_flags" => Ok(self.death_flags.clone().into()),
+            "silent_kill" => Ok(self.silent_kill.clone().into()),
+            "playerpenetratecount" => Ok(self.player_penetrate_count.clone().into()),
+            "assister_fallback" => Ok(self.assister_fallback.clone().into()),
+            "kill_streak_total" => Ok(self.kill_streak_total.clone().into()),
+            "kill_streak_wep" => Ok(self.kill_streak_wep.clone().into()),
+            "kill_streak_assist" => Ok(self.kill_streak_assist.clone().into()),
+            "kill_streak_victim" => Ok(self.kill_streak_victim.clone().into()),
+            "ducks_streaked" => Ok(self.ducks_streaked.clone().into()),
+            "duck_streak_total" => Ok(self.duck_streak_total.clone().into()),
+            "duck_streak_assist" => Ok(self.duck_streak_assist.clone().into()),
+            "duck_streak_victim" => Ok(self.duck_streak_victim.clone().into()),
+            "rocket_jump" => Ok(self.rocket_jump.clone().into()),
+            "weapon_def_index" => Ok(self.weapon_def_index.clone().into()),
+            "crit_type" => Ok(self.crit_type.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerDeath",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerHurtEvent {
     pub user_id: u16,
     pub health: u16,
@@ -563,26 +1379,75 @@ pub struct PlayerHurtEvent {
 impl PlayerHurtEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerHurtEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            health: read_value::<u16>(stream, iter.next(), "health")?,
-            attacker: read_value::<u16>(stream, iter.next(), "attacker")?,
-            damage_amount: read_value::<u16>(stream, iter.next(), "damage_amount")?,
-            custom: read_value::<u16>(stream, iter.next(), "custom")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            health: read_value::<u16>(stream, definition.get_entry("health"), "health")?,
+            attacker: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
+            damage_amount: read_value::<
+                u16,
+            >(stream, definition.get_entry("damageamount"), "damage_amount")?,
+            custom: read_value::<u16>(stream, definition.get_entry("custom"), "custom")?,
             show_disguised_crit: read_value::<
                 bool,
-            >(stream, iter.next(), "show_disguised_crit")?,
-            crit: read_value::<bool>(stream, iter.next(), "crit")?,
-            mini_crit: read_value::<bool>(stream, iter.next(), "mini_crit")?,
-            all_see_crit: read_value::<bool>(stream, iter.next(), "all_see_crit")?,
-            weapon_id: read_value::<u16>(stream, iter.next(), "weapon_id")?,
-            bonus_effect: read_value::<u8>(stream, iter.next(), "bonus_effect")?,
+            >(stream, definition.get_entry("showdisguisedcrit"), "show_disguised_crit")?,
+            crit: read_value::<bool>(stream, definition.get_entry("crit"), "crit")?,
+            mini_crit: read_value::<
+                bool,
+            >(stream, definition.get_entry("minicrit"), "mini_crit")?,
+            all_see_crit: read_value::<
+                bool,
+            >(stream, definition.get_entry("allseecrit"), "all_see_crit")?,
+            weapon_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            bonus_effect: read_value::<
+                u8,
+            >(stream, definition.get_entry("bonuseffect"), "bonus_effect")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "health" => Ok(self.health.clone().into()),
+            "attacker" => Ok(self.attacker.clone().into()),
+            "damageamount" => Ok(self.damage_amount.clone().into()),
+            "custom" => Ok(self.custom.clone().into()),
+            "showdisguisedcrit" => Ok(self.show_disguised_crit.clone().into()),
+            "crit" => Ok(self.crit.clone().into()),
+            "minicrit" => Ok(self.mini_crit.clone().into()),
+            "allseecrit" => Ok(self.all_see_crit.clone().into()),
+            "weaponid" => Ok(self.weapon_id.clone().into()),
+            "bonuseffect" => Ok(self.bonus_effect.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerHurt",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerChatEvent {
     pub team_only: bool,
     pub user_id: u16,
@@ -591,16 +1456,49 @@ pub struct PlayerChatEvent {
 impl PlayerChatEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerChatEvent {
-            team_only: read_value::<bool>(stream, iter.next(), "team_only")?,
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            text: read_value::<MaybeUtf8String>(stream, iter.next(), "text")?,
+            team_only: read_value::<
+                bool,
+            >(stream, definition.get_entry("teamonly"), "team_only")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            text: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("text"), "text")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "teamonly" => Ok(self.team_only.clone().into()),
+            "userid" => Ok(self.user_id.clone().into()),
+            "text" => Ok(self.text.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerChat",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerScoreEvent {
     pub user_id: u16,
     pub kills: u16,
@@ -610,17 +1508,47 @@ pub struct PlayerScoreEvent {
 impl PlayerScoreEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerScoreEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            kills: read_value::<u16>(stream, iter.next(), "kills")?,
-            deaths: read_value::<u16>(stream, iter.next(), "deaths")?,
-            score: read_value::<u16>(stream, iter.next(), "score")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            kills: read_value::<u16>(stream, definition.get_entry("kills"), "kills")?,
+            deaths: read_value::<u16>(stream, definition.get_entry("deaths"), "deaths")?,
+            score: read_value::<u16>(stream, definition.get_entry("score"), "score")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "kills" => Ok(self.kills.clone().into()),
+            "deaths" => Ok(self.deaths.clone().into()),
+            "score" => Ok(self.score.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerScore",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerSpawnEvent {
     pub user_id: u16,
     pub team: u16,
@@ -629,16 +1557,45 @@ pub struct PlayerSpawnEvent {
 impl PlayerSpawnEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerSpawnEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            team: read_value::<u16>(stream, iter.next(), "team")?,
-            class: read_value::<u16>(stream, iter.next(), "class")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            team: read_value::<u16>(stream, definition.get_entry("team"), "team")?,
+            class: read_value::<u16>(stream, definition.get_entry("class"), "class")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "team" => Ok(self.team.clone().into()),
+            "class" => Ok(self.class.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerSpawn",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerShootEvent {
     pub user_id: u16,
     pub weapon: u8,
@@ -647,16 +1604,45 @@ pub struct PlayerShootEvent {
 impl PlayerShootEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerShootEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            weapon: read_value::<u8>(stream, iter.next(), "weapon")?,
-            mode: read_value::<u8>(stream, iter.next(), "mode")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            weapon: read_value::<u8>(stream, definition.get_entry("weapon"), "weapon")?,
+            mode: read_value::<u8>(stream, definition.get_entry("mode"), "mode")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "weapon" => Ok(self.weapon.clone().into()),
+            "mode" => Ok(self.mode.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerShoot",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerUseEvent {
     pub user_id: u16,
     pub entity: u16,
@@ -664,15 +1650,43 @@ pub struct PlayerUseEvent {
 impl PlayerUseEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerUseEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            entity: read_value::<u16>(stream, iter.next(), "entity")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            entity: read_value::<u16>(stream, definition.get_entry("entity"), "entity")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "entity" => Ok(self.entity.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerUse",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerChangeNameEvent {
     pub user_id: u16,
     pub old_name: MaybeUtf8String,
@@ -681,69 +1695,206 @@ pub struct PlayerChangeNameEvent {
 impl PlayerChangeNameEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerChangeNameEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            old_name: read_value::<MaybeUtf8String>(stream, iter.next(), "old_name")?,
-            new_name: read_value::<MaybeUtf8String>(stream, iter.next(), "new_name")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            old_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("oldname"), "old_name")?,
+            new_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("newname"), "new_name")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "oldname" => Ok(self.old_name.clone().into()),
+            "newname" => Ok(self.new_name.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerChangeName",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerHintMessageEvent {
     pub hint_message: MaybeUtf8String,
 }
 impl PlayerHintMessageEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerHintMessageEvent {
             hint_message: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "hint_message")?,
+            >(stream, definition.get_entry("hintmessage"), "hint_message")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "hintmessage" => Ok(self.hint_message.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerHintMessage",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct BasePlayerTeleportedEvent {
     pub ent_index: u16,
 }
 impl BasePlayerTeleportedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(BasePlayerTeleportedEvent {
-            ent_index: read_value::<u16>(stream, iter.next(), "ent_index")?,
+            ent_index: read_value::<
+                u16,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "BasePlayerTeleported",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GameInitEvent {}
 impl GameInitEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(GameInitEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "GameInit",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GameNewMapEvent {
     pub map_name: MaybeUtf8String,
 }
 impl GameNewMapEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(GameNewMapEvent {
-            map_name: read_value::<MaybeUtf8String>(stream, iter.next(), "map_name")?,
+            map_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("mapname"), "map_name")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "mapname" => Ok(self.map_name.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "GameNewMap",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GameStartEvent {
     pub rounds_limit: u32,
     pub time_limit: u32,
@@ -753,31 +1904,92 @@ pub struct GameStartEvent {
 impl GameStartEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(GameStartEvent {
-            rounds_limit: read_value::<u32>(stream, iter.next(), "rounds_limit")?,
-            time_limit: read_value::<u32>(stream, iter.next(), "time_limit")?,
-            frag_limit: read_value::<u32>(stream, iter.next(), "frag_limit")?,
-            objective: read_value::<MaybeUtf8String>(stream, iter.next(), "objective")?,
+            rounds_limit: read_value::<
+                u32,
+            >(stream, definition.get_entry("roundslimit"), "rounds_limit")?,
+            time_limit: read_value::<
+                u32,
+            >(stream, definition.get_entry("timelimit"), "time_limit")?,
+            frag_limit: read_value::<
+                u32,
+            >(stream, definition.get_entry("fraglimit"), "frag_limit")?,
+            objective: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("objective"), "objective")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "roundslimit" => Ok(self.rounds_limit.clone().into()),
+            "timelimit" => Ok(self.time_limit.clone().into()),
+            "fraglimit" => Ok(self.frag_limit.clone().into()),
+            "objective" => Ok(self.objective.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "GameStart",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GameEndEvent {
     pub winner: u8,
 }
 impl GameEndEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(GameEndEvent {
-            winner: read_value::<u8>(stream, iter.next(), "winner")?,
+            winner: read_value::<u8>(stream, definition.get_entry("winner"), "winner")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "winner" => Ok(self.winner.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "GameEnd",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RoundStartEvent {
     pub time_limit: u32,
     pub frag_limit: u32,
@@ -786,16 +1998,49 @@ pub struct RoundStartEvent {
 impl RoundStartEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RoundStartEvent {
-            time_limit: read_value::<u32>(stream, iter.next(), "time_limit")?,
-            frag_limit: read_value::<u32>(stream, iter.next(), "frag_limit")?,
-            objective: read_value::<MaybeUtf8String>(stream, iter.next(), "objective")?,
+            time_limit: read_value::<
+                u32,
+            >(stream, definition.get_entry("timelimit"), "time_limit")?,
+            frag_limit: read_value::<
+                u32,
+            >(stream, definition.get_entry("fraglimit"), "frag_limit")?,
+            objective: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("objective"), "objective")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "timelimit" => Ok(self.time_limit.clone().into()),
+            "fraglimit" => Ok(self.frag_limit.clone().into()),
+            "objective" => Ok(self.objective.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RoundStart",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RoundEndEvent {
     pub winner: u8,
     pub reason: u8,
@@ -804,16 +2049,45 @@ pub struct RoundEndEvent {
 impl RoundEndEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RoundEndEvent {
-            winner: read_value::<u8>(stream, iter.next(), "winner")?,
-            reason: read_value::<u8>(stream, iter.next(), "reason")?,
-            message: read_value::<MaybeUtf8String>(stream, iter.next(), "message")?,
+            winner: read_value::<u8>(stream, definition.get_entry("winner"), "winner")?,
+            reason: read_value::<u8>(stream, definition.get_entry("reason"), "reason")?,
+            message: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("message"), "message")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "winner" => Ok(self.winner.clone().into()),
+            "reason" => Ok(self.reason.clone().into()),
+            "message" => Ok(self.message.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RoundEnd",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GameMessageEvent {
     pub target: u8,
     pub text: MaybeUtf8String,
@@ -821,15 +2095,43 @@ pub struct GameMessageEvent {
 impl GameMessageEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(GameMessageEvent {
-            target: read_value::<u8>(stream, iter.next(), "target")?,
-            text: read_value::<MaybeUtf8String>(stream, iter.next(), "text")?,
+            target: read_value::<u8>(stream, definition.get_entry("target"), "target")?,
+            text: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("text"), "text")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "target" => Ok(self.target.clone().into()),
+            "text" => Ok(self.text.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "GameMessage",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct BreakBreakableEvent {
     pub ent_index: u32,
     pub user_id: u16,
@@ -838,16 +2140,49 @@ pub struct BreakBreakableEvent {
 impl BreakBreakableEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(BreakBreakableEvent {
-            ent_index: read_value::<u32>(stream, iter.next(), "ent_index")?,
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            material: read_value::<u8>(stream, iter.next(), "material")?,
+            ent_index: read_value::<
+                u32,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            material: read_value::<
+                u8,
+            >(stream, definition.get_entry("material"), "material")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            "userid" => Ok(self.user_id.clone().into()),
+            "material" => Ok(self.material.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "BreakBreakable",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct BreakPropEvent {
     pub ent_index: u32,
     pub user_id: u16,
@@ -855,15 +2190,45 @@ pub struct BreakPropEvent {
 impl BreakPropEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(BreakPropEvent {
-            ent_index: read_value::<u32>(stream, iter.next(), "ent_index")?,
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            ent_index: read_value::<
+                u32,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            "userid" => Ok(self.user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "BreakProp",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EntityKilledEvent {
     pub ent_index_killed: u32,
     pub ent_index_attacker: u32,
@@ -873,23 +2238,57 @@ pub struct EntityKilledEvent {
 impl EntityKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(EntityKilledEvent {
             ent_index_killed: read_value::<
                 u32,
-            >(stream, iter.next(), "ent_index_killed")?,
+            >(stream, definition.get_entry("entindex_killed"), "ent_index_killed")?,
             ent_index_attacker: read_value::<
                 u32,
-            >(stream, iter.next(), "ent_index_attacker")?,
+            >(stream, definition.get_entry("entindex_attacker"), "ent_index_attacker")?,
             ent_index_inflictor: read_value::<
                 u32,
-            >(stream, iter.next(), "ent_index_inflictor")?,
-            damage_bits: read_value::<u32>(stream, iter.next(), "damage_bits")?,
+            >(
+                stream,
+                definition.get_entry("entindex_inflictor"),
+                "ent_index_inflictor",
+            )?,
+            damage_bits: read_value::<
+                u32,
+            >(stream, definition.get_entry("damagebits"), "damage_bits")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex_killed" => Ok(self.ent_index_killed.clone().into()),
+            "entindex_attacker" => Ok(self.ent_index_attacker.clone().into()),
+            "entindex_inflictor" => Ok(self.ent_index_inflictor.clone().into()),
+            "damagebits" => Ok(self.damage_bits.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EntityKilled",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct BonusUpdatedEvent {
     pub num_advanced: u16,
     pub num_bronze: u16,
@@ -899,17 +2298,53 @@ pub struct BonusUpdatedEvent {
 impl BonusUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(BonusUpdatedEvent {
-            num_advanced: read_value::<u16>(stream, iter.next(), "num_advanced")?,
-            num_bronze: read_value::<u16>(stream, iter.next(), "num_bronze")?,
-            num_silver: read_value::<u16>(stream, iter.next(), "num_silver")?,
-            num_gold: read_value::<u16>(stream, iter.next(), "num_gold")?,
+            num_advanced: read_value::<
+                u16,
+            >(stream, definition.get_entry("numadvanced"), "num_advanced")?,
+            num_bronze: read_value::<
+                u16,
+            >(stream, definition.get_entry("numbronze"), "num_bronze")?,
+            num_silver: read_value::<
+                u16,
+            >(stream, definition.get_entry("numsilver"), "num_silver")?,
+            num_gold: read_value::<
+                u16,
+            >(stream, definition.get_entry("numgold"), "num_gold")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "numadvanced" => Ok(self.num_advanced.clone().into()),
+            "numbronze" => Ok(self.num_bronze.clone().into()),
+            "numsilver" => Ok(self.num_silver.clone().into()),
+            "numgold" => Ok(self.num_gold.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "BonusUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct AchievementEventEvent {
     pub achievement_name: MaybeUtf8String,
     pub cur_val: u16,
@@ -918,18 +2353,49 @@ pub struct AchievementEventEvent {
 impl AchievementEventEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(AchievementEventEvent {
             achievement_name: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "achievement_name")?,
-            cur_val: read_value::<u16>(stream, iter.next(), "cur_val")?,
-            max_val: read_value::<u16>(stream, iter.next(), "max_val")?,
+            >(stream, definition.get_entry("achievement_name"), "achievement_name")?,
+            cur_val: read_value::<
+                u16,
+            >(stream, definition.get_entry("cur_val"), "cur_val")?,
+            max_val: read_value::<
+                u16,
+            >(stream, definition.get_entry("max_val"), "max_val")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "achievement_name" => Ok(self.achievement_name.clone().into()),
+            "cur_val" => Ok(self.cur_val.clone().into()),
+            "max_val" => Ok(self.max_val.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "AchievementEvent",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct AchievementIncrementEvent {
     pub achievement_id: u32,
     pub cur_val: u16,
@@ -938,76 +2404,240 @@ pub struct AchievementIncrementEvent {
 impl AchievementIncrementEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(AchievementIncrementEvent {
-            achievement_id: read_value::<u32>(stream, iter.next(), "achievement_id")?,
-            cur_val: read_value::<u16>(stream, iter.next(), "cur_val")?,
-            max_val: read_value::<u16>(stream, iter.next(), "max_val")?,
+            achievement_id: read_value::<
+                u32,
+            >(stream, definition.get_entry("achievement_id"), "achievement_id")?,
+            cur_val: read_value::<
+                u16,
+            >(stream, definition.get_entry("cur_val"), "cur_val")?,
+            max_val: read_value::<
+                u16,
+            >(stream, definition.get_entry("max_val"), "max_val")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "achievement_id" => Ok(self.achievement_id.clone().into()),
+            "cur_val" => Ok(self.cur_val.clone().into()),
+            "max_val" => Ok(self.max_val.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "AchievementIncrement",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PhysgunPickupEvent {
     pub ent_index: u32,
 }
 impl PhysgunPickupEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PhysgunPickupEvent {
-            ent_index: read_value::<u32>(stream, iter.next(), "ent_index")?,
+            ent_index: read_value::<
+                u32,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PhysgunPickup",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct FlareIgniteNpcEvent {
     pub ent_index: u32,
 }
 impl FlareIgniteNpcEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(FlareIgniteNpcEvent {
-            ent_index: read_value::<u32>(stream, iter.next(), "ent_index")?,
+            ent_index: read_value::<
+                u32,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "FlareIgniteNpc",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HelicopterGrenadePuntMissEvent {}
 impl HelicopterGrenadePuntMissEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HelicopterGrenadePuntMissEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HelicopterGrenadePuntMiss",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct UserDataDownloadedEvent {}
 impl UserDataDownloadedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(UserDataDownloadedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "UserDataDownloaded",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RagdollDissolvedEvent {
     pub ent_index: u32,
 }
 impl RagdollDissolvedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RagdollDissolvedEvent {
-            ent_index: read_value::<u32>(stream, iter.next(), "ent_index")?,
+            ent_index: read_value::<
+                u32,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RagdollDissolved",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HLTVChangedModeEvent {
     pub old_mode: u16,
     pub new_mode: u16,
@@ -1016,16 +2646,49 @@ pub struct HLTVChangedModeEvent {
 impl HLTVChangedModeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HLTVChangedModeEvent {
-            old_mode: read_value::<u16>(stream, iter.next(), "old_mode")?,
-            new_mode: read_value::<u16>(stream, iter.next(), "new_mode")?,
-            obs_target: read_value::<u16>(stream, iter.next(), "obs_target")?,
+            old_mode: read_value::<
+                u16,
+            >(stream, definition.get_entry("oldmode"), "old_mode")?,
+            new_mode: read_value::<
+                u16,
+            >(stream, definition.get_entry("newmode"), "new_mode")?,
+            obs_target: read_value::<
+                u16,
+            >(stream, definition.get_entry("obs_target"), "obs_target")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "oldmode" => Ok(self.old_mode.clone().into()),
+            "newmode" => Ok(self.new_mode.clone().into()),
+            "obs_target" => Ok(self.obs_target.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HLTVChangedMode",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HLTVChangedTargetEvent {
     pub mode: u16,
     pub old_target: u16,
@@ -1034,45 +2697,140 @@ pub struct HLTVChangedTargetEvent {
 impl HLTVChangedTargetEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HLTVChangedTargetEvent {
-            mode: read_value::<u16>(stream, iter.next(), "mode")?,
-            old_target: read_value::<u16>(stream, iter.next(), "old_target")?,
-            obs_target: read_value::<u16>(stream, iter.next(), "obs_target")?,
+            mode: read_value::<u16>(stream, definition.get_entry("mode"), "mode")?,
+            old_target: read_value::<
+                u16,
+            >(stream, definition.get_entry("old_target"), "old_target")?,
+            obs_target: read_value::<
+                u16,
+            >(stream, definition.get_entry("obs_target"), "obs_target")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "mode" => Ok(self.mode.clone().into()),
+            "old_target" => Ok(self.old_target.clone().into()),
+            "obs_target" => Ok(self.obs_target.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HLTVChangedTarget",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct VoteEndedEvent {}
 impl VoteEndedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(VoteEndedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "VoteEnded",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct VoteStartedEvent {
     pub issue: MaybeUtf8String,
     pub param_1: MaybeUtf8String,
     pub team: u8,
     pub initiator: u32,
+    pub voteidx: u32,
 }
 impl VoteStartedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(VoteStartedEvent {
-            issue: read_value::<MaybeUtf8String>(stream, iter.next(), "issue")?,
-            param_1: read_value::<MaybeUtf8String>(stream, iter.next(), "param_1")?,
-            team: read_value::<u8>(stream, iter.next(), "team")?,
-            initiator: read_value::<u32>(stream, iter.next(), "initiator")?,
+            issue: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("issue"), "issue")?,
+            param_1: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("param1"), "param_1")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            initiator: read_value::<
+                u32,
+            >(stream, definition.get_entry("initiator"), "initiator")?,
+            voteidx: read_value::<
+                u32,
+            >(stream, definition.get_entry("voteidx"), "voteidx")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "issue" => Ok(self.issue.clone().into()),
+            "param1" => Ok(self.param_1.clone().into()),
+            "team" => Ok(self.team.clone().into()),
+            "initiator" => Ok(self.initiator.clone().into()),
+            "voteidx" => Ok(self.voteidx.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "VoteStarted",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct VoteChangedEvent {
     pub vote_option_1: u8,
     pub vote_option_2: u8,
@@ -1080,73 +2838,222 @@ pub struct VoteChangedEvent {
     pub vote_option_4: u8,
     pub vote_option_5: u8,
     pub potential_votes: u8,
+    pub voteidx: u32,
 }
 impl VoteChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(VoteChangedEvent {
-            vote_option_1: read_value::<u8>(stream, iter.next(), "vote_option_1")?,
-            vote_option_2: read_value::<u8>(stream, iter.next(), "vote_option_2")?,
-            vote_option_3: read_value::<u8>(stream, iter.next(), "vote_option_3")?,
-            vote_option_4: read_value::<u8>(stream, iter.next(), "vote_option_4")?,
-            vote_option_5: read_value::<u8>(stream, iter.next(), "vote_option_5")?,
-            potential_votes: read_value::<u8>(stream, iter.next(), "potential_votes")?,
+            vote_option_1: read_value::<
+                u8,
+            >(stream, definition.get_entry("vote_option1"), "vote_option_1")?,
+            vote_option_2: read_value::<
+                u8,
+            >(stream, definition.get_entry("vote_option2"), "vote_option_2")?,
+            vote_option_3: read_value::<
+                u8,
+            >(stream, definition.get_entry("vote_option3"), "vote_option_3")?,
+            vote_option_4: read_value::<
+                u8,
+            >(stream, definition.get_entry("vote_option4"), "vote_option_4")?,
+            vote_option_5: read_value::<
+                u8,
+            >(stream, definition.get_entry("vote_option5"), "vote_option_5")?,
+            potential_votes: read_value::<
+                u8,
+            >(stream, definition.get_entry("potentialVotes"), "potential_votes")?,
+            voteidx: read_value::<
+                u32,
+            >(stream, definition.get_entry("voteidx"), "voteidx")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "vote_option1" => Ok(self.vote_option_1.clone().into()),
+            "vote_option2" => Ok(self.vote_option_2.clone().into()),
+            "vote_option3" => Ok(self.vote_option_3.clone().into()),
+            "vote_option4" => Ok(self.vote_option_4.clone().into()),
+            "vote_option5" => Ok(self.vote_option_5.clone().into()),
+            "potentialVotes" => Ok(self.potential_votes.clone().into()),
+            "voteidx" => Ok(self.voteidx.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "VoteChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct VotePassedEvent {
     pub details: MaybeUtf8String,
     pub param_1: MaybeUtf8String,
     pub team: u8,
+    pub voteidx: u32,
 }
 impl VotePassedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(VotePassedEvent {
-            details: read_value::<MaybeUtf8String>(stream, iter.next(), "details")?,
-            param_1: read_value::<MaybeUtf8String>(stream, iter.next(), "param_1")?,
-            team: read_value::<u8>(stream, iter.next(), "team")?,
+            details: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("details"), "details")?,
+            param_1: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("param1"), "param_1")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            voteidx: read_value::<
+                u32,
+            >(stream, definition.get_entry("voteidx"), "voteidx")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "details" => Ok(self.details.clone().into()),
+            "param1" => Ok(self.param_1.clone().into()),
+            "team" => Ok(self.team.clone().into()),
+            "voteidx" => Ok(self.voteidx.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "VotePassed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct VoteFailedEvent {
     pub team: u8,
+    pub voteidx: u32,
 }
 impl VoteFailedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(VoteFailedEvent {
-            team: read_value::<u8>(stream, iter.next(), "team")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            voteidx: read_value::<
+                u32,
+            >(stream, definition.get_entry("voteidx"), "voteidx")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "team" => Ok(self.team.clone().into()),
+            "voteidx" => Ok(self.voteidx.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "VoteFailed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct VoteCastEvent {
     pub vote_option: u8,
     pub team: u16,
     pub entity_id: u32,
+    pub voteidx: u32,
 }
 impl VoteCastEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(VoteCastEvent {
-            vote_option: read_value::<u8>(stream, iter.next(), "vote_option")?,
-            team: read_value::<u16>(stream, iter.next(), "team")?,
-            entity_id: read_value::<u32>(stream, iter.next(), "entity_id")?,
+            vote_option: read_value::<
+                u8,
+            >(stream, definition.get_entry("vote_option"), "vote_option")?,
+            team: read_value::<u16>(stream, definition.get_entry("team"), "team")?,
+            entity_id: read_value::<
+                u32,
+            >(stream, definition.get_entry("entityid"), "entity_id")?,
+            voteidx: read_value::<
+                u32,
+            >(stream, definition.get_entry("voteidx"), "voteidx")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "vote_option" => Ok(self.vote_option.clone().into()),
+            "team" => Ok(self.team.clone().into()),
+            "entityid" => Ok(self.entity_id.clone().into()),
+            "voteidx" => Ok(self.voteidx.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "VoteCast",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct VoteOptionsEvent {
     pub count: u8,
     pub option_1: MaybeUtf8String,
@@ -1154,50 +3061,170 @@ pub struct VoteOptionsEvent {
     pub option_3: MaybeUtf8String,
     pub option_4: MaybeUtf8String,
     pub option_5: MaybeUtf8String,
+    pub voteidx: u32,
 }
 impl VoteOptionsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(VoteOptionsEvent {
-            count: read_value::<u8>(stream, iter.next(), "count")?,
-            option_1: read_value::<MaybeUtf8String>(stream, iter.next(), "option_1")?,
-            option_2: read_value::<MaybeUtf8String>(stream, iter.next(), "option_2")?,
-            option_3: read_value::<MaybeUtf8String>(stream, iter.next(), "option_3")?,
-            option_4: read_value::<MaybeUtf8String>(stream, iter.next(), "option_4")?,
-            option_5: read_value::<MaybeUtf8String>(stream, iter.next(), "option_5")?,
+            count: read_value::<u8>(stream, definition.get_entry("count"), "count")?,
+            option_1: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("option1"), "option_1")?,
+            option_2: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("option2"), "option_2")?,
+            option_3: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("option3"), "option_3")?,
+            option_4: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("option4"), "option_4")?,
+            option_5: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("option5"), "option_5")?,
+            voteidx: read_value::<
+                u32,
+            >(stream, definition.get_entry("voteidx"), "voteidx")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "count" => Ok(self.count.clone().into()),
+            "option1" => Ok(self.option_1.clone().into()),
+            "option2" => Ok(self.option_2.clone().into()),
+            "option3" => Ok(self.option_3.clone().into()),
+            "option4" => Ok(self.option_4.clone().into()),
+            "option5" => Ok(self.option_5.clone().into()),
+            "voteidx" => Ok(self.voteidx.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "VoteOptions",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ReplaySavedEvent {}
 impl ReplaySavedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ReplaySavedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ReplaySaved",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EnteredPerformanceModeEvent {}
 impl EnteredPerformanceModeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EnteredPerformanceModeEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EnteredPerformanceMode",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct BrowseReplaysEvent {}
 impl BrowseReplaysEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(BrowseReplaysEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "BrowseReplays",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ReplayYoutubeStatsEvent {
     pub views: u32,
     pub likes: u32,
@@ -1206,107 +3233,361 @@ pub struct ReplayYoutubeStatsEvent {
 impl ReplayYoutubeStatsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ReplayYoutubeStatsEvent {
-            views: read_value::<u32>(stream, iter.next(), "views")?,
-            likes: read_value::<u32>(stream, iter.next(), "likes")?,
-            favorited: read_value::<u32>(stream, iter.next(), "favorited")?,
+            views: read_value::<u32>(stream, definition.get_entry("views"), "views")?,
+            likes: read_value::<u32>(stream, definition.get_entry("likes"), "likes")?,
+            favorited: read_value::<
+                u32,
+            >(stream, definition.get_entry("favorited"), "favorited")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "views" => Ok(self.views.clone().into()),
+            "likes" => Ok(self.likes.clone().into()),
+            "favorited" => Ok(self.favorited.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ReplayYoutubeStats",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct InventoryUpdatedEvent {}
 impl InventoryUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(InventoryUpdatedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "InventoryUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct CartUpdatedEvent {}
 impl CartUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(CartUpdatedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "CartUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct StorePriceSheetUpdatedEvent {}
 impl StorePriceSheetUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(StorePriceSheetUpdatedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "StorePriceSheetUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EconInventoryConnectedEvent {}
 impl EconInventoryConnectedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EconInventoryConnectedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EconInventoryConnected",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ItemSchemaInitializedEvent {}
 impl ItemSchemaInitializedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ItemSchemaInitializedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ItemSchemaInitialized",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GcNewSessionEvent {}
 impl GcNewSessionEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(GcNewSessionEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "GcNewSession",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GcLostSessionEvent {}
 impl GcLostSessionEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(GcLostSessionEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "GcLostSession",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct IntroFinishEvent {
     pub player: u16,
 }
 impl IntroFinishEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(IntroFinishEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "IntroFinish",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct IntroNextCameraEvent {
     pub player: u16,
 }
 impl IntroNextCameraEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(IntroNextCameraEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "IntroNextCamera",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerChangeClassEvent {
     pub user_id: u16,
     pub class: u16,
@@ -1314,43 +3595,125 @@ pub struct PlayerChangeClassEvent {
 impl PlayerChangeClassEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerChangeClassEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            class: read_value::<u16>(stream, iter.next(), "class")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            class: read_value::<u16>(stream, definition.get_entry("class"), "class")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "class" => Ok(self.class.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerChangeClass",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TfMapTimeRemainingEvent {
     pub seconds: u32,
 }
 impl TfMapTimeRemainingEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TfMapTimeRemainingEvent {
-            seconds: read_value::<u32>(stream, iter.next(), "seconds")?,
+            seconds: read_value::<
+                u32,
+            >(stream, definition.get_entry("seconds"), "seconds")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "seconds" => Ok(self.seconds.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TfMapTimeRemaining",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TfGameOverEvent {
     pub reason: MaybeUtf8String,
 }
 impl TfGameOverEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TfGameOverEvent {
-            reason: read_value::<MaybeUtf8String>(stream, iter.next(), "reason")?,
+            reason: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("reason"), "reason")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "reason" => Ok(self.reason.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TfGameOver",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct CtfFlagCapturedEvent {
     pub capping_team: u16,
     pub capping_team_score: u16,
@@ -1358,82 +3721,235 @@ pub struct CtfFlagCapturedEvent {
 impl CtfFlagCapturedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(CtfFlagCapturedEvent {
-            capping_team: read_value::<u16>(stream, iter.next(), "capping_team")?,
+            capping_team: read_value::<
+                u16,
+            >(stream, definition.get_entry("capping_team"), "capping_team")?,
             capping_team_score: read_value::<
                 u16,
-            >(stream, iter.next(), "capping_team_score")?,
+            >(stream, definition.get_entry("capping_team_score"), "capping_team_score")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "capping_team" => Ok(self.capping_team.clone().into()),
+            "capping_team_score" => Ok(self.capping_team_score.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "CtfFlagCaptured",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ControlPointInitializedEvent {}
 impl ControlPointInitializedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ControlPointInitializedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ControlPointInitialized",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ControlPointUpdateImagesEvent {
     pub index: u16,
 }
 impl ControlPointUpdateImagesEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ControlPointUpdateImagesEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ControlPointUpdateImages",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ControlPointUpdateLayoutEvent {
     pub index: u16,
 }
 impl ControlPointUpdateLayoutEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ControlPointUpdateLayoutEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ControlPointUpdateLayout",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ControlPointUpdateCappingEvent {
     pub index: u16,
 }
 impl ControlPointUpdateCappingEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ControlPointUpdateCappingEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ControlPointUpdateCapping",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ControlPointUpdateOwnerEvent {
     pub index: u16,
 }
 impl ControlPointUpdateOwnerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ControlPointUpdateOwnerEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ControlPointUpdateOwner",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ControlPointStartTouchEvent {
     pub player: u16,
     pub area: u16,
@@ -1441,15 +3957,41 @@ pub struct ControlPointStartTouchEvent {
 impl ControlPointStartTouchEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ControlPointStartTouchEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
-            area: read_value::<u16>(stream, iter.next(), "area")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            area: read_value::<u16>(stream, definition.get_entry("area"), "area")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "area" => Ok(self.area.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ControlPointStartTouch",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ControlPointEndTouchEvent {
     pub player: u16,
     pub area: u16,
@@ -1457,29 +3999,80 @@ pub struct ControlPointEndTouchEvent {
 impl ControlPointEndTouchEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ControlPointEndTouchEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
-            area: read_value::<u16>(stream, iter.next(), "area")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            area: read_value::<u16>(stream, definition.get_entry("area"), "area")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "area" => Ok(self.area.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ControlPointEndTouch",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ControlPointPulseElementEvent {
     pub player: u16,
 }
 impl ControlPointPulseElementEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ControlPointPulseElementEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ControlPointPulseElement",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ControlPointFakeCaptureEvent {
     pub player: u16,
     pub int_data: u16,
@@ -1487,15 +4080,43 @@ pub struct ControlPointFakeCaptureEvent {
 impl ControlPointFakeCaptureEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ControlPointFakeCaptureEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
-            int_data: read_value::<u16>(stream, iter.next(), "int_data")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            int_data: read_value::<
+                u16,
+            >(stream, definition.get_entry("int_data"), "int_data")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "int_data" => Ok(self.int_data.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ControlPointFakeCapture",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ControlPointFakeCaptureMultiplierEvent {
     pub player: u16,
     pub int_data: u16,
@@ -1503,125 +4124,409 @@ pub struct ControlPointFakeCaptureMultiplierEvent {
 impl ControlPointFakeCaptureMultiplierEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ControlPointFakeCaptureMultiplierEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
-            int_data: read_value::<u16>(stream, iter.next(), "int_data")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            int_data: read_value::<
+                u16,
+            >(stream, definition.get_entry("int_data"), "int_data")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "int_data" => Ok(self.int_data.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ControlPointFakeCaptureMultiplier",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayRoundSelectedEvent {
     pub round: MaybeUtf8String,
 }
 impl TeamPlayRoundSelectedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayRoundSelectedEvent {
-            round: read_value::<MaybeUtf8String>(stream, iter.next(), "round")?,
+            round: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("round"), "round")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "round" => Ok(self.round.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayRoundSelected",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayRoundStartEvent {
     pub full_reset: bool,
 }
 impl TeamPlayRoundStartEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayRoundStartEvent {
-            full_reset: read_value::<bool>(stream, iter.next(), "full_reset")?,
+            full_reset: read_value::<
+                bool,
+            >(stream, definition.get_entry("full_reset"), "full_reset")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "full_reset" => Ok(self.full_reset.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayRoundStart",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayRoundActiveEvent {}
 impl TeamPlayRoundActiveEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayRoundActiveEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayRoundActive",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayWaitingBeginsEvent {}
 impl TeamPlayWaitingBeginsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayWaitingBeginsEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayWaitingBegins",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayWaitingEndsEvent {}
 impl TeamPlayWaitingEndsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayWaitingEndsEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayWaitingEnds",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayWaitingAboutToEndEvent {}
 impl TeamPlayWaitingAboutToEndEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayWaitingAboutToEndEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayWaitingAboutToEnd",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayRestartRoundEvent {}
 impl TeamPlayRestartRoundEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayRestartRoundEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayRestartRound",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayReadyRestartEvent {}
 impl TeamPlayReadyRestartEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayReadyRestartEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayReadyRestart",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayRoundRestartSecondsEvent {
     pub seconds: u16,
 }
 impl TeamPlayRoundRestartSecondsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayRoundRestartSecondsEvent {
-            seconds: read_value::<u16>(stream, iter.next(), "seconds")?,
+            seconds: read_value::<
+                u16,
+            >(stream, definition.get_entry("seconds"), "seconds")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "seconds" => Ok(self.seconds.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayRoundRestartSeconds",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayTeamReadyEvent {
     pub team: u8,
 }
 impl TeamPlayTeamReadyEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayTeamReadyEvent {
-            team: read_value::<u8>(stream, iter.next(), "team")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "team" => Ok(self.team.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayTeamReady",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayRoundWinEvent {
     pub team: u8,
     pub win_reason: u8,
@@ -1634,123 +4539,399 @@ pub struct TeamPlayRoundWinEvent {
 impl TeamPlayRoundWinEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayRoundWinEvent {
-            team: read_value::<u8>(stream, iter.next(), "team")?,
-            win_reason: read_value::<u8>(stream, iter.next(), "win_reason")?,
-            flag_cap_limit: read_value::<u16>(stream, iter.next(), "flag_cap_limit")?,
-            full_round: read_value::<u16>(stream, iter.next(), "full_round")?,
-            round_time: read_value::<f32>(stream, iter.next(), "round_time")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            win_reason: read_value::<
+                u8,
+            >(stream, definition.get_entry("winreason"), "win_reason")?,
+            flag_cap_limit: read_value::<
+                u16,
+            >(stream, definition.get_entry("flagcaplimit"), "flag_cap_limit")?,
+            full_round: read_value::<
+                u16,
+            >(stream, definition.get_entry("full_round"), "full_round")?,
+            round_time: read_value::<
+                f32,
+            >(stream, definition.get_entry("round_time"), "round_time")?,
             losing_team_num_caps: read_value::<
                 u16,
-            >(stream, iter.next(), "losing_team_num_caps")?,
-            was_sudden_death: read_value::<u8>(stream, iter.next(), "was_sudden_death")?,
+            >(
+                stream,
+                definition.get_entry("losing_team_num_caps"),
+                "losing_team_num_caps",
+            )?,
+            was_sudden_death: read_value::<
+                u8,
+            >(stream, definition.get_entry("was_sudden_death"), "was_sudden_death")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "team" => Ok(self.team.clone().into()),
+            "winreason" => Ok(self.win_reason.clone().into()),
+            "flagcaplimit" => Ok(self.flag_cap_limit.clone().into()),
+            "full_round" => Ok(self.full_round.clone().into()),
+            "round_time" => Ok(self.round_time.clone().into()),
+            "losing_team_num_caps" => Ok(self.losing_team_num_caps.clone().into()),
+            "was_sudden_death" => Ok(self.was_sudden_death.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayRoundWin",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayUpdateTimerEvent {}
 impl TeamPlayUpdateTimerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayUpdateTimerEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayUpdateTimer",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayRoundStalemateEvent {
     pub reason: u8,
 }
 impl TeamPlayRoundStalemateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayRoundStalemateEvent {
-            reason: read_value::<u8>(stream, iter.next(), "reason")?,
+            reason: read_value::<u8>(stream, definition.get_entry("reason"), "reason")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "reason" => Ok(self.reason.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayRoundStalemate",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayOvertimeBeginEvent {}
 impl TeamPlayOvertimeBeginEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayOvertimeBeginEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayOvertimeBegin",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayOvertimeEndEvent {}
 impl TeamPlayOvertimeEndEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayOvertimeEndEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayOvertimeEnd",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlaySuddenDeathBeginEvent {}
 impl TeamPlaySuddenDeathBeginEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlaySuddenDeathBeginEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlaySuddenDeathBegin",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlaySuddenDeathEndEvent {}
 impl TeamPlaySuddenDeathEndEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlaySuddenDeathEndEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlaySuddenDeathEnd",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayGameOverEvent {
     pub reason: MaybeUtf8String,
 }
 impl TeamPlayGameOverEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayGameOverEvent {
-            reason: read_value::<MaybeUtf8String>(stream, iter.next(), "reason")?,
+            reason: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("reason"), "reason")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "reason" => Ok(self.reason.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayGameOver",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayMapTimeRemainingEvent {
     pub seconds: u16,
 }
 impl TeamPlayMapTimeRemainingEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayMapTimeRemainingEvent {
-            seconds: read_value::<u16>(stream, iter.next(), "seconds")?,
+            seconds: read_value::<
+                u16,
+            >(stream, definition.get_entry("seconds"), "seconds")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "seconds" => Ok(self.seconds.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayMapTimeRemaining",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayTimerFlashEvent {
     pub time_remaining: u16,
 }
 impl TeamPlayTimerFlashEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayTimerFlashEvent {
-            time_remaining: read_value::<u16>(stream, iter.next(), "time_remaining")?,
+            time_remaining: read_value::<
+                u16,
+            >(stream, definition.get_entry("time_remaining"), "time_remaining")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "time_remaining" => Ok(self.time_remaining.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayTimerFlash",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayTimerTimeAddedEvent {
     pub timer: u16,
     pub seconds_added: u16,
@@ -1758,15 +4939,43 @@ pub struct TeamPlayTimerTimeAddedEvent {
 impl TeamPlayTimerTimeAddedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayTimerTimeAddedEvent {
-            timer: read_value::<u16>(stream, iter.next(), "timer")?,
-            seconds_added: read_value::<u16>(stream, iter.next(), "seconds_added")?,
+            timer: read_value::<u16>(stream, definition.get_entry("timer"), "timer")?,
+            seconds_added: read_value::<
+                u16,
+            >(stream, definition.get_entry("seconds_added"), "seconds_added")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "timer" => Ok(self.timer.clone().into()),
+            "seconds_added" => Ok(self.seconds_added.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayTimerTimeAdded",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayPointStartCaptureEvent {
     pub cp: u8,
     pub cp_name: MaybeUtf8String,
@@ -1778,19 +4987,57 @@ pub struct TeamPlayPointStartCaptureEvent {
 impl TeamPlayPointStartCaptureEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayPointStartCaptureEvent {
-            cp: read_value::<u8>(stream, iter.next(), "cp")?,
-            cp_name: read_value::<MaybeUtf8String>(stream, iter.next(), "cp_name")?,
-            team: read_value::<u8>(stream, iter.next(), "team")?,
-            cap_team: read_value::<u8>(stream, iter.next(), "cap_team")?,
-            cappers: read_value::<MaybeUtf8String>(stream, iter.next(), "cappers")?,
-            cap_time: read_value::<f32>(stream, iter.next(), "cap_time")?,
+            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
+            cp_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("cpname"), "cp_name")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            cap_team: read_value::<
+                u8,
+            >(stream, definition.get_entry("capteam"), "cap_team")?,
+            cappers: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("cappers"), "cappers")?,
+            cap_time: read_value::<
+                f32,
+            >(stream, definition.get_entry("captime"), "cap_time")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "cp" => Ok(self.cp.clone().into()),
+            "cpname" => Ok(self.cp_name.clone().into()),
+            "team" => Ok(self.team.clone().into()),
+            "capteam" => Ok(self.cap_team.clone().into()),
+            "cappers" => Ok(self.cappers.clone().into()),
+            "captime" => Ok(self.cap_time.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayPointStartCapture",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayPointCapturedEvent {
     pub cp: u8,
     pub cp_name: MaybeUtf8String,
@@ -1800,17 +5047,49 @@ pub struct TeamPlayPointCapturedEvent {
 impl TeamPlayPointCapturedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayPointCapturedEvent {
-            cp: read_value::<u8>(stream, iter.next(), "cp")?,
-            cp_name: read_value::<MaybeUtf8String>(stream, iter.next(), "cp_name")?,
-            team: read_value::<u8>(stream, iter.next(), "team")?,
-            cappers: read_value::<MaybeUtf8String>(stream, iter.next(), "cappers")?,
+            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
+            cp_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("cpname"), "cp_name")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            cappers: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("cappers"), "cappers")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "cp" => Ok(self.cp.clone().into()),
+            "cpname" => Ok(self.cp_name.clone().into()),
+            "team" => Ok(self.team.clone().into()),
+            "cappers" => Ok(self.cappers.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayPointCaptured",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayPointLockedEvent {
     pub cp: u8,
     pub cp_name: MaybeUtf8String,
@@ -1819,16 +5098,45 @@ pub struct TeamPlayPointLockedEvent {
 impl TeamPlayPointLockedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayPointLockedEvent {
-            cp: read_value::<u8>(stream, iter.next(), "cp")?,
-            cp_name: read_value::<MaybeUtf8String>(stream, iter.next(), "cp_name")?,
-            team: read_value::<u8>(stream, iter.next(), "team")?,
+            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
+            cp_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("cpname"), "cp_name")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "cp" => Ok(self.cp.clone().into()),
+            "cpname" => Ok(self.cp_name.clone().into()),
+            "team" => Ok(self.team.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayPointLocked",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayPointUnlockedEvent {
     pub cp: u8,
     pub cp_name: MaybeUtf8String,
@@ -1837,16 +5145,45 @@ pub struct TeamPlayPointUnlockedEvent {
 impl TeamPlayPointUnlockedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayPointUnlockedEvent {
-            cp: read_value::<u8>(stream, iter.next(), "cp")?,
-            cp_name: read_value::<MaybeUtf8String>(stream, iter.next(), "cp_name")?,
-            team: read_value::<u8>(stream, iter.next(), "team")?,
+            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
+            cp_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("cpname"), "cp_name")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "cp" => Ok(self.cp.clone().into()),
+            "cpname" => Ok(self.cp_name.clone().into()),
+            "team" => Ok(self.team.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayPointUnlocked",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayCaptureBrokenEvent {
     pub cp: u8,
     pub cp_name: MaybeUtf8String,
@@ -1855,16 +5192,47 @@ pub struct TeamPlayCaptureBrokenEvent {
 impl TeamPlayCaptureBrokenEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayCaptureBrokenEvent {
-            cp: read_value::<u8>(stream, iter.next(), "cp")?,
-            cp_name: read_value::<MaybeUtf8String>(stream, iter.next(), "cp_name")?,
-            time_remaining: read_value::<f32>(stream, iter.next(), "time_remaining")?,
+            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
+            cp_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("cpname"), "cp_name")?,
+            time_remaining: read_value::<
+                f32,
+            >(stream, definition.get_entry("time_remaining"), "time_remaining")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "cp" => Ok(self.cp.clone().into()),
+            "cpname" => Ok(self.cp_name.clone().into()),
+            "time_remaining" => Ok(self.time_remaining.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayCaptureBroken",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayCaptureBlockedEvent {
     pub cp: u8,
     pub cp_name: MaybeUtf8String,
@@ -1874,17 +5242,49 @@ pub struct TeamPlayCaptureBlockedEvent {
 impl TeamPlayCaptureBlockedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayCaptureBlockedEvent {
-            cp: read_value::<u8>(stream, iter.next(), "cp")?,
-            cp_name: read_value::<MaybeUtf8String>(stream, iter.next(), "cp_name")?,
-            blocker: read_value::<u8>(stream, iter.next(), "blocker")?,
-            victim: read_value::<u8>(stream, iter.next(), "victim")?,
+            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
+            cp_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("cpname"), "cp_name")?,
+            blocker: read_value::<
+                u8,
+            >(stream, definition.get_entry("blocker"), "blocker")?,
+            victim: read_value::<u8>(stream, definition.get_entry("victim"), "victim")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "cp" => Ok(self.cp.clone().into()),
+            "cpname" => Ok(self.cp_name.clone().into()),
+            "blocker" => Ok(self.blocker.clone().into()),
+            "victim" => Ok(self.victim.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayCaptureBlocked",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayFlagEventEvent {
     pub player: u16,
     pub carrier: u16,
@@ -1895,18 +5295,51 @@ pub struct TeamPlayFlagEventEvent {
 impl TeamPlayFlagEventEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayFlagEventEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
-            carrier: read_value::<u16>(stream, iter.next(), "carrier")?,
-            event_type: read_value::<u16>(stream, iter.next(), "event_type")?,
-            home: read_value::<u8>(stream, iter.next(), "home")?,
-            team: read_value::<u8>(stream, iter.next(), "team")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            carrier: read_value::<
+                u16,
+            >(stream, definition.get_entry("carrier"), "carrier")?,
+            event_type: read_value::<
+                u16,
+            >(stream, definition.get_entry("eventtype"), "event_type")?,
+            home: read_value::<u8>(stream, definition.get_entry("home"), "home")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "carrier" => Ok(self.carrier.clone().into()),
+            "eventtype" => Ok(self.event_type.clone().into()),
+            "home" => Ok(self.home.clone().into()),
+            "team" => Ok(self.team.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayFlagEvent",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayWinPanelEvent {
     pub panel_style: u8,
     pub winning_team: u8,
@@ -1932,39 +5365,127 @@ pub struct TeamPlayWinPanelEvent {
 impl TeamPlayWinPanelEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayWinPanelEvent {
-            panel_style: read_value::<u8>(stream, iter.next(), "panel_style")?,
-            winning_team: read_value::<u8>(stream, iter.next(), "winning_team")?,
-            win_reason: read_value::<u8>(stream, iter.next(), "win_reason")?,
-            cappers: read_value::<MaybeUtf8String>(stream, iter.next(), "cappers")?,
-            flag_cap_limit: read_value::<u16>(stream, iter.next(), "flag_cap_limit")?,
-            blue_score: read_value::<u16>(stream, iter.next(), "blue_score")?,
-            red_score: read_value::<u16>(stream, iter.next(), "red_score")?,
-            blue_score_prev: read_value::<u16>(stream, iter.next(), "blue_score_prev")?,
-            red_score_prev: read_value::<u16>(stream, iter.next(), "red_score_prev")?,
-            round_complete: read_value::<u16>(stream, iter.next(), "round_complete")?,
+            panel_style: read_value::<
+                u8,
+            >(stream, definition.get_entry("panel_style"), "panel_style")?,
+            winning_team: read_value::<
+                u8,
+            >(stream, definition.get_entry("winning_team"), "winning_team")?,
+            win_reason: read_value::<
+                u8,
+            >(stream, definition.get_entry("winreason"), "win_reason")?,
+            cappers: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("cappers"), "cappers")?,
+            flag_cap_limit: read_value::<
+                u16,
+            >(stream, definition.get_entry("flagcaplimit"), "flag_cap_limit")?,
+            blue_score: read_value::<
+                u16,
+            >(stream, definition.get_entry("blue_score"), "blue_score")?,
+            red_score: read_value::<
+                u16,
+            >(stream, definition.get_entry("red_score"), "red_score")?,
+            blue_score_prev: read_value::<
+                u16,
+            >(stream, definition.get_entry("blue_score_prev"), "blue_score_prev")?,
+            red_score_prev: read_value::<
+                u16,
+            >(stream, definition.get_entry("red_score_prev"), "red_score_prev")?,
+            round_complete: read_value::<
+                u16,
+            >(stream, definition.get_entry("round_complete"), "round_complete")?,
             rounds_remaining: read_value::<
                 u16,
-            >(stream, iter.next(), "rounds_remaining")?,
-            player_1: read_value::<u16>(stream, iter.next(), "player_1")?,
-            player_1_points: read_value::<u16>(stream, iter.next(), "player_1_points")?,
-            player_2: read_value::<u16>(stream, iter.next(), "player_2")?,
-            player_2_points: read_value::<u16>(stream, iter.next(), "player_2_points")?,
-            player_3: read_value::<u16>(stream, iter.next(), "player_3")?,
-            player_3_points: read_value::<u16>(stream, iter.next(), "player_3_points")?,
+            >(stream, definition.get_entry("rounds_remaining"), "rounds_remaining")?,
+            player_1: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_1"), "player_1")?,
+            player_1_points: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_1_points"), "player_1_points")?,
+            player_2: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_2"), "player_2")?,
+            player_2_points: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_2_points"), "player_2_points")?,
+            player_3: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_3"), "player_3")?,
+            player_3_points: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_3_points"), "player_3_points")?,
             kill_stream_player_1: read_value::<
                 u16,
-            >(stream, iter.next(), "kill_stream_player_1")?,
+            >(
+                stream,
+                definition.get_entry("killstreak_player_1"),
+                "kill_stream_player_1",
+            )?,
             kill_stream_player_1_count: read_value::<
                 u16,
-            >(stream, iter.next(), "kill_stream_player_1_count")?,
-            game_over: read_value::<u8>(stream, iter.next(), "game_over")?,
+            >(
+                stream,
+                definition.get_entry("killstreak_player_1_count"),
+                "kill_stream_player_1_count",
+            )?,
+            game_over: read_value::<
+                u8,
+            >(stream, definition.get_entry("game_over"), "game_over")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "panel_style" => Ok(self.panel_style.clone().into()),
+            "winning_team" => Ok(self.winning_team.clone().into()),
+            "winreason" => Ok(self.win_reason.clone().into()),
+            "cappers" => Ok(self.cappers.clone().into()),
+            "flagcaplimit" => Ok(self.flag_cap_limit.clone().into()),
+            "blue_score" => Ok(self.blue_score.clone().into()),
+            "red_score" => Ok(self.red_score.clone().into()),
+            "blue_score_prev" => Ok(self.blue_score_prev.clone().into()),
+            "red_score_prev" => Ok(self.red_score_prev.clone().into()),
+            "round_complete" => Ok(self.round_complete.clone().into()),
+            "rounds_remaining" => Ok(self.rounds_remaining.clone().into()),
+            "player_1" => Ok(self.player_1.clone().into()),
+            "player_1_points" => Ok(self.player_1_points.clone().into()),
+            "player_2" => Ok(self.player_2.clone().into()),
+            "player_2_points" => Ok(self.player_2_points.clone().into()),
+            "player_3" => Ok(self.player_3.clone().into()),
+            "player_3_points" => Ok(self.player_3_points.clone().into()),
+            "killstreak_player_1" => Ok(self.kill_stream_player_1.clone().into()),
+            "killstreak_player_1_count" => {
+                Ok(self.kill_stream_player_1_count.clone().into())
+            }
+            "game_over" => Ok(self.game_over.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayWinPanel",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayTeamBalancedPlayerEvent {
     pub player: u16,
     pub team: u8,
@@ -1972,38 +5493,116 @@ pub struct TeamPlayTeamBalancedPlayerEvent {
 impl TeamPlayTeamBalancedPlayerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayTeamBalancedPlayerEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
-            team: read_value::<u8>(stream, iter.next(), "team")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "team" => Ok(self.team.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayTeamBalancedPlayer",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlaySetupFinishedEvent {}
 impl TeamPlaySetupFinishedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlaySetupFinishedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlaySetupFinished",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayAlertEvent {
     pub alert_type: u16,
 }
 impl TeamPlayAlertEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayAlertEvent {
-            alert_type: read_value::<u16>(stream, iter.next(), "alert_type")?,
+            alert_type: read_value::<
+                u16,
+            >(stream, definition.get_entry("alert_type"), "alert_type")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "alert_type" => Ok(self.alert_type.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayAlert",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TrainingCompleteEvent {
     pub next_map: MaybeUtf8String,
     pub map: MaybeUtf8String,
@@ -2012,89 +5611,297 @@ pub struct TrainingCompleteEvent {
 impl TrainingCompleteEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TrainingCompleteEvent {
-            next_map: read_value::<MaybeUtf8String>(stream, iter.next(), "next_map")?,
-            map: read_value::<MaybeUtf8String>(stream, iter.next(), "map")?,
-            text: read_value::<MaybeUtf8String>(stream, iter.next(), "text")?,
+            next_map: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("next_map"), "next_map")?,
+            map: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("map"), "map")?,
+            text: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("text"), "text")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "next_map" => Ok(self.next_map.clone().into()),
+            "map" => Ok(self.map.clone().into()),
+            "text" => Ok(self.text.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TrainingComplete",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ShowFreezePanelEvent {
     pub killer: u16,
 }
 impl ShowFreezePanelEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ShowFreezePanelEvent {
-            killer: read_value::<u16>(stream, iter.next(), "killer")?,
+            killer: read_value::<u16>(stream, definition.get_entry("killer"), "killer")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "killer" => Ok(self.killer.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ShowFreezePanel",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HideFreezePanelEvent {}
 impl HideFreezePanelEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HideFreezePanelEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HideFreezePanel",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct FreezeCamStartedEvent {}
 impl FreezeCamStartedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(FreezeCamStartedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "FreezeCamStarted",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct LocalPlayerChangeTeamEvent {}
 impl LocalPlayerChangeTeamEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(LocalPlayerChangeTeamEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "LocalPlayerChangeTeam",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct LocalPlayerScoreChangedEvent {
     pub score: u16,
 }
 impl LocalPlayerScoreChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(LocalPlayerScoreChangedEvent {
-            score: read_value::<u16>(stream, iter.next(), "score")?,
+            score: read_value::<u16>(stream, definition.get_entry("score"), "score")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "score" => Ok(self.score.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "LocalPlayerScoreChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct LocalPlayerChangeClassEvent {}
 impl LocalPlayerChangeClassEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(LocalPlayerChangeClassEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "LocalPlayerChangeClass",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct LocalPlayerRespawnEvent {}
 impl LocalPlayerRespawnEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(LocalPlayerRespawnEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "LocalPlayerRespawn",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct BuildingInfoChangedEvent {
     pub building_type: u8,
     pub object_mode: u8,
@@ -2103,30 +5910,88 @@ pub struct BuildingInfoChangedEvent {
 impl BuildingInfoChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(BuildingInfoChangedEvent {
-            building_type: read_value::<u8>(stream, iter.next(), "building_type")?,
-            object_mode: read_value::<u8>(stream, iter.next(), "object_mode")?,
-            remove: read_value::<u8>(stream, iter.next(), "remove")?,
+            building_type: read_value::<
+                u8,
+            >(stream, definition.get_entry("building_type"), "building_type")?,
+            object_mode: read_value::<
+                u8,
+            >(stream, definition.get_entry("object_mode"), "object_mode")?,
+            remove: read_value::<u8>(stream, definition.get_entry("remove"), "remove")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "building_type" => Ok(self.building_type.clone().into()),
+            "object_mode" => Ok(self.object_mode.clone().into()),
+            "remove" => Ok(self.remove.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "BuildingInfoChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct LocalPlayerChangeDisguiseEvent {
     pub disguised: bool,
 }
 impl LocalPlayerChangeDisguiseEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(LocalPlayerChangeDisguiseEvent {
-            disguised: read_value::<bool>(stream, iter.next(), "disguised")?,
+            disguised: read_value::<
+                bool,
+            >(stream, definition.get_entry("disguised"), "disguised")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "disguised" => Ok(self.disguised.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "LocalPlayerChangeDisguise",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerAccountChangedEvent {
     pub old_value: u16,
     pub new_value: u16,
@@ -2134,24 +5999,79 @@ pub struct PlayerAccountChangedEvent {
 impl PlayerAccountChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerAccountChangedEvent {
-            old_value: read_value::<u16>(stream, iter.next(), "old_value")?,
-            new_value: read_value::<u16>(stream, iter.next(), "new_value")?,
+            old_value: read_value::<
+                u16,
+            >(stream, definition.get_entry("old_value"), "old_value")?,
+            new_value: read_value::<
+                u16,
+            >(stream, definition.get_entry("new_value"), "new_value")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "old_value" => Ok(self.old_value.clone().into()),
+            "new_value" => Ok(self.new_value.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerAccountChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct SpyPdaResetEvent {}
 impl SpyPdaResetEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(SpyPdaResetEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "SpyPdaReset",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct FlagStatusUpdateEvent {
     pub user_id: u16,
     pub ent_index: u32,
@@ -2159,38 +6079,120 @@ pub struct FlagStatusUpdateEvent {
 impl FlagStatusUpdateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(FlagStatusUpdateEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            ent_index: read_value::<u32>(stream, iter.next(), "ent_index")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            ent_index: read_value::<
+                u32,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "entindex" => Ok(self.ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "FlagStatusUpdate",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerStatsUpdatedEvent {
     pub force_upload: bool,
 }
 impl PlayerStatsUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerStatsUpdatedEvent {
-            force_upload: read_value::<bool>(stream, iter.next(), "force_upload")?,
+            force_upload: read_value::<
+                bool,
+            >(stream, definition.get_entry("forceupload"), "force_upload")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "forceupload" => Ok(self.force_upload.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerStatsUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayingCommentaryEvent {}
 impl PlayingCommentaryEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayingCommentaryEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayingCommentary",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerChargeDeployedEvent {
     pub user_id: u16,
     pub target_id: u16,
@@ -2198,15 +6200,45 @@ pub struct PlayerChargeDeployedEvent {
 impl PlayerChargeDeployedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerChargeDeployedEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            target_id: read_value::<u16>(stream, iter.next(), "target_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            target_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("targetid"), "target_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "targetid" => Ok(self.target_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerChargeDeployed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerBuiltObjectEvent {
     pub user_id: u16,
     pub object: u16,
@@ -2215,16 +6247,45 @@ pub struct PlayerBuiltObjectEvent {
 impl PlayerBuiltObjectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerBuiltObjectEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            object: read_value::<u16>(stream, iter.next(), "object")?,
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            object: read_value::<u16>(stream, definition.get_entry("object"), "object")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "object" => Ok(self.object.clone().into()),
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerBuiltObject",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerUpgradedObjectEvent {
     pub user_id: u16,
     pub object: u16,
@@ -2234,17 +6295,49 @@ pub struct PlayerUpgradedObjectEvent {
 impl PlayerUpgradedObjectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerUpgradedObjectEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            object: read_value::<u16>(stream, iter.next(), "object")?,
-            index: read_value::<u16>(stream, iter.next(), "index")?,
-            is_builder: read_value::<bool>(stream, iter.next(), "is_builder")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            object: read_value::<u16>(stream, definition.get_entry("object"), "object")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            is_builder: read_value::<
+                bool,
+            >(stream, definition.get_entry("isbuilder"), "is_builder")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "object" => Ok(self.object.clone().into()),
+            "index" => Ok(self.index.clone().into()),
+            "isbuilder" => Ok(self.is_builder.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerUpgradedObject",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerCarryObjectEvent {
     pub user_id: u16,
     pub object: u16,
@@ -2253,16 +6346,45 @@ pub struct PlayerCarryObjectEvent {
 impl PlayerCarryObjectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerCarryObjectEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            object: read_value::<u16>(stream, iter.next(), "object")?,
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            object: read_value::<u16>(stream, definition.get_entry("object"), "object")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "object" => Ok(self.object.clone().into()),
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerCarryObject",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerDropObjectEvent {
     pub user_id: u16,
     pub object: u16,
@@ -2271,16 +6393,45 @@ pub struct PlayerDropObjectEvent {
 impl PlayerDropObjectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerDropObjectEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            object: read_value::<u16>(stream, iter.next(), "object")?,
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            object: read_value::<u16>(stream, definition.get_entry("object"), "object")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "object" => Ok(self.object.clone().into()),
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerDropObject",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ObjectRemovedEvent {
     pub user_id: u16,
     pub object_type: u16,
@@ -2289,16 +6440,47 @@ pub struct ObjectRemovedEvent {
 impl ObjectRemovedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ObjectRemovedEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            object_type: read_value::<u16>(stream, iter.next(), "object_type")?,
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            object_type: read_value::<
+                u16,
+            >(stream, definition.get_entry("objecttype"), "object_type")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "objecttype" => Ok(self.object_type.clone().into()),
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ObjectRemoved",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ObjectDestroyedEvent {
     pub user_id: u16,
     pub attacker: u16,
@@ -2312,21 +6494,67 @@ pub struct ObjectDestroyedEvent {
 impl ObjectDestroyedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ObjectDestroyedEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            attacker: read_value::<u16>(stream, iter.next(), "attacker")?,
-            assister: read_value::<u16>(stream, iter.next(), "assister")?,
-            weapon: read_value::<MaybeUtf8String>(stream, iter.next(), "weapon")?,
-            weapon_id: read_value::<u16>(stream, iter.next(), "weapon_id")?,
-            object_type: read_value::<u16>(stream, iter.next(), "object_type")?,
-            index: read_value::<u16>(stream, iter.next(), "index")?,
-            was_building: read_value::<bool>(stream, iter.next(), "was_building")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            attacker: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
+            assister: read_value::<
+                u16,
+            >(stream, definition.get_entry("assister"), "assister")?,
+            weapon: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("weapon"), "weapon")?,
+            weapon_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            object_type: read_value::<
+                u16,
+            >(stream, definition.get_entry("objecttype"), "object_type")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            was_building: read_value::<
+                bool,
+            >(stream, definition.get_entry("was_building"), "was_building")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "attacker" => Ok(self.attacker.clone().into()),
+            "assister" => Ok(self.assister.clone().into()),
+            "weapon" => Ok(self.weapon.clone().into()),
+            "weaponid" => Ok(self.weapon_id.clone().into()),
+            "objecttype" => Ok(self.object_type.clone().into()),
+            "index" => Ok(self.index.clone().into()),
+            "was_building" => Ok(self.was_building.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ObjectDestroyed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ObjectDetonatedEvent {
     pub user_id: u16,
     pub object_type: u16,
@@ -2335,16 +6563,47 @@ pub struct ObjectDetonatedEvent {
 impl ObjectDetonatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ObjectDetonatedEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            object_type: read_value::<u16>(stream, iter.next(), "object_type")?,
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            object_type: read_value::<
+                u16,
+            >(stream, definition.get_entry("objecttype"), "object_type")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "objecttype" => Ok(self.object_type.clone().into()),
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ObjectDetonated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct AchievementEarnedEvent {
     pub player: u8,
     pub achievement: u16,
@@ -2352,24 +6611,77 @@ pub struct AchievementEarnedEvent {
 impl AchievementEarnedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(AchievementEarnedEvent {
-            player: read_value::<u8>(stream, iter.next(), "player")?,
-            achievement: read_value::<u16>(stream, iter.next(), "achievement")?,
+            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
+            achievement: read_value::<
+                u16,
+            >(stream, definition.get_entry("achievement"), "achievement")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "achievement" => Ok(self.achievement.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "AchievementEarned",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct SpecTargetUpdatedEvent {}
 impl SpecTargetUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(SpecTargetUpdatedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "SpecTargetUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TournamentStateUpdateEvent {
     pub user_id: u16,
     pub name_change: bool,
@@ -2379,63 +6691,203 @@ pub struct TournamentStateUpdateEvent {
 impl TournamentStateUpdateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TournamentStateUpdateEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            name_change: read_value::<bool>(stream, iter.next(), "name_change")?,
-            ready_state: read_value::<u16>(stream, iter.next(), "ready_state")?,
-            new_name: read_value::<MaybeUtf8String>(stream, iter.next(), "new_name")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            name_change: read_value::<
+                bool,
+            >(stream, definition.get_entry("namechange"), "name_change")?,
+            ready_state: read_value::<
+                u16,
+            >(stream, definition.get_entry("readystate"), "ready_state")?,
+            new_name: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("newname"), "new_name")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "namechange" => Ok(self.name_change.clone().into()),
+            "readystate" => Ok(self.ready_state.clone().into()),
+            "newname" => Ok(self.new_name.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TournamentStateUpdate",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TournamentEnableCountdownEvent {}
 impl TournamentEnableCountdownEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TournamentEnableCountdownEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TournamentEnableCountdown",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerCalledForMedicEvent {
     pub user_id: u16,
 }
 impl PlayerCalledForMedicEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerCalledForMedicEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerCalledForMedic",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerAskedForBallEvent {
     pub user_id: u16,
 }
 impl PlayerAskedForBallEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerAskedForBallEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerAskedForBall",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct LocalPlayerBecameObserverEvent {}
 impl LocalPlayerBecameObserverEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(LocalPlayerBecameObserverEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "LocalPlayerBecameObserver",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerIgnitedInvEvent {
     pub pyro_ent_index: u8,
     pub victim_ent_index: u8,
@@ -2444,16 +6896,49 @@ pub struct PlayerIgnitedInvEvent {
 impl PlayerIgnitedInvEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerIgnitedInvEvent {
-            pyro_ent_index: read_value::<u8>(stream, iter.next(), "pyro_ent_index")?,
-            victim_ent_index: read_value::<u8>(stream, iter.next(), "victim_ent_index")?,
-            medic_ent_index: read_value::<u8>(stream, iter.next(), "medic_ent_index")?,
+            pyro_ent_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("pyro_entindex"), "pyro_ent_index")?,
+            victim_ent_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("victim_entindex"), "victim_ent_index")?,
+            medic_ent_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("medic_entindex"), "medic_ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "pyro_entindex" => Ok(self.pyro_ent_index.clone().into()),
+            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
+            "medic_entindex" => Ok(self.medic_ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerIgnitedInv",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerIgnitedEvent {
     pub pyro_ent_index: u8,
     pub victim_ent_index: u8,
@@ -2462,16 +6947,49 @@ pub struct PlayerIgnitedEvent {
 impl PlayerIgnitedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerIgnitedEvent {
-            pyro_ent_index: read_value::<u8>(stream, iter.next(), "pyro_ent_index")?,
-            victim_ent_index: read_value::<u8>(stream, iter.next(), "victim_ent_index")?,
-            weapon_id: read_value::<u8>(stream, iter.next(), "weapon_id")?,
+            pyro_ent_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("pyro_entindex"), "pyro_ent_index")?,
+            victim_ent_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("victim_entindex"), "victim_ent_index")?,
+            weapon_id: read_value::<
+                u8,
+            >(stream, definition.get_entry("weaponid"), "weapon_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "pyro_entindex" => Ok(self.pyro_ent_index.clone().into()),
+            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
+            "weaponid" => Ok(self.weapon_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerIgnited",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerExtinguishedEvent {
     pub victim: u8,
     pub healer: u8,
@@ -2480,18 +6998,45 @@ pub struct PlayerExtinguishedEvent {
 impl PlayerExtinguishedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerExtinguishedEvent {
-            victim: read_value::<u8>(stream, iter.next(), "victim")?,
-            healer: read_value::<u8>(stream, iter.next(), "healer")?,
+            victim: read_value::<u8>(stream, definition.get_entry("victim"), "victim")?,
+            healer: read_value::<u8>(stream, definition.get_entry("healer"), "healer")?,
             item_definition_index: read_value::<
                 u16,
-            >(stream, iter.next(), "item_definition_index")?,
+            >(stream, definition.get_entry("itemdefindex"), "item_definition_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "victim" => Ok(self.victim.clone().into()),
+            "healer" => Ok(self.healer.clone().into()),
+            "itemdefindex" => Ok(self.item_definition_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerExtinguished",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerTeleportedEvent {
     pub user_id: u16,
     pub builder_id: u16,
@@ -2500,48 +7045,156 @@ pub struct PlayerTeleportedEvent {
 impl PlayerTeleportedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerTeleportedEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            builder_id: read_value::<u16>(stream, iter.next(), "builder_id")?,
-            dist: read_value::<f32>(stream, iter.next(), "dist")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            builder_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("builderid"), "builder_id")?,
+            dist: read_value::<f32>(stream, definition.get_entry("dist"), "dist")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "builderid" => Ok(self.builder_id.clone().into()),
+            "dist" => Ok(self.dist.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerTeleported",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerHealedMedicCallEvent {
     pub user_id: u16,
 }
 impl PlayerHealedMedicCallEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerHealedMedicCallEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerHealedMedicCall",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct LocalPlayerChargeReadyEvent {}
 impl LocalPlayerChargeReadyEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(LocalPlayerChargeReadyEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "LocalPlayerChargeReady",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct LocalPlayerWindDownEvent {}
 impl LocalPlayerWindDownEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(LocalPlayerWindDownEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "LocalPlayerWindDown",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerInvulnedEvent {
     pub user_id: u16,
     pub medic_user_id: u16,
@@ -2549,15 +7202,45 @@ pub struct PlayerInvulnedEvent {
 impl PlayerInvulnedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerInvulnedEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            medic_user_id: read_value::<u16>(stream, iter.next(), "medic_user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            medic_user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("medic_userid"), "medic_user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "medic_userid" => Ok(self.medic_user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerInvulned",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EscortSpeedEvent {
     pub team: u8,
     pub speed: u8,
@@ -2566,16 +7249,45 @@ pub struct EscortSpeedEvent {
 impl EscortSpeedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(EscortSpeedEvent {
-            team: read_value::<u8>(stream, iter.next(), "team")?,
-            speed: read_value::<u8>(stream, iter.next(), "speed")?,
-            players: read_value::<u8>(stream, iter.next(), "players")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            speed: read_value::<u8>(stream, definition.get_entry("speed"), "speed")?,
+            players: read_value::<
+                u8,
+            >(stream, definition.get_entry("players"), "players")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "team" => Ok(self.team.clone().into()),
+            "speed" => Ok(self.speed.clone().into()),
+            "players" => Ok(self.players.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EscortSpeed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EscortProgressEvent {
     pub team: u8,
     pub progress: f32,
@@ -2584,16 +7296,45 @@ pub struct EscortProgressEvent {
 impl EscortProgressEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(EscortProgressEvent {
-            team: read_value::<u8>(stream, iter.next(), "team")?,
-            progress: read_value::<f32>(stream, iter.next(), "progress")?,
-            reset: read_value::<bool>(stream, iter.next(), "reset")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            progress: read_value::<
+                f32,
+            >(stream, definition.get_entry("progress"), "progress")?,
+            reset: read_value::<bool>(stream, definition.get_entry("reset"), "reset")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "team" => Ok(self.team.clone().into()),
+            "progress" => Ok(self.progress.clone().into()),
+            "reset" => Ok(self.reset.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EscortProgress",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EscortRecedeEvent {
     pub team: u8,
     pub recede_time: f32,
@@ -2601,33 +7342,111 @@ pub struct EscortRecedeEvent {
 impl EscortRecedeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(EscortRecedeEvent {
-            team: read_value::<u8>(stream, iter.next(), "team")?,
-            recede_time: read_value::<f32>(stream, iter.next(), "recede_time")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            recede_time: read_value::<
+                f32,
+            >(stream, definition.get_entry("recedetime"), "recede_time")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "team" => Ok(self.team.clone().into()),
+            "recedetime" => Ok(self.recede_time.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EscortRecede",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GameUIActivatedEvent {}
 impl GameUIActivatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(GameUIActivatedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "GameUIActivated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GameUIHiddenEvent {}
 impl GameUIHiddenEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(GameUIHiddenEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "GameUIHidden",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerEscortScoreEvent {
     pub player: u8,
     pub points: u8,
@@ -2635,15 +7454,41 @@ pub struct PlayerEscortScoreEvent {
 impl PlayerEscortScoreEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerEscortScoreEvent {
-            player: read_value::<u8>(stream, iter.next(), "player")?,
-            points: read_value::<u8>(stream, iter.next(), "points")?,
+            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
+            points: read_value::<u8>(stream, definition.get_entry("points"), "points")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "points" => Ok(self.points.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerEscortScore",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerHealOnHitEvent {
     pub amount: u16,
     pub ent_index: u8,
@@ -2652,16 +7497,47 @@ pub struct PlayerHealOnHitEvent {
 impl PlayerHealOnHitEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerHealOnHitEvent {
-            amount: read_value::<u16>(stream, iter.next(), "amount")?,
-            ent_index: read_value::<u8>(stream, iter.next(), "ent_index")?,
-            weapon_def_index: read_value::<u32>(stream, iter.next(), "weapon_def_index")?,
+            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
+            ent_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
+            weapon_def_index: read_value::<
+                u32,
+            >(stream, definition.get_entry("weapon_def_index"), "weapon_def_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "amount" => Ok(self.amount.clone().into()),
+            "entindex" => Ok(self.ent_index.clone().into()),
+            "weapon_def_index" => Ok(self.weapon_def_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerHealOnHit",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerStealSandvichEvent {
     pub owner: u16,
     pub target: u16,
@@ -2669,43 +7545,119 @@ pub struct PlayerStealSandvichEvent {
 impl PlayerStealSandvichEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerStealSandvichEvent {
-            owner: read_value::<u16>(stream, iter.next(), "owner")?,
-            target: read_value::<u16>(stream, iter.next(), "target")?,
+            owner: read_value::<u16>(stream, definition.get_entry("owner"), "owner")?,
+            target: read_value::<u16>(stream, definition.get_entry("target"), "target")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "owner" => Ok(self.owner.clone().into()),
+            "target" => Ok(self.target.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerStealSandvich",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ShowClassLayoutEvent {
     pub show: bool,
 }
 impl ShowClassLayoutEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ShowClassLayoutEvent {
-            show: read_value::<bool>(stream, iter.next(), "show")?,
+            show: read_value::<bool>(stream, definition.get_entry("show"), "show")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "show" => Ok(self.show.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ShowClassLayout",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ShowVsPanelEvent {
     pub show: bool,
 }
 impl ShowVsPanelEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ShowVsPanelEvent {
-            show: read_value::<bool>(stream, iter.next(), "show")?,
+            show: read_value::<bool>(stream, definition.get_entry("show"), "show")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "show" => Ok(self.show.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ShowVsPanel",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerDamagedEvent {
     pub amount: u16,
     pub kind: u32,
@@ -2713,15 +7665,41 @@ pub struct PlayerDamagedEvent {
 impl PlayerDamagedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerDamagedEvent {
-            amount: read_value::<u16>(stream, iter.next(), "amount")?,
-            kind: read_value::<u32>(stream, iter.next(), "kind")?,
+            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
+            kind: read_value::<u32>(stream, definition.get_entry("type"), "kind")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "amount" => Ok(self.amount.clone().into()),
+            "type" => Ok(self.kind.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerDamaged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ArenaPlayerNotificationEvent {
     pub player: u8,
     pub message: u8,
@@ -2729,15 +7707,43 @@ pub struct ArenaPlayerNotificationEvent {
 impl ArenaPlayerNotificationEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ArenaPlayerNotificationEvent {
-            player: read_value::<u8>(stream, iter.next(), "player")?,
-            message: read_value::<u8>(stream, iter.next(), "message")?,
+            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
+            message: read_value::<
+                u8,
+            >(stream, definition.get_entry("message"), "message")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "message" => Ok(self.message.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ArenaPlayerNotification",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ArenaMatchMaxStreakEvent {
     pub team: u8,
     pub streak: u8,
@@ -2745,24 +7751,75 @@ pub struct ArenaMatchMaxStreakEvent {
 impl ArenaMatchMaxStreakEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ArenaMatchMaxStreakEvent {
-            team: read_value::<u8>(stream, iter.next(), "team")?,
-            streak: read_value::<u8>(stream, iter.next(), "streak")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            streak: read_value::<u8>(stream, definition.get_entry("streak"), "streak")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "team" => Ok(self.team.clone().into()),
+            "streak" => Ok(self.streak.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ArenaMatchMaxStreak",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ArenaRoundStartEvent {}
 impl ArenaRoundStartEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ArenaRoundStartEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ArenaRoundStart",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ArenaWinPanelEvent {
     pub panel_style: u8,
     pub winning_team: u8,
@@ -2808,77 +7865,197 @@ pub struct ArenaWinPanelEvent {
 impl ArenaWinPanelEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ArenaWinPanelEvent {
-            panel_style: read_value::<u8>(stream, iter.next(), "panel_style")?,
-            winning_team: read_value::<u8>(stream, iter.next(), "winning_team")?,
-            win_reason: read_value::<u8>(stream, iter.next(), "win_reason")?,
-            cappers: read_value::<MaybeUtf8String>(stream, iter.next(), "cappers")?,
-            flag_cap_limit: read_value::<u16>(stream, iter.next(), "flag_cap_limit")?,
-            blue_score: read_value::<u16>(stream, iter.next(), "blue_score")?,
-            red_score: read_value::<u16>(stream, iter.next(), "red_score")?,
-            blue_score_prev: read_value::<u16>(stream, iter.next(), "blue_score_prev")?,
-            red_score_prev: read_value::<u16>(stream, iter.next(), "red_score_prev")?,
-            round_complete: read_value::<u16>(stream, iter.next(), "round_complete")?,
-            player_1: read_value::<u16>(stream, iter.next(), "player_1")?,
-            player_1_damage: read_value::<u16>(stream, iter.next(), "player_1_damage")?,
+            panel_style: read_value::<
+                u8,
+            >(stream, definition.get_entry("panel_style"), "panel_style")?,
+            winning_team: read_value::<
+                u8,
+            >(stream, definition.get_entry("winning_team"), "winning_team")?,
+            win_reason: read_value::<
+                u8,
+            >(stream, definition.get_entry("winreason"), "win_reason")?,
+            cappers: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("cappers"), "cappers")?,
+            flag_cap_limit: read_value::<
+                u16,
+            >(stream, definition.get_entry("flagcaplimit"), "flag_cap_limit")?,
+            blue_score: read_value::<
+                u16,
+            >(stream, definition.get_entry("blue_score"), "blue_score")?,
+            red_score: read_value::<
+                u16,
+            >(stream, definition.get_entry("red_score"), "red_score")?,
+            blue_score_prev: read_value::<
+                u16,
+            >(stream, definition.get_entry("blue_score_prev"), "blue_score_prev")?,
+            red_score_prev: read_value::<
+                u16,
+            >(stream, definition.get_entry("red_score_prev"), "red_score_prev")?,
+            round_complete: read_value::<
+                u16,
+            >(stream, definition.get_entry("round_complete"), "round_complete")?,
+            player_1: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_1"), "player_1")?,
+            player_1_damage: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_1_damage"), "player_1_damage")?,
             player_1_healing: read_value::<
                 u16,
-            >(stream, iter.next(), "player_1_healing")?,
+            >(stream, definition.get_entry("player_1_healing"), "player_1_healing")?,
             player_1_lifetime: read_value::<
                 u16,
-            >(stream, iter.next(), "player_1_lifetime")?,
-            player_1_kills: read_value::<u16>(stream, iter.next(), "player_1_kills")?,
-            player_2: read_value::<u16>(stream, iter.next(), "player_2")?,
-            player_2_damage: read_value::<u16>(stream, iter.next(), "player_2_damage")?,
+            >(stream, definition.get_entry("player_1_lifetime"), "player_1_lifetime")?,
+            player_1_kills: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_1_kills"), "player_1_kills")?,
+            player_2: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_2"), "player_2")?,
+            player_2_damage: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_2_damage"), "player_2_damage")?,
             player_2_healing: read_value::<
                 u16,
-            >(stream, iter.next(), "player_2_healing")?,
+            >(stream, definition.get_entry("player_2_healing"), "player_2_healing")?,
             player_2_lifetime: read_value::<
                 u16,
-            >(stream, iter.next(), "player_2_lifetime")?,
-            player_2_kills: read_value::<u16>(stream, iter.next(), "player_2_kills")?,
-            player_3: read_value::<u16>(stream, iter.next(), "player_3")?,
-            player_3_damage: read_value::<u16>(stream, iter.next(), "player_3_damage")?,
+            >(stream, definition.get_entry("player_2_lifetime"), "player_2_lifetime")?,
+            player_2_kills: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_2_kills"), "player_2_kills")?,
+            player_3: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_3"), "player_3")?,
+            player_3_damage: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_3_damage"), "player_3_damage")?,
             player_3_healing: read_value::<
                 u16,
-            >(stream, iter.next(), "player_3_healing")?,
+            >(stream, definition.get_entry("player_3_healing"), "player_3_healing")?,
             player_3_lifetime: read_value::<
                 u16,
-            >(stream, iter.next(), "player_3_lifetime")?,
-            player_3_kills: read_value::<u16>(stream, iter.next(), "player_3_kills")?,
-            player_4: read_value::<u16>(stream, iter.next(), "player_4")?,
-            player_4_damage: read_value::<u16>(stream, iter.next(), "player_4_damage")?,
+            >(stream, definition.get_entry("player_3_lifetime"), "player_3_lifetime")?,
+            player_3_kills: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_3_kills"), "player_3_kills")?,
+            player_4: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_4"), "player_4")?,
+            player_4_damage: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_4_damage"), "player_4_damage")?,
             player_4_healing: read_value::<
                 u16,
-            >(stream, iter.next(), "player_4_healing")?,
+            >(stream, definition.get_entry("player_4_healing"), "player_4_healing")?,
             player_4_lifetime: read_value::<
                 u16,
-            >(stream, iter.next(), "player_4_lifetime")?,
-            player_4_kills: read_value::<u16>(stream, iter.next(), "player_4_kills")?,
-            player_5: read_value::<u16>(stream, iter.next(), "player_5")?,
-            player_5_damage: read_value::<u16>(stream, iter.next(), "player_5_damage")?,
+            >(stream, definition.get_entry("player_4_lifetime"), "player_4_lifetime")?,
+            player_4_kills: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_4_kills"), "player_4_kills")?,
+            player_5: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_5"), "player_5")?,
+            player_5_damage: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_5_damage"), "player_5_damage")?,
             player_5_healing: read_value::<
                 u16,
-            >(stream, iter.next(), "player_5_healing")?,
+            >(stream, definition.get_entry("player_5_healing"), "player_5_healing")?,
             player_5_lifetime: read_value::<
                 u16,
-            >(stream, iter.next(), "player_5_lifetime")?,
-            player_5_kills: read_value::<u16>(stream, iter.next(), "player_5_kills")?,
-            player_6: read_value::<u16>(stream, iter.next(), "player_6")?,
-            player_6_damage: read_value::<u16>(stream, iter.next(), "player_6_damage")?,
+            >(stream, definition.get_entry("player_5_lifetime"), "player_5_lifetime")?,
+            player_5_kills: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_5_kills"), "player_5_kills")?,
+            player_6: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_6"), "player_6")?,
+            player_6_damage: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_6_damage"), "player_6_damage")?,
             player_6_healing: read_value::<
                 u16,
-            >(stream, iter.next(), "player_6_healing")?,
+            >(stream, definition.get_entry("player_6_healing"), "player_6_healing")?,
             player_6_lifetime: read_value::<
                 u16,
-            >(stream, iter.next(), "player_6_lifetime")?,
-            player_6_kills: read_value::<u16>(stream, iter.next(), "player_6_kills")?,
+            >(stream, definition.get_entry("player_6_lifetime"), "player_6_lifetime")?,
+            player_6_kills: read_value::<
+                u16,
+            >(stream, definition.get_entry("player_6_kills"), "player_6_kills")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "panel_style" => Ok(self.panel_style.clone().into()),
+            "winning_team" => Ok(self.winning_team.clone().into()),
+            "winreason" => Ok(self.win_reason.clone().into()),
+            "cappers" => Ok(self.cappers.clone().into()),
+            "flagcaplimit" => Ok(self.flag_cap_limit.clone().into()),
+            "blue_score" => Ok(self.blue_score.clone().into()),
+            "red_score" => Ok(self.red_score.clone().into()),
+            "blue_score_prev" => Ok(self.blue_score_prev.clone().into()),
+            "red_score_prev" => Ok(self.red_score_prev.clone().into()),
+            "round_complete" => Ok(self.round_complete.clone().into()),
+            "player_1" => Ok(self.player_1.clone().into()),
+            "player_1_damage" => Ok(self.player_1_damage.clone().into()),
+            "player_1_healing" => Ok(self.player_1_healing.clone().into()),
+            "player_1_lifetime" => Ok(self.player_1_lifetime.clone().into()),
+            "player_1_kills" => Ok(self.player_1_kills.clone().into()),
+            "player_2" => Ok(self.player_2.clone().into()),
+            "player_2_damage" => Ok(self.player_2_damage.clone().into()),
+            "player_2_healing" => Ok(self.player_2_healing.clone().into()),
+            "player_2_lifetime" => Ok(self.player_2_lifetime.clone().into()),
+            "player_2_kills" => Ok(self.player_2_kills.clone().into()),
+            "player_3" => Ok(self.player_3.clone().into()),
+            "player_3_damage" => Ok(self.player_3_damage.clone().into()),
+            "player_3_healing" => Ok(self.player_3_healing.clone().into()),
+            "player_3_lifetime" => Ok(self.player_3_lifetime.clone().into()),
+            "player_3_kills" => Ok(self.player_3_kills.clone().into()),
+            "player_4" => Ok(self.player_4.clone().into()),
+            "player_4_damage" => Ok(self.player_4_damage.clone().into()),
+            "player_4_healing" => Ok(self.player_4_healing.clone().into()),
+            "player_4_lifetime" => Ok(self.player_4_lifetime.clone().into()),
+            "player_4_kills" => Ok(self.player_4_kills.clone().into()),
+            "player_5" => Ok(self.player_5.clone().into()),
+            "player_5_damage" => Ok(self.player_5_damage.clone().into()),
+            "player_5_healing" => Ok(self.player_5_healing.clone().into()),
+            "player_5_lifetime" => Ok(self.player_5_lifetime.clone().into()),
+            "player_5_kills" => Ok(self.player_5_kills.clone().into()),
+            "player_6" => Ok(self.player_6.clone().into()),
+            "player_6_damage" => Ok(self.player_6_damage.clone().into()),
+            "player_6_healing" => Ok(self.player_6_healing.clone().into()),
+            "player_6_lifetime" => Ok(self.player_6_lifetime.clone().into()),
+            "player_6_kills" => Ok(self.player_6_kills.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ArenaWinPanel",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PveWinPanelEvent {
     pub panel_style: u8,
     pub winning_team: u8,
@@ -2887,58 +8064,166 @@ pub struct PveWinPanelEvent {
 impl PveWinPanelEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PveWinPanelEvent {
-            panel_style: read_value::<u8>(stream, iter.next(), "panel_style")?,
-            winning_team: read_value::<u8>(stream, iter.next(), "winning_team")?,
-            win_reason: read_value::<u8>(stream, iter.next(), "win_reason")?,
+            panel_style: read_value::<
+                u8,
+            >(stream, definition.get_entry("panel_style"), "panel_style")?,
+            winning_team: read_value::<
+                u8,
+            >(stream, definition.get_entry("winning_team"), "winning_team")?,
+            win_reason: read_value::<
+                u8,
+            >(stream, definition.get_entry("winreason"), "win_reason")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "panel_style" => Ok(self.panel_style.clone().into()),
+            "winning_team" => Ok(self.winning_team.clone().into()),
+            "winreason" => Ok(self.win_reason.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PveWinPanel",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct AirDashEvent {
     pub player: u8,
 }
 impl AirDashEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(AirDashEvent {
-            player: read_value::<u8>(stream, iter.next(), "player")?,
+            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "AirDash",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct LandedEvent {
     pub player: u8,
 }
 impl LandedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(LandedEvent {
-            player: read_value::<u8>(stream, iter.next(), "player")?,
+            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "Landed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerDamageDodgedEvent {
     pub damage: u16,
 }
 impl PlayerDamageDodgedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerDamageDodgedEvent {
-            damage: read_value::<u16>(stream, iter.next(), "damage")?,
+            damage: read_value::<u16>(stream, definition.get_entry("damage"), "damage")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "damage" => Ok(self.damage.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerDamageDodged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerStunnedEvent {
     pub stunner: u16,
     pub victim: u16,
@@ -2948,17 +8233,51 @@ pub struct PlayerStunnedEvent {
 impl PlayerStunnedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerStunnedEvent {
-            stunner: read_value::<u16>(stream, iter.next(), "stunner")?,
-            victim: read_value::<u16>(stream, iter.next(), "victim")?,
-            victim_capping: read_value::<bool>(stream, iter.next(), "victim_capping")?,
-            big_stun: read_value::<bool>(stream, iter.next(), "big_stun")?,
+            stunner: read_value::<
+                u16,
+            >(stream, definition.get_entry("stunner"), "stunner")?,
+            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
+            victim_capping: read_value::<
+                bool,
+            >(stream, definition.get_entry("victim_capping"), "victim_capping")?,
+            big_stun: read_value::<
+                bool,
+            >(stream, definition.get_entry("big_stun"), "big_stun")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "stunner" => Ok(self.stunner.clone().into()),
+            "victim" => Ok(self.victim.clone().into()),
+            "victim_capping" => Ok(self.victim_capping.clone().into()),
+            "big_stun" => Ok(self.big_stun.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerStunned",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ScoutGrandSlamEvent {
     pub scout_id: u16,
     pub target_id: u16,
@@ -2966,15 +8285,45 @@ pub struct ScoutGrandSlamEvent {
 impl ScoutGrandSlamEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ScoutGrandSlamEvent {
-            scout_id: read_value::<u16>(stream, iter.next(), "scout_id")?,
-            target_id: read_value::<u16>(stream, iter.next(), "target_id")?,
+            scout_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("scout_id"), "scout_id")?,
+            target_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("target_id"), "target_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "scout_id" => Ok(self.scout_id.clone().into()),
+            "target_id" => Ok(self.target_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ScoutGrandSlam",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ScoutSlamdollLandedEvent {
     pub target_index: u16,
     pub x: f32,
@@ -2984,17 +8333,47 @@ pub struct ScoutSlamdollLandedEvent {
 impl ScoutSlamdollLandedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ScoutSlamdollLandedEvent {
-            target_index: read_value::<u16>(stream, iter.next(), "target_index")?,
-            x: read_value::<f32>(stream, iter.next(), "x")?,
-            y: read_value::<f32>(stream, iter.next(), "y")?,
-            z: read_value::<f32>(stream, iter.next(), "z")?,
+            target_index: read_value::<
+                u16,
+            >(stream, definition.get_entry("target_index"), "target_index")?,
+            x: read_value::<f32>(stream, definition.get_entry("x"), "x")?,
+            y: read_value::<f32>(stream, definition.get_entry("y"), "y")?,
+            z: read_value::<f32>(stream, definition.get_entry("z"), "z")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "target_index" => Ok(self.target_index.clone().into()),
+            "x" => Ok(self.x.clone().into()),
+            "y" => Ok(self.y.clone().into()),
+            "z" => Ok(self.z.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ScoutSlamdollLanded",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ArrowImpactEvent {
     pub attached_entity: u16,
     pub shooter: u16,
@@ -3011,26 +8390,81 @@ pub struct ArrowImpactEvent {
 impl ArrowImpactEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ArrowImpactEvent {
-            attached_entity: read_value::<u16>(stream, iter.next(), "attached_entity")?,
-            shooter: read_value::<u16>(stream, iter.next(), "shooter")?,
+            attached_entity: read_value::<
+                u16,
+            >(stream, definition.get_entry("attachedEntity"), "attached_entity")?,
+            shooter: read_value::<
+                u16,
+            >(stream, definition.get_entry("shooter"), "shooter")?,
             bone_index_attached: read_value::<
                 u16,
-            >(stream, iter.next(), "bone_index_attached")?,
-            bone_position_x: read_value::<f32>(stream, iter.next(), "bone_position_x")?,
-            bone_position_y: read_value::<f32>(stream, iter.next(), "bone_position_y")?,
-            bone_position_z: read_value::<f32>(stream, iter.next(), "bone_position_z")?,
-            bone_angles_x: read_value::<f32>(stream, iter.next(), "bone_angles_x")?,
-            bone_angles_y: read_value::<f32>(stream, iter.next(), "bone_angles_y")?,
-            bone_angles_z: read_value::<f32>(stream, iter.next(), "bone_angles_z")?,
-            projectile_type: read_value::<u16>(stream, iter.next(), "projectile_type")?,
-            is_crit: read_value::<bool>(stream, iter.next(), "is_crit")?,
+            >(stream, definition.get_entry("boneIndexAttached"), "bone_index_attached")?,
+            bone_position_x: read_value::<
+                f32,
+            >(stream, definition.get_entry("bonePositionX"), "bone_position_x")?,
+            bone_position_y: read_value::<
+                f32,
+            >(stream, definition.get_entry("bonePositionY"), "bone_position_y")?,
+            bone_position_z: read_value::<
+                f32,
+            >(stream, definition.get_entry("bonePositionZ"), "bone_position_z")?,
+            bone_angles_x: read_value::<
+                f32,
+            >(stream, definition.get_entry("boneAnglesX"), "bone_angles_x")?,
+            bone_angles_y: read_value::<
+                f32,
+            >(stream, definition.get_entry("boneAnglesY"), "bone_angles_y")?,
+            bone_angles_z: read_value::<
+                f32,
+            >(stream, definition.get_entry("boneAnglesZ"), "bone_angles_z")?,
+            projectile_type: read_value::<
+                u16,
+            >(stream, definition.get_entry("projectileType"), "projectile_type")?,
+            is_crit: read_value::<
+                bool,
+            >(stream, definition.get_entry("isCrit"), "is_crit")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "attachedEntity" => Ok(self.attached_entity.clone().into()),
+            "shooter" => Ok(self.shooter.clone().into()),
+            "boneIndexAttached" => Ok(self.bone_index_attached.clone().into()),
+            "bonePositionX" => Ok(self.bone_position_x.clone().into()),
+            "bonePositionY" => Ok(self.bone_position_y.clone().into()),
+            "bonePositionZ" => Ok(self.bone_position_z.clone().into()),
+            "boneAnglesX" => Ok(self.bone_angles_x.clone().into()),
+            "boneAnglesY" => Ok(self.bone_angles_y.clone().into()),
+            "boneAnglesZ" => Ok(self.bone_angles_z.clone().into()),
+            "projectileType" => Ok(self.projectile_type.clone().into()),
+            "isCrit" => Ok(self.is_crit.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ArrowImpact",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerJaratedEvent {
     pub thrower_ent_index: u8,
     pub victim_ent_index: u8,
@@ -3038,17 +8472,45 @@ pub struct PlayerJaratedEvent {
 impl PlayerJaratedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerJaratedEvent {
             thrower_ent_index: read_value::<
                 u8,
-            >(stream, iter.next(), "thrower_ent_index")?,
-            victim_ent_index: read_value::<u8>(stream, iter.next(), "victim_ent_index")?,
+            >(stream, definition.get_entry("thrower_entindex"), "thrower_ent_index")?,
+            victim_ent_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("victim_entindex"), "victim_ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "thrower_entindex" => Ok(self.thrower_ent_index.clone().into()),
+            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerJarated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerJaratedFadeEvent {
     pub thrower_ent_index: u8,
     pub victim_ent_index: u8,
@@ -3056,17 +8518,45 @@ pub struct PlayerJaratedFadeEvent {
 impl PlayerJaratedFadeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerJaratedFadeEvent {
             thrower_ent_index: read_value::<
                 u8,
-            >(stream, iter.next(), "thrower_ent_index")?,
-            victim_ent_index: read_value::<u8>(stream, iter.next(), "victim_ent_index")?,
+            >(stream, definition.get_entry("thrower_entindex"), "thrower_ent_index")?,
+            victim_ent_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("victim_entindex"), "victim_ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "thrower_entindex" => Ok(self.thrower_ent_index.clone().into()),
+            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerJaratedFade",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerShieldBlockedEvent {
     pub attacker_ent_index: u8,
     pub blocker_ent_index: u8,
@@ -3074,47 +8564,123 @@ pub struct PlayerShieldBlockedEvent {
 impl PlayerShieldBlockedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerShieldBlockedEvent {
             attacker_ent_index: read_value::<
                 u8,
-            >(stream, iter.next(), "attacker_ent_index")?,
+            >(stream, definition.get_entry("attacker_entindex"), "attacker_ent_index")?,
             blocker_ent_index: read_value::<
                 u8,
-            >(stream, iter.next(), "blocker_ent_index")?,
+            >(stream, definition.get_entry("blocker_entindex"), "blocker_ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "attacker_entindex" => Ok(self.attacker_ent_index.clone().into()),
+            "blocker_entindex" => Ok(self.blocker_ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerShieldBlocked",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerPinnedEvent {
     pub pinned: u8,
 }
 impl PlayerPinnedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerPinnedEvent {
-            pinned: read_value::<u8>(stream, iter.next(), "pinned")?,
+            pinned: read_value::<u8>(stream, definition.get_entry("pinned"), "pinned")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "pinned" => Ok(self.pinned.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerPinned",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerHealedByMedicEvent {
     pub medic: u8,
 }
 impl PlayerHealedByMedicEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerHealedByMedicEvent {
-            medic: read_value::<u8>(stream, iter.next(), "medic")?,
+            medic: read_value::<u8>(stream, definition.get_entry("medic"), "medic")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "medic" => Ok(self.medic.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerHealedByMedic",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerSappedObjectEvent {
     pub user_id: u16,
     pub owner_id: u16,
@@ -3124,17 +8690,51 @@ pub struct PlayerSappedObjectEvent {
 impl PlayerSappedObjectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerSappedObjectEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            owner_id: read_value::<u16>(stream, iter.next(), "owner_id")?,
-            object: read_value::<u8>(stream, iter.next(), "object")?,
-            sapper_id: read_value::<u16>(stream, iter.next(), "sapper_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            owner_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("ownerid"), "owner_id")?,
+            object: read_value::<u8>(stream, definition.get_entry("object"), "object")?,
+            sapper_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("sapperid"), "sapper_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "ownerid" => Ok(self.owner_id.clone().into()),
+            "object" => Ok(self.object.clone().into()),
+            "sapperid" => Ok(self.sapper_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerSappedObject",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ItemFoundEvent {
     pub player: u8,
     pub quality: u8,
@@ -3147,20 +8747,59 @@ pub struct ItemFoundEvent {
 impl ItemFoundEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ItemFoundEvent {
-            player: read_value::<u8>(stream, iter.next(), "player")?,
-            quality: read_value::<u8>(stream, iter.next(), "quality")?,
-            method: read_value::<u8>(stream, iter.next(), "method")?,
-            item_def: read_value::<u32>(stream, iter.next(), "item_def")?,
-            is_strange: read_value::<u8>(stream, iter.next(), "is_strange")?,
-            is_unusual: read_value::<u8>(stream, iter.next(), "is_unusual")?,
-            wear: read_value::<f32>(stream, iter.next(), "wear")?,
+            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
+            quality: read_value::<
+                u8,
+            >(stream, definition.get_entry("quality"), "quality")?,
+            method: read_value::<u8>(stream, definition.get_entry("method"), "method")?,
+            item_def: read_value::<
+                u32,
+            >(stream, definition.get_entry("itemdef"), "item_def")?,
+            is_strange: read_value::<
+                u8,
+            >(stream, definition.get_entry("isstrange"), "is_strange")?,
+            is_unusual: read_value::<
+                u8,
+            >(stream, definition.get_entry("isunusual"), "is_unusual")?,
+            wear: read_value::<f32>(stream, definition.get_entry("wear"), "wear")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "quality" => Ok(self.quality.clone().into()),
+            "method" => Ok(self.method.clone().into()),
+            "itemdef" => Ok(self.item_def.clone().into()),
+            "isstrange" => Ok(self.is_strange.clone().into()),
+            "isunusual" => Ok(self.is_unusual.clone().into()),
+            "wear" => Ok(self.wear.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ItemFound",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ShowAnnotationEvent {
     pub world_pos_x: f32,
     pub world_pos_y: f32,
@@ -3180,61 +8819,175 @@ pub struct ShowAnnotationEvent {
 impl ShowAnnotationEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ShowAnnotationEvent {
-            world_pos_x: read_value::<f32>(stream, iter.next(), "world_pos_x")?,
-            world_pos_y: read_value::<f32>(stream, iter.next(), "world_pos_y")?,
-            world_pos_z: read_value::<f32>(stream, iter.next(), "world_pos_z")?,
-            world_normal_x: read_value::<f32>(stream, iter.next(), "world_normal_x")?,
-            world_normal_y: read_value::<f32>(stream, iter.next(), "world_normal_y")?,
-            world_normal_z: read_value::<f32>(stream, iter.next(), "world_normal_z")?,
-            id: read_value::<u32>(stream, iter.next(), "id")?,
-            text: read_value::<MaybeUtf8String>(stream, iter.next(), "text")?,
-            lifetime: read_value::<f32>(stream, iter.next(), "lifetime")?,
+            world_pos_x: read_value::<
+                f32,
+            >(stream, definition.get_entry("worldPosX"), "world_pos_x")?,
+            world_pos_y: read_value::<
+                f32,
+            >(stream, definition.get_entry("worldPosY"), "world_pos_y")?,
+            world_pos_z: read_value::<
+                f32,
+            >(stream, definition.get_entry("worldPosZ"), "world_pos_z")?,
+            world_normal_x: read_value::<
+                f32,
+            >(stream, definition.get_entry("worldNormalX"), "world_normal_x")?,
+            world_normal_y: read_value::<
+                f32,
+            >(stream, definition.get_entry("worldNormalY"), "world_normal_y")?,
+            world_normal_z: read_value::<
+                f32,
+            >(stream, definition.get_entry("worldNormalZ"), "world_normal_z")?,
+            id: read_value::<u32>(stream, definition.get_entry("id"), "id")?,
+            text: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("text"), "text")?,
+            lifetime: read_value::<
+                f32,
+            >(stream, definition.get_entry("lifetime"), "lifetime")?,
             visibility_bit_field: read_value::<
                 u32,
-            >(stream, iter.next(), "visibility_bit_field")?,
+            >(
+                stream,
+                definition.get_entry("visibilityBitfield"),
+                "visibility_bit_field",
+            )?,
             follow_ent_index: read_value::<
                 u32,
-            >(stream, iter.next(), "follow_ent_index")?,
-            show_distance: read_value::<bool>(stream, iter.next(), "show_distance")?,
+            >(stream, definition.get_entry("follow_entindex"), "follow_ent_index")?,
+            show_distance: read_value::<
+                bool,
+            >(stream, definition.get_entry("show_distance"), "show_distance")?,
             play_sound: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "play_sound")?,
-            show_effect: read_value::<bool>(stream, iter.next(), "show_effect")?,
+            >(stream, definition.get_entry("play_sound"), "play_sound")?,
+            show_effect: read_value::<
+                bool,
+            >(stream, definition.get_entry("show_effect"), "show_effect")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "worldPosX" => Ok(self.world_pos_x.clone().into()),
+            "worldPosY" => Ok(self.world_pos_y.clone().into()),
+            "worldPosZ" => Ok(self.world_pos_z.clone().into()),
+            "worldNormalX" => Ok(self.world_normal_x.clone().into()),
+            "worldNormalY" => Ok(self.world_normal_y.clone().into()),
+            "worldNormalZ" => Ok(self.world_normal_z.clone().into()),
+            "id" => Ok(self.id.clone().into()),
+            "text" => Ok(self.text.clone().into()),
+            "lifetime" => Ok(self.lifetime.clone().into()),
+            "visibilityBitfield" => Ok(self.visibility_bit_field.clone().into()),
+            "follow_entindex" => Ok(self.follow_ent_index.clone().into()),
+            "show_distance" => Ok(self.show_distance.clone().into()),
+            "play_sound" => Ok(self.play_sound.clone().into()),
+            "show_effect" => Ok(self.show_effect.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ShowAnnotation",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HideAnnotationEvent {
     pub id: u32,
 }
 impl HideAnnotationEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HideAnnotationEvent {
-            id: read_value::<u32>(stream, iter.next(), "id")?,
+            id: read_value::<u32>(stream, definition.get_entry("id"), "id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "id" => Ok(self.id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HideAnnotation",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PostInventoryApplicationEvent {
     pub user_id: u16,
 }
 impl PostInventoryApplicationEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PostInventoryApplicationEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PostInventoryApplication",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ControlPointUnlockUpdatedEvent {
     pub index: u16,
     pub time: f32,
@@ -3242,15 +8995,41 @@ pub struct ControlPointUnlockUpdatedEvent {
 impl ControlPointUnlockUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ControlPointUnlockUpdatedEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
-            time: read_value::<f32>(stream, iter.next(), "time")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            time: read_value::<f32>(stream, definition.get_entry("time"), "time")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            "time" => Ok(self.time.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ControlPointUnlockUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct DeployBuffBannerEvent {
     pub buff_type: u8,
     pub buff_owner: u16,
@@ -3258,15 +9037,45 @@ pub struct DeployBuffBannerEvent {
 impl DeployBuffBannerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(DeployBuffBannerEvent {
-            buff_type: read_value::<u8>(stream, iter.next(), "buff_type")?,
-            buff_owner: read_value::<u16>(stream, iter.next(), "buff_owner")?,
+            buff_type: read_value::<
+                u8,
+            >(stream, definition.get_entry("buff_type"), "buff_type")?,
+            buff_owner: read_value::<
+                u16,
+            >(stream, definition.get_entry("buff_owner"), "buff_owner")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "buff_type" => Ok(self.buff_type.clone().into()),
+            "buff_owner" => Ok(self.buff_owner.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "DeployBuffBanner",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerBuffEvent {
     pub user_id: u16,
     pub buff_owner: u16,
@@ -3275,16 +9084,49 @@ pub struct PlayerBuffEvent {
 impl PlayerBuffEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerBuffEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            buff_owner: read_value::<u16>(stream, iter.next(), "buff_owner")?,
-            buff_type: read_value::<u8>(stream, iter.next(), "buff_type")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            buff_owner: read_value::<
+                u16,
+            >(stream, definition.get_entry("buff_owner"), "buff_owner")?,
+            buff_type: read_value::<
+                u8,
+            >(stream, definition.get_entry("buff_type"), "buff_type")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "buff_owner" => Ok(self.buff_owner.clone().into()),
+            "buff_type" => Ok(self.buff_type.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerBuff",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MedicDeathEvent {
     pub user_id: u16,
     pub attacker: u16,
@@ -3294,49 +9136,162 @@ pub struct MedicDeathEvent {
 impl MedicDeathEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MedicDeathEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            attacker: read_value::<u16>(stream, iter.next(), "attacker")?,
-            healing: read_value::<u16>(stream, iter.next(), "healing")?,
-            charged: read_value::<bool>(stream, iter.next(), "charged")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            attacker: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
+            healing: read_value::<
+                u16,
+            >(stream, definition.get_entry("healing"), "healing")?,
+            charged: read_value::<
+                bool,
+            >(stream, definition.get_entry("charged"), "charged")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "attacker" => Ok(self.attacker.clone().into()),
+            "healing" => Ok(self.healing.clone().into()),
+            "charged" => Ok(self.charged.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MedicDeath",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct OvertimeNagEvent {}
 impl OvertimeNagEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(OvertimeNagEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "OvertimeNag",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamsChangedEvent {}
 impl TeamsChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamsChangedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamsChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HalloweenPumpkinGrabEvent {
     pub user_id: u16,
 }
 impl HalloweenPumpkinGrabEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HalloweenPumpkinGrabEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HalloweenPumpkinGrab",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RocketJumpEvent {
     pub user_id: u16,
     pub play_sound: bool,
@@ -3344,29 +9299,86 @@ pub struct RocketJumpEvent {
 impl RocketJumpEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RocketJumpEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            play_sound: read_value::<bool>(stream, iter.next(), "play_sound")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            play_sound: read_value::<
+                bool,
+            >(stream, definition.get_entry("playsound"), "play_sound")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "playsound" => Ok(self.play_sound.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RocketJump",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RocketJumpLandedEvent {
     pub user_id: u16,
 }
 impl RocketJumpLandedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RocketJumpLandedEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RocketJumpLanded",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct StickyJumpEvent {
     pub user_id: u16,
     pub play_sound: bool,
@@ -3374,29 +9386,86 @@ pub struct StickyJumpEvent {
 impl StickyJumpEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(StickyJumpEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            play_sound: read_value::<bool>(stream, iter.next(), "play_sound")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            play_sound: read_value::<
+                bool,
+            >(stream, definition.get_entry("playsound"), "play_sound")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "playsound" => Ok(self.play_sound.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "StickyJump",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct StickyJumpLandedEvent {
     pub user_id: u16,
 }
 impl StickyJumpLandedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(StickyJumpLandedEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "StickyJumpLanded",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RocketPackLaunchEvent {
     pub user_id: u16,
     pub play_sound: bool,
@@ -3404,29 +9473,86 @@ pub struct RocketPackLaunchEvent {
 impl RocketPackLaunchEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RocketPackLaunchEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            play_sound: read_value::<bool>(stream, iter.next(), "play_sound")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            play_sound: read_value::<
+                bool,
+            >(stream, definition.get_entry("playsound"), "play_sound")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "playsound" => Ok(self.play_sound.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RocketPackLaunch",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RocketPackLandedEvent {
     pub user_id: u16,
 }
 impl RocketPackLandedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RocketPackLandedEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RocketPackLanded",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MedicDefendedEvent {
     pub user_id: u16,
     pub medic: u16,
@@ -3434,43 +9560,123 @@ pub struct MedicDefendedEvent {
 impl MedicDefendedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MedicDefendedEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            medic: read_value::<u16>(stream, iter.next(), "medic")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            medic: read_value::<u16>(stream, definition.get_entry("medic"), "medic")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "medic" => Ok(self.medic.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MedicDefended",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct LocalPlayerHealedEvent {
     pub amount: u16,
 }
 impl LocalPlayerHealedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(LocalPlayerHealedEvent {
-            amount: read_value::<u16>(stream, iter.next(), "amount")?,
+            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "amount" => Ok(self.amount.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "LocalPlayerHealed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerDestroyedPipeBombEvent {
     pub user_id: u16,
 }
 impl PlayerDestroyedPipeBombEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerDestroyedPipeBombEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerDestroyedPipeBomb",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ObjectDeflectedEvent {
     pub user_id: u16,
     pub owner_id: u16,
@@ -3480,49 +9686,160 @@ pub struct ObjectDeflectedEvent {
 impl ObjectDeflectedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ObjectDeflectedEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            owner_id: read_value::<u16>(stream, iter.next(), "owner_id")?,
-            weapon_id: read_value::<u16>(stream, iter.next(), "weapon_id")?,
-            object_ent_index: read_value::<u16>(stream, iter.next(), "object_ent_index")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            owner_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("ownerid"), "owner_id")?,
+            weapon_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            object_ent_index: read_value::<
+                u16,
+            >(stream, definition.get_entry("object_entindex"), "object_ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "ownerid" => Ok(self.owner_id.clone().into()),
+            "weaponid" => Ok(self.weapon_id.clone().into()),
+            "object_entindex" => Ok(self.object_ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ObjectDeflected",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerMvpEvent {
     pub player: u16,
 }
 impl PlayerMvpEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerMvpEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerMvp",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RaidSpawnMobEvent {}
 impl RaidSpawnMobEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RaidSpawnMobEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RaidSpawnMob",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RaidSpawnSquadEvent {}
 impl RaidSpawnSquadEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RaidSpawnSquadEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RaidSpawnSquad",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct NavBlockedEvent {
     pub area: u32,
     pub blocked: bool,
@@ -3530,29 +9847,82 @@ pub struct NavBlockedEvent {
 impl NavBlockedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(NavBlockedEvent {
-            area: read_value::<u32>(stream, iter.next(), "area")?,
-            blocked: read_value::<bool>(stream, iter.next(), "blocked")?,
+            area: read_value::<u32>(stream, definition.get_entry("area"), "area")?,
+            blocked: read_value::<
+                bool,
+            >(stream, definition.get_entry("blocked"), "blocked")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "area" => Ok(self.area.clone().into()),
+            "blocked" => Ok(self.blocked.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "NavBlocked",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PathTrackPassedEvent {
     pub index: u16,
 }
 impl PathTrackPassedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PathTrackPassedEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PathTrackPassed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct NumCappersChangedEvent {
     pub index: u16,
     pub count: u8,
@@ -3560,24 +9930,75 @@ pub struct NumCappersChangedEvent {
 impl NumCappersChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(NumCappersChangedEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
-            count: read_value::<u8>(stream, iter.next(), "count")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            count: read_value::<u8>(stream, definition.get_entry("count"), "count")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            "count" => Ok(self.count.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "NumCappersChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerRegenerateEvent {}
 impl PlayerRegenerateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerRegenerateEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerRegenerate",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct UpdateStatusItemEvent {
     pub index: u8,
     pub object: u8,
@@ -3585,24 +10006,75 @@ pub struct UpdateStatusItemEvent {
 impl UpdateStatusItemEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(UpdateStatusItemEvent {
-            index: read_value::<u8>(stream, iter.next(), "index")?,
-            object: read_value::<u8>(stream, iter.next(), "object")?,
+            index: read_value::<u8>(stream, definition.get_entry("index"), "index")?,
+            object: read_value::<u8>(stream, definition.get_entry("object"), "object")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            "object" => Ok(self.object.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "UpdateStatusItem",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct StatsResetRoundEvent {}
 impl StatsResetRoundEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(StatsResetRoundEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "StatsResetRound",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ScoreStatsAccumulatedUpdateEvent {}
 impl ScoreStatsAccumulatedUpdateEvent {
     #[allow(unused_variables)]
@@ -3610,32 +10082,109 @@ impl ScoreStatsAccumulatedUpdateEvent {
         Ok(ScoreStatsAccumulatedUpdateEvent {
         })
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ScoreStatsAccumulatedUpdate",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ScoreStatsAccumulatedResetEvent {}
 impl ScoreStatsAccumulatedResetEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ScoreStatsAccumulatedResetEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ScoreStatsAccumulatedReset",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct AchievementEarnedLocalEvent {
     pub achievement: u16,
 }
 impl AchievementEarnedLocalEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(AchievementEarnedLocalEvent {
-            achievement: read_value::<u16>(stream, iter.next(), "achievement")?,
+            achievement: read_value::<
+                u16,
+            >(stream, definition.get_entry("achievement"), "achievement")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "achievement" => Ok(self.achievement.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "AchievementEarnedLocal",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerHealedEvent {
     pub patient: u16,
     pub healer: u16,
@@ -3644,16 +10193,45 @@ pub struct PlayerHealedEvent {
 impl PlayerHealedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerHealedEvent {
-            patient: read_value::<u16>(stream, iter.next(), "patient")?,
-            healer: read_value::<u16>(stream, iter.next(), "healer")?,
-            amount: read_value::<u16>(stream, iter.next(), "amount")?,
+            patient: read_value::<
+                u16,
+            >(stream, definition.get_entry("patient"), "patient")?,
+            healer: read_value::<u16>(stream, definition.get_entry("healer"), "healer")?,
+            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "patient" => Ok(self.patient.clone().into()),
+            "healer" => Ok(self.healer.clone().into()),
+            "amount" => Ok(self.amount.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerHealed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct BuildingHealedEvent {
     pub building: u16,
     pub healer: u16,
@@ -3662,16 +10240,45 @@ pub struct BuildingHealedEvent {
 impl BuildingHealedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(BuildingHealedEvent {
-            building: read_value::<u16>(stream, iter.next(), "building")?,
-            healer: read_value::<u16>(stream, iter.next(), "healer")?,
-            amount: read_value::<u16>(stream, iter.next(), "amount")?,
+            building: read_value::<
+                u16,
+            >(stream, definition.get_entry("building"), "building")?,
+            healer: read_value::<u16>(stream, definition.get_entry("healer"), "healer")?,
+            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "building" => Ok(self.building.clone().into()),
+            "healer" => Ok(self.healer.clone().into()),
+            "amount" => Ok(self.amount.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "BuildingHealed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ItemPickupEvent {
     pub user_id: u16,
     pub item: MaybeUtf8String,
@@ -3679,15 +10286,45 @@ pub struct ItemPickupEvent {
 impl ItemPickupEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ItemPickupEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            item: read_value::<MaybeUtf8String>(stream, iter.next(), "item")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            item: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("item"), "item")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "item" => Ok(self.item.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ItemPickup",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct DuelStatusEvent {
     pub killer: u16,
     pub score_type: u16,
@@ -3699,19 +10336,57 @@ pub struct DuelStatusEvent {
 impl DuelStatusEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(DuelStatusEvent {
-            killer: read_value::<u16>(stream, iter.next(), "killer")?,
-            score_type: read_value::<u16>(stream, iter.next(), "score_type")?,
-            initiator: read_value::<u16>(stream, iter.next(), "initiator")?,
-            target: read_value::<u16>(stream, iter.next(), "target")?,
-            initiator_score: read_value::<u16>(stream, iter.next(), "initiator_score")?,
-            target_score: read_value::<u16>(stream, iter.next(), "target_score")?,
+            killer: read_value::<u16>(stream, definition.get_entry("killer"), "killer")?,
+            score_type: read_value::<
+                u16,
+            >(stream, definition.get_entry("score_type"), "score_type")?,
+            initiator: read_value::<
+                u16,
+            >(stream, definition.get_entry("initiator"), "initiator")?,
+            target: read_value::<u16>(stream, definition.get_entry("target"), "target")?,
+            initiator_score: read_value::<
+                u16,
+            >(stream, definition.get_entry("initiator_score"), "initiator_score")?,
+            target_score: read_value::<
+                u16,
+            >(stream, definition.get_entry("target_score"), "target_score")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "killer" => Ok(self.killer.clone().into()),
+            "score_type" => Ok(self.score_type.clone().into()),
+            "initiator" => Ok(self.initiator.clone().into()),
+            "target" => Ok(self.target.clone().into()),
+            "initiator_score" => Ok(self.initiator_score.clone().into()),
+            "target_score" => Ok(self.target_score.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "DuelStatus",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct FishNoticeEvent {
     pub user_id: u16,
     pub victim_ent_index: u32,
@@ -3731,35 +10406,101 @@ pub struct FishNoticeEvent {
 impl FishNoticeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(FishNoticeEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
             victim_ent_index: read_value::<
                 u32,
-            >(stream, iter.next(), "victim_ent_index")?,
+            >(stream, definition.get_entry("victim_entindex"), "victim_ent_index")?,
             inflictor_ent_index: read_value::<
                 u32,
-            >(stream, iter.next(), "inflictor_ent_index")?,
-            attacker: read_value::<u16>(stream, iter.next(), "attacker")?,
-            weapon: read_value::<MaybeUtf8String>(stream, iter.next(), "weapon")?,
-            weapon_id: read_value::<u16>(stream, iter.next(), "weapon_id")?,
-            damage_bits: read_value::<u32>(stream, iter.next(), "damage_bits")?,
-            custom_kill: read_value::<u16>(stream, iter.next(), "custom_kill")?,
-            assister: read_value::<u16>(stream, iter.next(), "assister")?,
+            >(
+                stream,
+                definition.get_entry("inflictor_entindex"),
+                "inflictor_ent_index",
+            )?,
+            attacker: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
+            weapon: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("weapon"), "weapon")?,
+            weapon_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            damage_bits: read_value::<
+                u32,
+            >(stream, definition.get_entry("damagebits"), "damage_bits")?,
+            custom_kill: read_value::<
+                u16,
+            >(stream, definition.get_entry("customkill"), "custom_kill")?,
+            assister: read_value::<
+                u16,
+            >(stream, definition.get_entry("assister"), "assister")?,
             weapon_log_class_name: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "weapon_log_class_name")?,
-            stun_flags: read_value::<u16>(stream, iter.next(), "stun_flags")?,
-            death_flags: read_value::<u16>(stream, iter.next(), "death_flags")?,
-            silent_kill: read_value::<bool>(stream, iter.next(), "silent_kill")?,
+            >(
+                stream,
+                definition.get_entry("weapon_logclassname"),
+                "weapon_log_class_name",
+            )?,
+            stun_flags: read_value::<
+                u16,
+            >(stream, definition.get_entry("stun_flags"), "stun_flags")?,
+            death_flags: read_value::<
+                u16,
+            >(stream, definition.get_entry("death_flags"), "death_flags")?,
+            silent_kill: read_value::<
+                bool,
+            >(stream, definition.get_entry("silent_kill"), "silent_kill")?,
             assister_fallback: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "assister_fallback")?,
+            >(stream, definition.get_entry("assister_fallback"), "assister_fallback")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
+            "inflictor_entindex" => Ok(self.inflictor_ent_index.clone().into()),
+            "attacker" => Ok(self.attacker.clone().into()),
+            "weapon" => Ok(self.weapon.clone().into()),
+            "weaponid" => Ok(self.weapon_id.clone().into()),
+            "damagebits" => Ok(self.damage_bits.clone().into()),
+            "customkill" => Ok(self.custom_kill.clone().into()),
+            "assister" => Ok(self.assister.clone().into()),
+            "weapon_logclassname" => Ok(self.weapon_log_class_name.clone().into()),
+            "stun_flags" => Ok(self.stun_flags.clone().into()),
+            "death_flags" => Ok(self.death_flags.clone().into()),
+            "silent_kill" => Ok(self.silent_kill.clone().into()),
+            "assister_fallback" => Ok(self.assister_fallback.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "FishNotice",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct FishNoticeArmEvent {
     pub user_id: u16,
     pub victim_ent_index: u32,
@@ -3779,35 +10520,101 @@ pub struct FishNoticeArmEvent {
 impl FishNoticeArmEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(FishNoticeArmEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
             victim_ent_index: read_value::<
                 u32,
-            >(stream, iter.next(), "victim_ent_index")?,
+            >(stream, definition.get_entry("victim_entindex"), "victim_ent_index")?,
             inflictor_ent_index: read_value::<
                 u32,
-            >(stream, iter.next(), "inflictor_ent_index")?,
-            attacker: read_value::<u16>(stream, iter.next(), "attacker")?,
-            weapon: read_value::<MaybeUtf8String>(stream, iter.next(), "weapon")?,
-            weapon_id: read_value::<u16>(stream, iter.next(), "weapon_id")?,
-            damage_bits: read_value::<u32>(stream, iter.next(), "damage_bits")?,
-            custom_kill: read_value::<u16>(stream, iter.next(), "custom_kill")?,
-            assister: read_value::<u16>(stream, iter.next(), "assister")?,
+            >(
+                stream,
+                definition.get_entry("inflictor_entindex"),
+                "inflictor_ent_index",
+            )?,
+            attacker: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
+            weapon: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("weapon"), "weapon")?,
+            weapon_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            damage_bits: read_value::<
+                u32,
+            >(stream, definition.get_entry("damagebits"), "damage_bits")?,
+            custom_kill: read_value::<
+                u16,
+            >(stream, definition.get_entry("customkill"), "custom_kill")?,
+            assister: read_value::<
+                u16,
+            >(stream, definition.get_entry("assister"), "assister")?,
             weapon_log_class_name: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "weapon_log_class_name")?,
-            stun_flags: read_value::<u16>(stream, iter.next(), "stun_flags")?,
-            death_flags: read_value::<u16>(stream, iter.next(), "death_flags")?,
-            silent_kill: read_value::<bool>(stream, iter.next(), "silent_kill")?,
+            >(
+                stream,
+                definition.get_entry("weapon_logclassname"),
+                "weapon_log_class_name",
+            )?,
+            stun_flags: read_value::<
+                u16,
+            >(stream, definition.get_entry("stun_flags"), "stun_flags")?,
+            death_flags: read_value::<
+                u16,
+            >(stream, definition.get_entry("death_flags"), "death_flags")?,
+            silent_kill: read_value::<
+                bool,
+            >(stream, definition.get_entry("silent_kill"), "silent_kill")?,
             assister_fallback: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "assister_fallback")?,
+            >(stream, definition.get_entry("assister_fallback"), "assister_fallback")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
+            "inflictor_entindex" => Ok(self.inflictor_ent_index.clone().into()),
+            "attacker" => Ok(self.attacker.clone().into()),
+            "weapon" => Ok(self.weapon.clone().into()),
+            "weaponid" => Ok(self.weapon_id.clone().into()),
+            "damagebits" => Ok(self.damage_bits.clone().into()),
+            "customkill" => Ok(self.custom_kill.clone().into()),
+            "assister" => Ok(self.assister.clone().into()),
+            "weapon_logclassname" => Ok(self.weapon_log_class_name.clone().into()),
+            "stun_flags" => Ok(self.stun_flags.clone().into()),
+            "death_flags" => Ok(self.death_flags.clone().into()),
+            "silent_kill" => Ok(self.silent_kill.clone().into()),
+            "assister_fallback" => Ok(self.assister_fallback.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "FishNoticeArm",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct SlapNoticeEvent {
     pub user_id: u16,
     pub victim_ent_index: u32,
@@ -3827,35 +10634,101 @@ pub struct SlapNoticeEvent {
 impl SlapNoticeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(SlapNoticeEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
             victim_ent_index: read_value::<
                 u32,
-            >(stream, iter.next(), "victim_ent_index")?,
+            >(stream, definition.get_entry("victim_entindex"), "victim_ent_index")?,
             inflictor_ent_index: read_value::<
                 u32,
-            >(stream, iter.next(), "inflictor_ent_index")?,
-            attacker: read_value::<u16>(stream, iter.next(), "attacker")?,
-            weapon: read_value::<MaybeUtf8String>(stream, iter.next(), "weapon")?,
-            weapon_id: read_value::<u16>(stream, iter.next(), "weapon_id")?,
-            damage_bits: read_value::<u32>(stream, iter.next(), "damage_bits")?,
-            custom_kill: read_value::<u16>(stream, iter.next(), "custom_kill")?,
-            assister: read_value::<u16>(stream, iter.next(), "assister")?,
+            >(
+                stream,
+                definition.get_entry("inflictor_entindex"),
+                "inflictor_ent_index",
+            )?,
+            attacker: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
+            weapon: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("weapon"), "weapon")?,
+            weapon_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            damage_bits: read_value::<
+                u32,
+            >(stream, definition.get_entry("damagebits"), "damage_bits")?,
+            custom_kill: read_value::<
+                u16,
+            >(stream, definition.get_entry("customkill"), "custom_kill")?,
+            assister: read_value::<
+                u16,
+            >(stream, definition.get_entry("assister"), "assister")?,
             weapon_log_class_name: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "weapon_log_class_name")?,
-            stun_flags: read_value::<u16>(stream, iter.next(), "stun_flags")?,
-            death_flags: read_value::<u16>(stream, iter.next(), "death_flags")?,
-            silent_kill: read_value::<bool>(stream, iter.next(), "silent_kill")?,
+            >(
+                stream,
+                definition.get_entry("weapon_logclassname"),
+                "weapon_log_class_name",
+            )?,
+            stun_flags: read_value::<
+                u16,
+            >(stream, definition.get_entry("stun_flags"), "stun_flags")?,
+            death_flags: read_value::<
+                u16,
+            >(stream, definition.get_entry("death_flags"), "death_flags")?,
+            silent_kill: read_value::<
+                bool,
+            >(stream, definition.get_entry("silent_kill"), "silent_kill")?,
             assister_fallback: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "assister_fallback")?,
+            >(stream, definition.get_entry("assister_fallback"), "assister_fallback")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
+            "inflictor_entindex" => Ok(self.inflictor_ent_index.clone().into()),
+            "attacker" => Ok(self.attacker.clone().into()),
+            "weapon" => Ok(self.weapon.clone().into()),
+            "weaponid" => Ok(self.weapon_id.clone().into()),
+            "damagebits" => Ok(self.damage_bits.clone().into()),
+            "customkill" => Ok(self.custom_kill.clone().into()),
+            "assister" => Ok(self.assister.clone().into()),
+            "weapon_logclassname" => Ok(self.weapon_log_class_name.clone().into()),
+            "stun_flags" => Ok(self.stun_flags.clone().into()),
+            "death_flags" => Ok(self.death_flags.clone().into()),
+            "silent_kill" => Ok(self.silent_kill.clone().into()),
+            "assister_fallback" => Ok(self.assister_fallback.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "SlapNotice",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ThrowableHitEvent {
     pub user_id: u16,
     pub victim_ent_index: u32,
@@ -3876,82 +10749,251 @@ pub struct ThrowableHitEvent {
 impl ThrowableHitEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ThrowableHitEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
             victim_ent_index: read_value::<
                 u32,
-            >(stream, iter.next(), "victim_ent_index")?,
+            >(stream, definition.get_entry("victim_entindex"), "victim_ent_index")?,
             inflictor_ent_index: read_value::<
                 u32,
-            >(stream, iter.next(), "inflictor_ent_index")?,
-            attacker: read_value::<u16>(stream, iter.next(), "attacker")?,
-            weapon: read_value::<MaybeUtf8String>(stream, iter.next(), "weapon")?,
-            weapon_id: read_value::<u16>(stream, iter.next(), "weapon_id")?,
-            damage_bits: read_value::<u32>(stream, iter.next(), "damage_bits")?,
-            custom_kill: read_value::<u16>(stream, iter.next(), "custom_kill")?,
-            assister: read_value::<u16>(stream, iter.next(), "assister")?,
+            >(
+                stream,
+                definition.get_entry("inflictor_entindex"),
+                "inflictor_ent_index",
+            )?,
+            attacker: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
+            weapon: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("weapon"), "weapon")?,
+            weapon_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            damage_bits: read_value::<
+                u32,
+            >(stream, definition.get_entry("damagebits"), "damage_bits")?,
+            custom_kill: read_value::<
+                u16,
+            >(stream, definition.get_entry("customkill"), "custom_kill")?,
+            assister: read_value::<
+                u16,
+            >(stream, definition.get_entry("assister"), "assister")?,
             weapon_log_class_name: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "weapon_log_class_name")?,
-            stun_flags: read_value::<u16>(stream, iter.next(), "stun_flags")?,
-            death_flags: read_value::<u16>(stream, iter.next(), "death_flags")?,
-            silent_kill: read_value::<bool>(stream, iter.next(), "silent_kill")?,
+            >(
+                stream,
+                definition.get_entry("weapon_logclassname"),
+                "weapon_log_class_name",
+            )?,
+            stun_flags: read_value::<
+                u16,
+            >(stream, definition.get_entry("stun_flags"), "stun_flags")?,
+            death_flags: read_value::<
+                u16,
+            >(stream, definition.get_entry("death_flags"), "death_flags")?,
+            silent_kill: read_value::<
+                bool,
+            >(stream, definition.get_entry("silent_kill"), "silent_kill")?,
             assister_fallback: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "assister_fallback")?,
-            total_hits: read_value::<u16>(stream, iter.next(), "total_hits")?,
+            >(stream, definition.get_entry("assister_fallback"), "assister_fallback")?,
+            total_hits: read_value::<
+                u16,
+            >(stream, definition.get_entry("totalhits"), "total_hits")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
+            "inflictor_entindex" => Ok(self.inflictor_ent_index.clone().into()),
+            "attacker" => Ok(self.attacker.clone().into()),
+            "weapon" => Ok(self.weapon.clone().into()),
+            "weaponid" => Ok(self.weapon_id.clone().into()),
+            "damagebits" => Ok(self.damage_bits.clone().into()),
+            "customkill" => Ok(self.custom_kill.clone().into()),
+            "assister" => Ok(self.assister.clone().into()),
+            "weapon_logclassname" => Ok(self.weapon_log_class_name.clone().into()),
+            "stun_flags" => Ok(self.stun_flags.clone().into()),
+            "death_flags" => Ok(self.death_flags.clone().into()),
+            "silent_kill" => Ok(self.silent_kill.clone().into()),
+            "assister_fallback" => Ok(self.assister_fallback.clone().into()),
+            "totalhits" => Ok(self.total_hits.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ThrowableHit",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PumpkinLordSummonedEvent {}
 impl PumpkinLordSummonedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PumpkinLordSummonedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PumpkinLordSummoned",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PumpkinLordKilledEvent {}
 impl PumpkinLordKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PumpkinLordKilledEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PumpkinLordKilled",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MerasmusSummonedEvent {
     pub level: u16,
 }
 impl MerasmusSummonedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MerasmusSummonedEvent {
-            level: read_value::<u16>(stream, iter.next(), "level")?,
+            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "level" => Ok(self.level.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MerasmusSummoned",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MerasmusKilledEvent {
     pub level: u16,
 }
 impl MerasmusKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MerasmusKilledEvent {
-            level: read_value::<u16>(stream, iter.next(), "level")?,
+            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "level" => Ok(self.level.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MerasmusKilled",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MerasmusEscapeWarningEvent {
     pub level: u16,
     pub time_remaining: u8,
@@ -3959,43 +11001,121 @@ pub struct MerasmusEscapeWarningEvent {
 impl MerasmusEscapeWarningEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MerasmusEscapeWarningEvent {
-            level: read_value::<u16>(stream, iter.next(), "level")?,
-            time_remaining: read_value::<u8>(stream, iter.next(), "time_remaining")?,
+            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            time_remaining: read_value::<
+                u8,
+            >(stream, definition.get_entry("time_remaining"), "time_remaining")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "level" => Ok(self.level.clone().into()),
+            "time_remaining" => Ok(self.time_remaining.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MerasmusEscapeWarning",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MerasmusEscapedEvent {
     pub level: u16,
 }
 impl MerasmusEscapedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MerasmusEscapedEvent {
-            level: read_value::<u16>(stream, iter.next(), "level")?,
+            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "level" => Ok(self.level.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MerasmusEscaped",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EyeballBossSummonedEvent {
     pub level: u16,
 }
 impl EyeballBossSummonedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(EyeballBossSummonedEvent {
-            level: read_value::<u16>(stream, iter.next(), "level")?,
+            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "level" => Ok(self.level.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EyeballBossSummoned",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EyeballBossStunnedEvent {
     pub level: u16,
     pub player_ent_index: u8,
@@ -4003,29 +11123,82 @@ pub struct EyeballBossStunnedEvent {
 impl EyeballBossStunnedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(EyeballBossStunnedEvent {
-            level: read_value::<u16>(stream, iter.next(), "level")?,
-            player_ent_index: read_value::<u8>(stream, iter.next(), "player_ent_index")?,
+            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            player_ent_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("player_entindex"), "player_ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "level" => Ok(self.level.clone().into()),
+            "player_entindex" => Ok(self.player_ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EyeballBossStunned",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EyeballBossKilledEvent {
     pub level: u16,
 }
 impl EyeballBossKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(EyeballBossKilledEvent {
-            level: read_value::<u16>(stream, iter.next(), "level")?,
+            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "level" => Ok(self.level.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EyeballBossKilled",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EyeballBossKillerEvent {
     pub level: u16,
     pub player_ent_index: u8,
@@ -4033,15 +11206,43 @@ pub struct EyeballBossKillerEvent {
 impl EyeballBossKillerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(EyeballBossKillerEvent {
-            level: read_value::<u16>(stream, iter.next(), "level")?,
-            player_ent_index: read_value::<u8>(stream, iter.next(), "player_ent_index")?,
+            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            player_ent_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("player_entindex"), "player_ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "level" => Ok(self.level.clone().into()),
+            "player_entindex" => Ok(self.player_ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EyeballBossKiller",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EyeballBossEscapeImminentEvent {
     pub level: u16,
     pub time_remaining: u8,
@@ -4049,29 +11250,82 @@ pub struct EyeballBossEscapeImminentEvent {
 impl EyeballBossEscapeImminentEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(EyeballBossEscapeImminentEvent {
-            level: read_value::<u16>(stream, iter.next(), "level")?,
-            time_remaining: read_value::<u8>(stream, iter.next(), "time_remaining")?,
+            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            time_remaining: read_value::<
+                u8,
+            >(stream, definition.get_entry("time_remaining"), "time_remaining")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "level" => Ok(self.level.clone().into()),
+            "time_remaining" => Ok(self.time_remaining.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EyeballBossEscapeImminent",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EyeballBossEscapedEvent {
     pub level: u16,
 }
 impl EyeballBossEscapedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(EyeballBossEscapedEvent {
-            level: read_value::<u16>(stream, iter.next(), "level")?,
+            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "level" => Ok(self.level.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EyeballBossEscaped",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct NpcHurtEvent {
     pub ent_index: u16,
     pub health: u16,
@@ -4084,20 +11338,59 @@ pub struct NpcHurtEvent {
 impl NpcHurtEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(NpcHurtEvent {
-            ent_index: read_value::<u16>(stream, iter.next(), "ent_index")?,
-            health: read_value::<u16>(stream, iter.next(), "health")?,
-            attacker_player: read_value::<u16>(stream, iter.next(), "attacker_player")?,
-            weapon_id: read_value::<u16>(stream, iter.next(), "weapon_id")?,
-            damage_amount: read_value::<u16>(stream, iter.next(), "damage_amount")?,
-            crit: read_value::<bool>(stream, iter.next(), "crit")?,
-            boss: read_value::<u16>(stream, iter.next(), "boss")?,
+            ent_index: read_value::<
+                u16,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
+            health: read_value::<u16>(stream, definition.get_entry("health"), "health")?,
+            attacker_player: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker_player"), "attacker_player")?,
+            weapon_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            damage_amount: read_value::<
+                u16,
+            >(stream, definition.get_entry("damageamount"), "damage_amount")?,
+            crit: read_value::<bool>(stream, definition.get_entry("crit"), "crit")?,
+            boss: read_value::<u16>(stream, definition.get_entry("boss"), "boss")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            "health" => Ok(self.health.clone().into()),
+            "attacker_player" => Ok(self.attacker_player.clone().into()),
+            "weaponid" => Ok(self.weapon_id.clone().into()),
+            "damageamount" => Ok(self.damage_amount.clone().into()),
+            "crit" => Ok(self.crit.clone().into()),
+            "boss" => Ok(self.boss.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "NpcHurt",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ControlPointTimerUpdatedEvent {
     pub index: u16,
     pub time: f32,
@@ -4105,43 +11398,123 @@ pub struct ControlPointTimerUpdatedEvent {
 impl ControlPointTimerUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ControlPointTimerUpdatedEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
-            time: read_value::<f32>(stream, iter.next(), "time")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            time: read_value::<f32>(stream, definition.get_entry("time"), "time")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            "time" => Ok(self.time.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ControlPointTimerUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerHighFiveStartEvent {
     pub ent_index: u8,
 }
 impl PlayerHighFiveStartEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerHighFiveStartEvent {
-            ent_index: read_value::<u8>(stream, iter.next(), "ent_index")?,
+            ent_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerHighFiveStart",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerHighFiveCancelEvent {
     pub ent_index: u8,
 }
 impl PlayerHighFiveCancelEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerHighFiveCancelEvent {
-            ent_index: read_value::<u8>(stream, iter.next(), "ent_index")?,
+            ent_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerHighFiveCancel",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerHighFiveSuccessEvent {
     pub initiator_ent_index: u8,
     pub partner_ent_index: u8,
@@ -4149,19 +11522,49 @@ pub struct PlayerHighFiveSuccessEvent {
 impl PlayerHighFiveSuccessEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerHighFiveSuccessEvent {
             initiator_ent_index: read_value::<
                 u8,
-            >(stream, iter.next(), "initiator_ent_index")?,
+            >(
+                stream,
+                definition.get_entry("initiator_entindex"),
+                "initiator_ent_index",
+            )?,
             partner_ent_index: read_value::<
                 u8,
-            >(stream, iter.next(), "partner_ent_index")?,
+            >(stream, definition.get_entry("partner_entindex"), "partner_ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "initiator_entindex" => Ok(self.initiator_ent_index.clone().into()),
+            "partner_entindex" => Ok(self.partner_ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerHighFiveSuccess",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerBonusPointsEvent {
     pub points: u16,
     pub player_ent_index: u16,
@@ -4170,27 +11573,81 @@ pub struct PlayerBonusPointsEvent {
 impl PlayerBonusPointsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerBonusPointsEvent {
-            points: read_value::<u16>(stream, iter.next(), "points")?,
+            points: read_value::<u16>(stream, definition.get_entry("points"), "points")?,
             player_ent_index: read_value::<
                 u16,
-            >(stream, iter.next(), "player_ent_index")?,
-            source_ent_index: read_value::<u16>(stream, iter.next(), "source_ent_index")?,
+            >(stream, definition.get_entry("player_entindex"), "player_ent_index")?,
+            source_ent_index: read_value::<
+                u16,
+            >(stream, definition.get_entry("source_entindex"), "source_ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "points" => Ok(self.points.clone().into()),
+            "player_entindex" => Ok(self.player_ent_index.clone().into()),
+            "source_entindex" => Ok(self.source_ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerBonusPoints",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerUpgradedEvent {}
 impl PlayerUpgradedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerUpgradedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerUpgraded",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerBuybackEvent {
     pub player: u16,
     pub cost: u16,
@@ -4198,15 +11655,41 @@ pub struct PlayerBuybackEvent {
 impl PlayerBuybackEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerBuybackEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
-            cost: read_value::<u16>(stream, iter.next(), "cost")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            cost: read_value::<u16>(stream, definition.get_entry("cost"), "cost")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "cost" => Ok(self.cost.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerBuyback",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerUsedPowerUpBottleEvent {
     pub player: u16,
     pub kind: u16,
@@ -4215,30 +11698,84 @@ pub struct PlayerUsedPowerUpBottleEvent {
 impl PlayerUsedPowerUpBottleEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerUsedPowerUpBottleEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
-            kind: read_value::<u16>(stream, iter.next(), "kind")?,
-            time: read_value::<f32>(stream, iter.next(), "time")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            kind: read_value::<u16>(stream, definition.get_entry("type"), "kind")?,
+            time: read_value::<f32>(stream, definition.get_entry("time"), "time")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "type" => Ok(self.kind.clone().into()),
+            "time" => Ok(self.time.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerUsedPowerUpBottle",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ChristmasGiftGrabEvent {
     pub user_id: u16,
 }
 impl ChristmasGiftGrabEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ChristmasGiftGrabEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ChristmasGiftGrab",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerKilledAchievementZoneEvent {
     pub attacker: u16,
     pub victim: u16,
@@ -4247,66 +11784,224 @@ pub struct PlayerKilledAchievementZoneEvent {
 impl PlayerKilledAchievementZoneEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerKilledAchievementZoneEvent {
-            attacker: read_value::<u16>(stream, iter.next(), "attacker")?,
-            victim: read_value::<u16>(stream, iter.next(), "victim")?,
-            zone_id: read_value::<u16>(stream, iter.next(), "zone_id")?,
+            attacker: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
+            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
+            zone_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("zone_id"), "zone_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "attacker" => Ok(self.attacker.clone().into()),
+            "victim" => Ok(self.victim.clone().into()),
+            "zone_id" => Ok(self.zone_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerKilledAchievementZone",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PartyUpdatedEvent {}
 impl PartyUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PartyUpdatedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PartyUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PartyPrefChangedEvent {}
 impl PartyPrefChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PartyPrefChangedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PartyPrefChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PartyCriteriaChangedEvent {}
 impl PartyCriteriaChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PartyCriteriaChangedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PartyCriteriaChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PartyInvitesChangedEvent {}
 impl PartyInvitesChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PartyInvitesChangedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PartyInvitesChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PartyQueueStateChangedEvent {
     pub match_group: u16,
 }
 impl PartyQueueStateChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PartyQueueStateChangedEvent {
-            match_group: read_value::<u16>(stream, iter.next(), "match_group")?,
+            match_group: read_value::<
+                u16,
+            >(stream, definition.get_entry("matchgroup"), "match_group")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "matchgroup" => Ok(self.match_group.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PartyQueueStateChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PartyChatEvent {
     pub steam_id: MaybeUtf8String,
     pub text: MaybeUtf8String,
@@ -4315,62 +12010,197 @@ pub struct PartyChatEvent {
 impl PartyChatEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PartyChatEvent {
-            steam_id: read_value::<MaybeUtf8String>(stream, iter.next(), "steam_id")?,
-            text: read_value::<MaybeUtf8String>(stream, iter.next(), "text")?,
-            kind: read_value::<u16>(stream, iter.next(), "kind")?,
+            steam_id: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("steamid"), "steam_id")?,
+            text: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("text"), "text")?,
+            kind: read_value::<u16>(stream, definition.get_entry("type"), "kind")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "steamid" => Ok(self.steam_id.clone().into()),
+            "text" => Ok(self.text.clone().into()),
+            "type" => Ok(self.kind.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PartyChat",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PartyMemberJoinEvent {
     pub steam_id: MaybeUtf8String,
 }
 impl PartyMemberJoinEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PartyMemberJoinEvent {
-            steam_id: read_value::<MaybeUtf8String>(stream, iter.next(), "steam_id")?,
+            steam_id: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("steamid"), "steam_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "steamid" => Ok(self.steam_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PartyMemberJoin",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PartyMemberLeaveEvent {
     pub steam_id: MaybeUtf8String,
 }
 impl PartyMemberLeaveEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PartyMemberLeaveEvent {
-            steam_id: read_value::<MaybeUtf8String>(stream, iter.next(), "steam_id")?,
+            steam_id: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("steamid"), "steam_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "steamid" => Ok(self.steam_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PartyMemberLeave",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MatchInvitesUpdatedEvent {}
 impl MatchInvitesUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MatchInvitesUpdatedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MatchInvitesUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct LobbyUpdatedEvent {}
 impl LobbyUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(LobbyUpdatedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "LobbyUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmMissionUpdateEvent {
     pub class: u16,
     pub count: u16,
@@ -4378,130 +12208,408 @@ pub struct MvmMissionUpdateEvent {
 impl MvmMissionUpdateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmMissionUpdateEvent {
-            class: read_value::<u16>(stream, iter.next(), "class")?,
-            count: read_value::<u16>(stream, iter.next(), "count")?,
+            class: read_value::<u16>(stream, definition.get_entry("class"), "class")?,
+            count: read_value::<u16>(stream, definition.get_entry("count"), "count")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "class" => Ok(self.class.clone().into()),
+            "count" => Ok(self.count.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmMissionUpdate",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RecalculateHolidaysEvent {}
 impl RecalculateHolidaysEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RecalculateHolidaysEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RecalculateHolidays",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerCurrencyChangedEvent {
     pub currency: u16,
 }
 impl PlayerCurrencyChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerCurrencyChangedEvent {
-            currency: read_value::<u16>(stream, iter.next(), "currency")?,
+            currency: read_value::<
+                u16,
+            >(stream, definition.get_entry("currency"), "currency")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "currency" => Ok(self.currency.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerCurrencyChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct DoomsdayRocketOpenEvent {
     pub team: u8,
 }
 impl DoomsdayRocketOpenEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(DoomsdayRocketOpenEvent {
-            team: read_value::<u8>(stream, iter.next(), "team")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "team" => Ok(self.team.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "DoomsdayRocketOpen",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RemoveNemesisRelationshipsEvent {
     pub player: u16,
 }
 impl RemoveNemesisRelationshipsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RemoveNemesisRelationshipsEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RemoveNemesisRelationships",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmCreditBonusWaveEvent {}
 impl MvmCreditBonusWaveEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmCreditBonusWaveEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmCreditBonusWave",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmCreditBonusAllEvent {}
 impl MvmCreditBonusAllEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmCreditBonusAllEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmCreditBonusAll",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmCreditBonusAllAdvancedEvent {}
 impl MvmCreditBonusAllAdvancedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmCreditBonusAllAdvancedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmCreditBonusAllAdvanced",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmQuickSentryUpgradeEvent {
     pub player: u16,
 }
 impl MvmQuickSentryUpgradeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmQuickSentryUpgradeEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmQuickSentryUpgrade",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmTankDestroyedByPlayersEvent {}
 impl MvmTankDestroyedByPlayersEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmTankDestroyedByPlayersEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmTankDestroyedByPlayers",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmKillRobotDeliveringBombEvent {
     pub player: u16,
 }
 impl MvmKillRobotDeliveringBombEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmKillRobotDeliveringBombEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmKillRobotDeliveringBomb",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmPickupCurrencyEvent {
     pub player: u16,
     pub currency: u16,
@@ -4509,29 +12617,82 @@ pub struct MvmPickupCurrencyEvent {
 impl MvmPickupCurrencyEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmPickupCurrencyEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
-            currency: read_value::<u16>(stream, iter.next(), "currency")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            currency: read_value::<
+                u16,
+            >(stream, definition.get_entry("currency"), "currency")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "currency" => Ok(self.currency.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmPickupCurrency",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmBombCarrierKilledEvent {
     pub level: u16,
 }
 impl MvmBombCarrierKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmBombCarrierKilledEvent {
-            level: read_value::<u16>(stream, iter.next(), "level")?,
+            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "level" => Ok(self.level.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmBombCarrierKilled",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmSentryBusterDetonateEvent {
     pub player: u16,
     pub det_x: f32,
@@ -4541,45 +12702,123 @@ pub struct MvmSentryBusterDetonateEvent {
 impl MvmSentryBusterDetonateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmSentryBusterDetonateEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
-            det_x: read_value::<f32>(stream, iter.next(), "det_x")?,
-            det_y: read_value::<f32>(stream, iter.next(), "det_y")?,
-            det_z: read_value::<f32>(stream, iter.next(), "det_z")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            det_x: read_value::<f32>(stream, definition.get_entry("det_x"), "det_x")?,
+            det_y: read_value::<f32>(stream, definition.get_entry("det_y"), "det_y")?,
+            det_z: read_value::<f32>(stream, definition.get_entry("det_z"), "det_z")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "det_x" => Ok(self.det_x.clone().into()),
+            "det_y" => Ok(self.det_y.clone().into()),
+            "det_z" => Ok(self.det_z.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmSentryBusterDetonate",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmScoutMarkedForDeathEvent {
     pub player: u16,
 }
 impl MvmScoutMarkedForDeathEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmScoutMarkedForDeathEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmScoutMarkedForDeath",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmMedicPowerUpSharedEvent {
     pub player: u16,
 }
 impl MvmMedicPowerUpSharedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmMedicPowerUpSharedEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmMedicPowerUpShared",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmBeginWaveEvent {
     pub wave_index: u16,
     pub max_waves: u16,
@@ -4588,113 +12827,352 @@ pub struct MvmBeginWaveEvent {
 impl MvmBeginWaveEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmBeginWaveEvent {
-            wave_index: read_value::<u16>(stream, iter.next(), "wave_index")?,
-            max_waves: read_value::<u16>(stream, iter.next(), "max_waves")?,
-            advanced: read_value::<u16>(stream, iter.next(), "advanced")?,
+            wave_index: read_value::<
+                u16,
+            >(stream, definition.get_entry("wave_index"), "wave_index")?,
+            max_waves: read_value::<
+                u16,
+            >(stream, definition.get_entry("max_waves"), "max_waves")?,
+            advanced: read_value::<
+                u16,
+            >(stream, definition.get_entry("advanced"), "advanced")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "wave_index" => Ok(self.wave_index.clone().into()),
+            "max_waves" => Ok(self.max_waves.clone().into()),
+            "advanced" => Ok(self.advanced.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmBeginWave",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmWaveCompleteEvent {
     pub advanced: bool,
 }
 impl MvmWaveCompleteEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmWaveCompleteEvent {
-            advanced: read_value::<bool>(stream, iter.next(), "advanced")?,
+            advanced: read_value::<
+                bool,
+            >(stream, definition.get_entry("advanced"), "advanced")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "advanced" => Ok(self.advanced.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmWaveComplete",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmMissionCompleteEvent {
     pub mission: MaybeUtf8String,
 }
 impl MvmMissionCompleteEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmMissionCompleteEvent {
-            mission: read_value::<MaybeUtf8String>(stream, iter.next(), "mission")?,
+            mission: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("mission"), "mission")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "mission" => Ok(self.mission.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmMissionComplete",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmBombResetByPlayerEvent {
     pub player: u16,
 }
 impl MvmBombResetByPlayerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmBombResetByPlayerEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmBombResetByPlayer",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmBombAlarmTriggeredEvent {}
 impl MvmBombAlarmTriggeredEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmBombAlarmTriggeredEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmBombAlarmTriggered",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmBombDeployResetByPlayerEvent {
     pub player: u16,
 }
 impl MvmBombDeployResetByPlayerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmBombDeployResetByPlayerEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmBombDeployResetByPlayer",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmWaveFailedEvent {}
 impl MvmWaveFailedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmWaveFailedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmWaveFailed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmResetStatsEvent {}
 impl MvmResetStatsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmResetStatsEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmResetStats",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct DamageResistedEvent {
     pub ent_index: u8,
 }
 impl DamageResistedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(DamageResistedEvent {
-            ent_index: read_value::<u8>(stream, iter.next(), "ent_index")?,
+            ent_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "DamageResisted",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RevivePlayerNotifyEvent {
     pub ent_index: u16,
     pub marker_ent_index: u16,
@@ -4702,57 +13180,168 @@ pub struct RevivePlayerNotifyEvent {
 impl RevivePlayerNotifyEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RevivePlayerNotifyEvent {
-            ent_index: read_value::<u16>(stream, iter.next(), "ent_index")?,
-            marker_ent_index: read_value::<u16>(stream, iter.next(), "marker_ent_index")?,
+            ent_index: read_value::<
+                u16,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
+            marker_ent_index: read_value::<
+                u16,
+            >(stream, definition.get_entry("marker_entindex"), "marker_ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            "marker_entindex" => Ok(self.marker_ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RevivePlayerNotify",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RevivePlayerStoppedEvent {
     pub ent_index: u16,
 }
 impl RevivePlayerStoppedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RevivePlayerStoppedEvent {
-            ent_index: read_value::<u16>(stream, iter.next(), "ent_index")?,
+            ent_index: read_value::<
+                u16,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RevivePlayerStopped",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RevivePlayerCompleteEvent {
     pub ent_index: u16,
 }
 impl RevivePlayerCompleteEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RevivePlayerCompleteEvent {
-            ent_index: read_value::<u16>(stream, iter.next(), "ent_index")?,
+            ent_index: read_value::<
+                u16,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RevivePlayerComplete",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerTurnedToGhostEvent {
     pub user_id: u16,
 }
 impl PlayerTurnedToGhostEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerTurnedToGhostEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerTurnedToGhost",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MedigunShieldBlockedDamageEvent {
     pub user_id: u16,
     pub damage: f32,
@@ -4760,29 +13349,82 @@ pub struct MedigunShieldBlockedDamageEvent {
 impl MedigunShieldBlockedDamageEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MedigunShieldBlockedDamageEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            damage: read_value::<f32>(stream, iter.next(), "damage")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            damage: read_value::<f32>(stream, definition.get_entry("damage"), "damage")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "damage" => Ok(self.damage.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MedigunShieldBlockedDamage",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmAdvWaveCompleteNoGatesEvent {
     pub index: u16,
 }
 impl MvmAdvWaveCompleteNoGatesEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmAdvWaveCompleteNoGatesEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmAdvWaveCompleteNoGates",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmSniperHeadshotCurrencyEvent {
     pub user_id: u16,
     pub currency: u16,
@@ -4790,42 +13432,147 @@ pub struct MvmSniperHeadshotCurrencyEvent {
 impl MvmSniperHeadshotCurrencyEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmSniperHeadshotCurrencyEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
-            currency: read_value::<u16>(stream, iter.next(), "currency")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
+            currency: read_value::<
+                u16,
+            >(stream, definition.get_entry("currency"), "currency")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "currency" => Ok(self.currency.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmSniperHeadshotCurrency",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmMannhattanPitEvent {}
 impl MvmMannhattanPitEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmMannhattanPitEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmMannhattanPit",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct FlagCarriedInDetectionZoneEvent {}
 impl FlagCarriedInDetectionZoneEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(FlagCarriedInDetectionZoneEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "FlagCarriedInDetectionZone",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmAdvWaveKilledStunRadioEvent {}
 impl MvmAdvWaveKilledStunRadioEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmAdvWaveKilledStunRadioEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmAdvWaveKilledStunRadio",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerDirectHitStunEvent {
     pub attacker: u16,
     pub victim: u16,
@@ -4833,43 +13580,125 @@ pub struct PlayerDirectHitStunEvent {
 impl PlayerDirectHitStunEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerDirectHitStunEvent {
-            attacker: read_value::<u16>(stream, iter.next(), "attacker")?,
-            victim: read_value::<u16>(stream, iter.next(), "victim")?,
+            attacker: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
+            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "attacker" => Ok(self.attacker.clone().into()),
+            "victim" => Ok(self.victim.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerDirectHitStun",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MvmSentryBusterKilledEvent {
     pub sentry_buster: u16,
 }
 impl MvmSentryBusterKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MvmSentryBusterKilledEvent {
-            sentry_buster: read_value::<u16>(stream, iter.next(), "sentry_buster")?,
+            sentry_buster: read_value::<
+                u16,
+            >(stream, definition.get_entry("sentry_buster"), "sentry_buster")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "sentry_buster" => Ok(self.sentry_buster.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MvmSentryBusterKilled",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct UpgradesFileChangedEvent {
     pub path: MaybeUtf8String,
 }
 impl UpgradesFileChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(UpgradesFileChangedEvent {
-            path: read_value::<MaybeUtf8String>(stream, iter.next(), "path")?,
+            path: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("path"), "path")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "path" => Ok(self.path.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "UpgradesFileChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RdTeamPointsChangedEvent {
     pub points: u16,
     pub team: u8,
@@ -4878,25 +13707,77 @@ pub struct RdTeamPointsChangedEvent {
 impl RdTeamPointsChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RdTeamPointsChangedEvent {
-            points: read_value::<u16>(stream, iter.next(), "points")?,
-            team: read_value::<u8>(stream, iter.next(), "team")?,
-            method: read_value::<u8>(stream, iter.next(), "method")?,
+            points: read_value::<u16>(stream, definition.get_entry("points"), "points")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            method: read_value::<u8>(stream, definition.get_entry("method"), "method")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "points" => Ok(self.points.clone().into()),
+            "team" => Ok(self.team.clone().into()),
+            "method" => Ok(self.method.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RdTeamPointsChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RdRulesStateChangedEvent {}
 impl RdRulesStateChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RdRulesStateChangedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RdRulesStateChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RdRobotKilledEvent {
     pub user_id: u16,
     pub victim_ent_index: u32,
@@ -4911,28 +13792,81 @@ pub struct RdRobotKilledEvent {
 impl RdRobotKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RdRobotKilledEvent {
-            user_id: read_value::<u16>(stream, iter.next(), "user_id")?,
+            user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("userid"), "user_id")?,
             victim_ent_index: read_value::<
                 u32,
-            >(stream, iter.next(), "victim_ent_index")?,
+            >(stream, definition.get_entry("victim_entindex"), "victim_ent_index")?,
             inflictor_ent_index: read_value::<
                 u32,
-            >(stream, iter.next(), "inflictor_ent_index")?,
-            attacker: read_value::<u16>(stream, iter.next(), "attacker")?,
-            weapon: read_value::<MaybeUtf8String>(stream, iter.next(), "weapon")?,
-            weapon_id: read_value::<u16>(stream, iter.next(), "weapon_id")?,
-            damage_bits: read_value::<u32>(stream, iter.next(), "damage_bits")?,
-            custom_kill: read_value::<u16>(stream, iter.next(), "custom_kill")?,
+            >(
+                stream,
+                definition.get_entry("inflictor_entindex"),
+                "inflictor_ent_index",
+            )?,
+            attacker: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
+            weapon: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("weapon"), "weapon")?,
+            weapon_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            damage_bits: read_value::<
+                u32,
+            >(stream, definition.get_entry("damagebits"), "damage_bits")?,
+            custom_kill: read_value::<
+                u16,
+            >(stream, definition.get_entry("customkill"), "custom_kill")?,
             weapon_log_class_name: read_value::<
                 MaybeUtf8String,
-            >(stream, iter.next(), "weapon_log_class_name")?,
+            >(
+                stream,
+                definition.get_entry("weapon_logclassname"),
+                "weapon_log_class_name",
+            )?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "userid" => Ok(self.user_id.clone().into()),
+            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
+            "inflictor_entindex" => Ok(self.inflictor_ent_index.clone().into()),
+            "attacker" => Ok(self.attacker.clone().into()),
+            "weapon" => Ok(self.weapon.clone().into()),
+            "weaponid" => Ok(self.weapon_id.clone().into()),
+            "damagebits" => Ok(self.damage_bits.clone().into()),
+            "customkill" => Ok(self.custom_kill.clone().into()),
+            "weapon_logclassname" => Ok(self.weapon_log_class_name.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RdRobotKilled",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RdRobotImpactEvent {
     pub ent_index: u16,
     pub impulse_x: f32,
@@ -4942,73 +13876,209 @@ pub struct RdRobotImpactEvent {
 impl RdRobotImpactEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RdRobotImpactEvent {
-            ent_index: read_value::<u16>(stream, iter.next(), "ent_index")?,
-            impulse_x: read_value::<f32>(stream, iter.next(), "impulse_x")?,
-            impulse_y: read_value::<f32>(stream, iter.next(), "impulse_y")?,
-            impulse_z: read_value::<f32>(stream, iter.next(), "impulse_z")?,
+            ent_index: read_value::<
+                u16,
+            >(stream, definition.get_entry("entindex"), "ent_index")?,
+            impulse_x: read_value::<
+                f32,
+            >(stream, definition.get_entry("impulse_x"), "impulse_x")?,
+            impulse_y: read_value::<
+                f32,
+            >(stream, definition.get_entry("impulse_y"), "impulse_y")?,
+            impulse_z: read_value::<
+                f32,
+            >(stream, definition.get_entry("impulse_z"), "impulse_z")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "entindex" => Ok(self.ent_index.clone().into()),
+            "impulse_x" => Ok(self.impulse_x.clone().into()),
+            "impulse_y" => Ok(self.impulse_y.clone().into()),
+            "impulse_z" => Ok(self.impulse_z.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RdRobotImpact",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamPlayPreRoundTimeLeftEvent {
     pub time: u16,
 }
 impl TeamPlayPreRoundTimeLeftEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamPlayPreRoundTimeLeftEvent {
-            time: read_value::<u16>(stream, iter.next(), "time")?,
+            time: read_value::<u16>(stream, definition.get_entry("time"), "time")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "time" => Ok(self.time.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamPlayPreRoundTimeLeft",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ParachuteDeployEvent {
     pub index: u16,
 }
 impl ParachuteDeployEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ParachuteDeployEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ParachuteDeploy",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ParachuteHolsterEvent {
     pub index: u16,
 }
 impl ParachuteHolsterEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ParachuteHolsterEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ParachuteHolster",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct KillRefillsMeterEvent {
     pub index: u16,
 }
 impl KillRefillsMeterEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(KillRefillsMeterEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "KillRefillsMeter",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RpsTauntEventEvent {
     pub winner: u16,
     pub winner_rps: u8,
@@ -5018,54 +14088,161 @@ pub struct RpsTauntEventEvent {
 impl RpsTauntEventEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RpsTauntEventEvent {
-            winner: read_value::<u16>(stream, iter.next(), "winner")?,
-            winner_rps: read_value::<u8>(stream, iter.next(), "winner_rps")?,
-            loser: read_value::<u16>(stream, iter.next(), "loser")?,
-            loser_rps: read_value::<u8>(stream, iter.next(), "loser_rps")?,
+            winner: read_value::<u16>(stream, definition.get_entry("winner"), "winner")?,
+            winner_rps: read_value::<
+                u8,
+            >(stream, definition.get_entry("winner_rps"), "winner_rps")?,
+            loser: read_value::<u16>(stream, definition.get_entry("loser"), "loser")?,
+            loser_rps: read_value::<
+                u8,
+            >(stream, definition.get_entry("loser_rps"), "loser_rps")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "winner" => Ok(self.winner.clone().into()),
+            "winner_rps" => Ok(self.winner_rps.clone().into()),
+            "loser" => Ok(self.loser.clone().into()),
+            "loser_rps" => Ok(self.loser_rps.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RpsTauntEvent",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct CongaKillEvent {
     pub index: u16,
 }
 impl CongaKillEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(CongaKillEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "CongaKill",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerInitialSpawnEvent {
     pub index: u16,
 }
 impl PlayerInitialSpawnEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerInitialSpawnEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerInitialSpawn",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct CompetitiveVictoryEvent {}
 impl CompetitiveVictoryEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(CompetitiveVictoryEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "CompetitiveVictory",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct CompetitiveStatsUpdateEvent {
     pub index: u16,
     pub kills_rank: u8,
@@ -5077,19 +14254,59 @@ pub struct CompetitiveStatsUpdateEvent {
 impl CompetitiveStatsUpdateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(CompetitiveStatsUpdateEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
-            kills_rank: read_value::<u8>(stream, iter.next(), "kills_rank")?,
-            score_rank: read_value::<u8>(stream, iter.next(), "score_rank")?,
-            damage_rank: read_value::<u8>(stream, iter.next(), "damage_rank")?,
-            healing_rank: read_value::<u8>(stream, iter.next(), "healing_rank")?,
-            support_rank: read_value::<u8>(stream, iter.next(), "support_rank")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            kills_rank: read_value::<
+                u8,
+            >(stream, definition.get_entry("kills_rank"), "kills_rank")?,
+            score_rank: read_value::<
+                u8,
+            >(stream, definition.get_entry("score_rank"), "score_rank")?,
+            damage_rank: read_value::<
+                u8,
+            >(stream, definition.get_entry("damage_rank"), "damage_rank")?,
+            healing_rank: read_value::<
+                u8,
+            >(stream, definition.get_entry("healing_rank"), "healing_rank")?,
+            support_rank: read_value::<
+                u8,
+            >(stream, definition.get_entry("support_rank"), "support_rank")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            "kills_rank" => Ok(self.kills_rank.clone().into()),
+            "score_rank" => Ok(self.score_rank.clone().into()),
+            "damage_rank" => Ok(self.damage_rank.clone().into()),
+            "healing_rank" => Ok(self.healing_rank.clone().into()),
+            "support_rank" => Ok(self.support_rank.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "CompetitiveStatsUpdate",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MiniGameWinEvent {
     pub team: u8,
     pub kind: u8,
@@ -5097,70 +14314,221 @@ pub struct MiniGameWinEvent {
 impl MiniGameWinEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MiniGameWinEvent {
-            team: read_value::<u8>(stream, iter.next(), "team")?,
-            kind: read_value::<u8>(stream, iter.next(), "kind")?,
+            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            kind: read_value::<u8>(stream, definition.get_entry("type"), "kind")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "team" => Ok(self.team.clone().into()),
+            "type" => Ok(self.kind.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MiniGameWin",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct SentryOnGoActiveEvent {
     pub index: u16,
 }
 impl SentryOnGoActiveEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(SentryOnGoActiveEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "SentryOnGoActive",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct DuckXpLevelUpEvent {
     pub level: u16,
 }
 impl DuckXpLevelUpEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(DuckXpLevelUpEvent {
-            level: read_value::<u16>(stream, iter.next(), "level")?,
+            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "level" => Ok(self.level.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "DuckXpLevelUp",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct QuestLogOpenedEvent {}
 impl QuestLogOpenedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(QuestLogOpenedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "QuestLogOpened",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct SchemaUpdatedEvent {}
 impl SchemaUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(SchemaUpdatedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "SchemaUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct LocalPlayerPickupWeaponEvent {}
 impl LocalPlayerPickupWeaponEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(LocalPlayerPickupWeaponEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "LocalPlayerPickupWeapon",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RdPlayerScorePointsEvent {
     pub player: u16,
     pub method: u16,
@@ -5169,30 +14537,82 @@ pub struct RdPlayerScorePointsEvent {
 impl RdPlayerScorePointsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RdPlayerScorePointsEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
-            method: read_value::<u16>(stream, iter.next(), "method")?,
-            amount: read_value::<u16>(stream, iter.next(), "amount")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            method: read_value::<u16>(stream, definition.get_entry("method"), "method")?,
+            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "method" => Ok(self.method.clone().into()),
+            "amount" => Ok(self.amount.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RdPlayerScorePoints",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct DemomanDetStickiesEvent {
     pub player: u16,
 }
 impl DemomanDetStickiesEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(DemomanDetStickiesEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "DemomanDetStickies",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct QuestObjectiveCompletedEvent {
     pub quest_item_id_low: u32,
     pub quest_item_id_hi: u32,
@@ -5202,23 +14622,53 @@ pub struct QuestObjectiveCompletedEvent {
 impl QuestObjectiveCompletedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(QuestObjectiveCompletedEvent {
             quest_item_id_low: read_value::<
                 u32,
-            >(stream, iter.next(), "quest_item_id_low")?,
+            >(stream, definition.get_entry("quest_item_id_low"), "quest_item_id_low")?,
             quest_item_id_hi: read_value::<
                 u32,
-            >(stream, iter.next(), "quest_item_id_hi")?,
+            >(stream, definition.get_entry("quest_item_id_hi"), "quest_item_id_hi")?,
             quest_objective_id: read_value::<
                 u32,
-            >(stream, iter.next(), "quest_objective_id")?,
-            scorer_user_id: read_value::<u16>(stream, iter.next(), "scorer_user_id")?,
+            >(stream, definition.get_entry("quest_objective_id"), "quest_objective_id")?,
+            scorer_user_id: read_value::<
+                u16,
+            >(stream, definition.get_entry("scorer_user_id"), "scorer_user_id")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "quest_item_id_low" => Ok(self.quest_item_id_low.clone().into()),
+            "quest_item_id_hi" => Ok(self.quest_item_id_hi.clone().into()),
+            "quest_objective_id" => Ok(self.quest_objective_id.clone().into()),
+            "scorer_user_id" => Ok(self.scorer_user_id.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "QuestObjectiveCompleted",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerScoreChangedEvent {
     pub player: u8,
     pub delta: u16,
@@ -5226,15 +14676,41 @@ pub struct PlayerScoreChangedEvent {
 impl PlayerScoreChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerScoreChangedEvent {
-            player: read_value::<u8>(stream, iter.next(), "player")?,
-            delta: read_value::<u16>(stream, iter.next(), "delta")?,
+            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
+            delta: read_value::<u16>(stream, definition.get_entry("delta"), "delta")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "delta" => Ok(self.delta.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerScoreChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct KilledCappingPlayerEvent {
     pub cp: u8,
     pub killer: u8,
@@ -5244,17 +14720,47 @@ pub struct KilledCappingPlayerEvent {
 impl KilledCappingPlayerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(KilledCappingPlayerEvent {
-            cp: read_value::<u8>(stream, iter.next(), "cp")?,
-            killer: read_value::<u8>(stream, iter.next(), "killer")?,
-            victim: read_value::<u8>(stream, iter.next(), "victim")?,
-            assister: read_value::<u8>(stream, iter.next(), "assister")?,
+            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
+            killer: read_value::<u8>(stream, definition.get_entry("killer"), "killer")?,
+            victim: read_value::<u8>(stream, definition.get_entry("victim"), "victim")?,
+            assister: read_value::<
+                u8,
+            >(stream, definition.get_entry("assister"), "assister")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "cp" => Ok(self.cp.clone().into()),
+            "killer" => Ok(self.killer.clone().into()),
+            "victim" => Ok(self.victim.clone().into()),
+            "assister" => Ok(self.assister.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "KilledCappingPlayer",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EnvironmentalDeathEvent {
     pub killer: u8,
     pub victim: u8,
@@ -5262,15 +14768,41 @@ pub struct EnvironmentalDeathEvent {
 impl EnvironmentalDeathEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(EnvironmentalDeathEvent {
-            killer: read_value::<u8>(stream, iter.next(), "killer")?,
-            victim: read_value::<u8>(stream, iter.next(), "victim")?,
+            killer: read_value::<u8>(stream, definition.get_entry("killer"), "killer")?,
+            victim: read_value::<u8>(stream, definition.get_entry("victim"), "victim")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "killer" => Ok(self.killer.clone().into()),
+            "victim" => Ok(self.victim.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EnvironmentalDeath",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ProjectileDirectHitEvent {
     pub attacker: u8,
     pub victim: u8,
@@ -5279,30 +14811,86 @@ pub struct ProjectileDirectHitEvent {
 impl ProjectileDirectHitEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ProjectileDirectHitEvent {
-            attacker: read_value::<u8>(stream, iter.next(), "attacker")?,
-            victim: read_value::<u8>(stream, iter.next(), "victim")?,
-            weapon_def_index: read_value::<u32>(stream, iter.next(), "weapon_def_index")?,
+            attacker: read_value::<
+                u8,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
+            victim: read_value::<u8>(stream, definition.get_entry("victim"), "victim")?,
+            weapon_def_index: read_value::<
+                u32,
+            >(stream, definition.get_entry("weapon_def_index"), "weapon_def_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "attacker" => Ok(self.attacker.clone().into()),
+            "victim" => Ok(self.victim.clone().into()),
+            "weapon_def_index" => Ok(self.weapon_def_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ProjectileDirectHit",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PassGetEvent {
     pub owner: u16,
 }
 impl PassGetEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PassGetEvent {
-            owner: read_value::<u16>(stream, iter.next(), "owner")?,
+            owner: read_value::<u16>(stream, definition.get_entry("owner"), "owner")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "owner" => Ok(self.owner.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PassGet",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PassScoreEvent {
     pub scorer: u16,
     pub assister: u16,
@@ -5311,16 +14899,45 @@ pub struct PassScoreEvent {
 impl PassScoreEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PassScoreEvent {
-            scorer: read_value::<u16>(stream, iter.next(), "scorer")?,
-            assister: read_value::<u16>(stream, iter.next(), "assister")?,
-            points: read_value::<u8>(stream, iter.next(), "points")?,
+            scorer: read_value::<u16>(stream, definition.get_entry("scorer"), "scorer")?,
+            assister: read_value::<
+                u16,
+            >(stream, definition.get_entry("assister"), "assister")?,
+            points: read_value::<u8>(stream, definition.get_entry("points"), "points")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "scorer" => Ok(self.scorer.clone().into()),
+            "assister" => Ok(self.assister.clone().into()),
+            "points" => Ok(self.points.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PassScore",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PassFreeEvent {
     pub owner: u16,
     pub attacker: u16,
@@ -5328,15 +14945,43 @@ pub struct PassFreeEvent {
 impl PassFreeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PassFreeEvent {
-            owner: read_value::<u16>(stream, iter.next(), "owner")?,
-            attacker: read_value::<u16>(stream, iter.next(), "attacker")?,
+            owner: read_value::<u16>(stream, definition.get_entry("owner"), "owner")?,
+            attacker: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "owner" => Ok(self.owner.clone().into()),
+            "attacker" => Ok(self.attacker.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PassFree",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PassPassCaughtEvent {
     pub passer: u16,
     pub catcher: u16,
@@ -5346,17 +14991,49 @@ pub struct PassPassCaughtEvent {
 impl PassPassCaughtEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PassPassCaughtEvent {
-            passer: read_value::<u16>(stream, iter.next(), "passer")?,
-            catcher: read_value::<u16>(stream, iter.next(), "catcher")?,
-            dist: read_value::<f32>(stream, iter.next(), "dist")?,
-            duration: read_value::<f32>(stream, iter.next(), "duration")?,
+            passer: read_value::<u16>(stream, definition.get_entry("passer"), "passer")?,
+            catcher: read_value::<
+                u16,
+            >(stream, definition.get_entry("catcher"), "catcher")?,
+            dist: read_value::<f32>(stream, definition.get_entry("dist"), "dist")?,
+            duration: read_value::<
+                f32,
+            >(stream, definition.get_entry("duration"), "duration")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "passer" => Ok(self.passer.clone().into()),
+            "catcher" => Ok(self.catcher.clone().into()),
+            "dist" => Ok(self.dist.clone().into()),
+            "duration" => Ok(self.duration.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PassPassCaught",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PassBallStolenEvent {
     pub victim: u16,
     pub attacker: u16,
@@ -5364,15 +15041,43 @@ pub struct PassBallStolenEvent {
 impl PassBallStolenEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PassBallStolenEvent {
-            victim: read_value::<u16>(stream, iter.next(), "victim")?,
-            attacker: read_value::<u16>(stream, iter.next(), "attacker")?,
+            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
+            attacker: read_value::<
+                u16,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "victim" => Ok(self.victim.clone().into()),
+            "attacker" => Ok(self.attacker.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PassBallStolen",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PassBallBlockedEvent {
     pub owner: u16,
     pub blocker: u16,
@@ -5380,15 +15085,43 @@ pub struct PassBallBlockedEvent {
 impl PassBallBlockedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PassBallBlockedEvent {
-            owner: read_value::<u16>(stream, iter.next(), "owner")?,
-            blocker: read_value::<u16>(stream, iter.next(), "blocker")?,
+            owner: read_value::<u16>(stream, definition.get_entry("owner"), "owner")?,
+            blocker: read_value::<
+                u16,
+            >(stream, definition.get_entry("blocker"), "blocker")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "owner" => Ok(self.owner.clone().into()),
+            "blocker" => Ok(self.blocker.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PassBallBlocked",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct DamagePreventedEvent {
     pub preventor: u16,
     pub victim: u16,
@@ -5398,17 +15131,49 @@ pub struct DamagePreventedEvent {
 impl DamagePreventedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(DamagePreventedEvent {
-            preventor: read_value::<u16>(stream, iter.next(), "preventor")?,
-            victim: read_value::<u16>(stream, iter.next(), "victim")?,
-            amount: read_value::<u16>(stream, iter.next(), "amount")?,
-            condition: read_value::<u16>(stream, iter.next(), "condition")?,
+            preventor: read_value::<
+                u16,
+            >(stream, definition.get_entry("preventor"), "preventor")?,
+            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
+            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
+            condition: read_value::<
+                u16,
+            >(stream, definition.get_entry("condition"), "condition")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "preventor" => Ok(self.preventor.clone().into()),
+            "victim" => Ok(self.victim.clone().into()),
+            "amount" => Ok(self.amount.clone().into()),
+            "condition" => Ok(self.condition.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "DamagePrevented",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HalloweenBossKilledEvent {
     pub boss: u16,
     pub killer: u16,
@@ -5416,113 +15181,392 @@ pub struct HalloweenBossKilledEvent {
 impl HalloweenBossKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HalloweenBossKilledEvent {
-            boss: read_value::<u16>(stream, iter.next(), "boss")?,
-            killer: read_value::<u16>(stream, iter.next(), "killer")?,
+            boss: read_value::<u16>(stream, definition.get_entry("boss"), "boss")?,
+            killer: read_value::<u16>(stream, definition.get_entry("killer"), "killer")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "boss" => Ok(self.boss.clone().into()),
+            "killer" => Ok(self.killer.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HalloweenBossKilled",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EscapedLootIslandEvent {
     pub player: u16,
 }
 impl EscapedLootIslandEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(EscapedLootIslandEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EscapedLootIsland",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TaggedPlayerAsItEvent {
     pub player: u16,
 }
 impl TaggedPlayerAsItEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TaggedPlayerAsItEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TaggedPlayerAsIt",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MerasmusStunnedEvent {
     pub player: u16,
 }
 impl MerasmusStunnedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MerasmusStunnedEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MerasmusStunned",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MerasmusPropFoundEvent {
     pub player: u16,
 }
 impl MerasmusPropFoundEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MerasmusPropFoundEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MerasmusPropFound",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HalloweenSkeletonKilledEvent {
     pub player: u16,
 }
 impl HalloweenSkeletonKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HalloweenSkeletonKilledEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HalloweenSkeletonKilled",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+pub struct SkeletonKilledQuestEvent {
+    pub player: u16,
+}
+impl SkeletonKilledQuestEvent {
+    #[allow(unused_variables)]
+    fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
+        Ok(SkeletonKilledQuestEvent {
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+        })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "SkeletonKilledQuest",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
+}
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+pub struct SkeletonKingKilledQuestEvent {
+    pub player: u16,
+}
+impl SkeletonKingKilledQuestEvent {
+    #[allow(unused_variables)]
+    fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
+        Ok(SkeletonKingKilledQuestEvent {
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+        })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "SkeletonKingKilledQuest",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
+}
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct EscapeHellEvent {
     pub player: u16,
 }
 impl EscapeHellEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(EscapeHellEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "EscapeHell",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct CrossSpectralBridgeEvent {
     pub player: u16,
 }
 impl CrossSpectralBridgeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(CrossSpectralBridgeEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "CrossSpectralBridge",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MiniGameWonEvent {
     pub player: u16,
     pub game: u16,
@@ -5530,15 +15574,41 @@ pub struct MiniGameWonEvent {
 impl MiniGameWonEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(MiniGameWonEvent {
-            player: read_value::<u16>(stream, iter.next(), "player")?,
-            game: read_value::<u16>(stream, iter.next(), "game")?,
+            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            game: read_value::<u16>(stream, definition.get_entry("game"), "game")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "game" => Ok(self.game.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MiniGameWon",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RespawnGhostEvent {
     pub reviver: u16,
     pub ghost: u16,
@@ -5546,15 +15616,43 @@ pub struct RespawnGhostEvent {
 impl RespawnGhostEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RespawnGhostEvent {
-            reviver: read_value::<u16>(stream, iter.next(), "reviver")?,
-            ghost: read_value::<u16>(stream, iter.next(), "ghost")?,
+            reviver: read_value::<
+                u16,
+            >(stream, definition.get_entry("reviver"), "reviver")?,
+            ghost: read_value::<u16>(stream, definition.get_entry("ghost"), "ghost")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "reviver" => Ok(self.reviver.clone().into()),
+            "ghost" => Ok(self.ghost.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RespawnGhost",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct KillInHellEvent {
     pub killer: u16,
     pub victim: u16,
@@ -5562,43 +15660,121 @@ pub struct KillInHellEvent {
 impl KillInHellEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(KillInHellEvent {
-            killer: read_value::<u16>(stream, iter.next(), "killer")?,
-            victim: read_value::<u16>(stream, iter.next(), "victim")?,
+            killer: read_value::<u16>(stream, definition.get_entry("killer"), "killer")?,
+            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "killer" => Ok(self.killer.clone().into()),
+            "victim" => Ok(self.victim.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "KillInHell",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HalloweenDuckCollectedEvent {
     pub collector: u16,
 }
 impl HalloweenDuckCollectedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HalloweenDuckCollectedEvent {
-            collector: read_value::<u16>(stream, iter.next(), "collector")?,
+            collector: read_value::<
+                u16,
+            >(stream, definition.get_entry("collector"), "collector")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "collector" => Ok(self.collector.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HalloweenDuckCollected",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct SpecialScoreEvent {
     pub player: u8,
 }
 impl SpecialScoreEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(SpecialScoreEvent {
-            player: read_value::<u8>(stream, iter.next(), "player")?,
+            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "SpecialScore",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TeamLeaderKilledEvent {
     pub killer: u8,
     pub victim: u8,
@@ -5606,15 +15782,41 @@ pub struct TeamLeaderKilledEvent {
 impl TeamLeaderKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(TeamLeaderKilledEvent {
-            killer: read_value::<u8>(stream, iter.next(), "killer")?,
-            victim: read_value::<u8>(stream, iter.next(), "victim")?,
+            killer: read_value::<u8>(stream, definition.get_entry("killer"), "killer")?,
+            victim: read_value::<u8>(stream, definition.get_entry("victim"), "victim")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "killer" => Ok(self.killer.clone().into()),
+            "victim" => Ok(self.victim.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TeamLeaderKilled",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HalloweenSoulCollectedEvent {
     pub intended_target: u8,
     pub collecting_player: u8,
@@ -5623,27 +15825,83 @@ pub struct HalloweenSoulCollectedEvent {
 impl HalloweenSoulCollectedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HalloweenSoulCollectedEvent {
-            intended_target: read_value::<u8>(stream, iter.next(), "intended_target")?,
+            intended_target: read_value::<
+                u8,
+            >(stream, definition.get_entry("intended_target"), "intended_target")?,
             collecting_player: read_value::<
                 u8,
-            >(stream, iter.next(), "collecting_player")?,
-            soul_count: read_value::<u8>(stream, iter.next(), "soul_count")?,
+            >(stream, definition.get_entry("collecting_player"), "collecting_player")?,
+            soul_count: read_value::<
+                u8,
+            >(stream, definition.get_entry("soul_count"), "soul_count")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "intended_target" => Ok(self.intended_target.clone().into()),
+            "collecting_player" => Ok(self.collecting_player.clone().into()),
+            "soul_count" => Ok(self.soul_count.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HalloweenSoulCollected",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RecalculateTruceEvent {}
 impl RecalculateTruceEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RecalculateTruceEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RecalculateTruce",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct DeadRingerCheatDeathEvent {
     pub spy: u8,
     pub attacker: u8,
@@ -5651,15 +15909,43 @@ pub struct DeadRingerCheatDeathEvent {
 impl DeadRingerCheatDeathEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(DeadRingerCheatDeathEvent {
-            spy: read_value::<u8>(stream, iter.next(), "spy")?,
-            attacker: read_value::<u8>(stream, iter.next(), "attacker")?,
+            spy: read_value::<u8>(stream, definition.get_entry("spy"), "spy")?,
+            attacker: read_value::<
+                u8,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "spy" => Ok(self.spy.clone().into()),
+            "attacker" => Ok(self.attacker.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "DeadRingerCheatDeath",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct CrossbowHealEvent {
     pub healer: u8,
     pub target: u8,
@@ -5668,16 +15954,43 @@ pub struct CrossbowHealEvent {
 impl CrossbowHealEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(CrossbowHealEvent {
-            healer: read_value::<u8>(stream, iter.next(), "healer")?,
-            target: read_value::<u8>(stream, iter.next(), "target")?,
-            amount: read_value::<u16>(stream, iter.next(), "amount")?,
+            healer: read_value::<u8>(stream, definition.get_entry("healer"), "healer")?,
+            target: read_value::<u8>(stream, definition.get_entry("target"), "target")?,
+            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "healer" => Ok(self.healer.clone().into()),
+            "target" => Ok(self.target.clone().into()),
+            "amount" => Ok(self.amount.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "CrossbowHeal",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct DamageMitigatedEvent {
     pub mitigator: u8,
     pub damaged: u8,
@@ -5687,19 +16000,51 @@ pub struct DamageMitigatedEvent {
 impl DamageMitigatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(DamageMitigatedEvent {
-            mitigator: read_value::<u8>(stream, iter.next(), "mitigator")?,
-            damaged: read_value::<u8>(stream, iter.next(), "damaged")?,
-            amount: read_value::<u16>(stream, iter.next(), "amount")?,
+            mitigator: read_value::<
+                u8,
+            >(stream, definition.get_entry("mitigator"), "mitigator")?,
+            damaged: read_value::<
+                u8,
+            >(stream, definition.get_entry("damaged"), "damaged")?,
+            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
             item_definition_index: read_value::<
                 u16,
-            >(stream, iter.next(), "item_definition_index")?,
+            >(stream, definition.get_entry("itemdefindex"), "item_definition_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "mitigator" => Ok(self.mitigator.clone().into()),
+            "damaged" => Ok(self.damaged.clone().into()),
+            "amount" => Ok(self.amount.clone().into()),
+            "itemdefindex" => Ok(self.item_definition_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "DamageMitigated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PayloadPushedEvent {
     pub pusher: u8,
     pub distance: u16,
@@ -5707,29 +16052,84 @@ pub struct PayloadPushedEvent {
 impl PayloadPushedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PayloadPushedEvent {
-            pusher: read_value::<u8>(stream, iter.next(), "pusher")?,
-            distance: read_value::<u16>(stream, iter.next(), "distance")?,
+            pusher: read_value::<u8>(stream, definition.get_entry("pusher"), "pusher")?,
+            distance: read_value::<
+                u16,
+            >(stream, definition.get_entry("distance"), "distance")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "pusher" => Ok(self.pusher.clone().into()),
+            "distance" => Ok(self.distance.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PayloadPushed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerAbandonedMatchEvent {
     pub game_over: bool,
 }
 impl PlayerAbandonedMatchEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerAbandonedMatchEvent {
-            game_over: read_value::<bool>(stream, iter.next(), "game_over")?,
+            game_over: read_value::<
+                bool,
+            >(stream, definition.get_entry("game_over"), "game_over")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "game_over" => Ok(self.game_over.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerAbandonedMatch",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ClDrawlineEvent {
     pub player: u8,
     pub panel: u8,
@@ -5740,195 +16140,676 @@ pub struct ClDrawlineEvent {
 impl ClDrawlineEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ClDrawlineEvent {
-            player: read_value::<u8>(stream, iter.next(), "player")?,
-            panel: read_value::<u8>(stream, iter.next(), "panel")?,
-            line: read_value::<u8>(stream, iter.next(), "line")?,
-            x: read_value::<f32>(stream, iter.next(), "x")?,
-            y: read_value::<f32>(stream, iter.next(), "y")?,
+            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
+            panel: read_value::<u8>(stream, definition.get_entry("panel"), "panel")?,
+            line: read_value::<u8>(stream, definition.get_entry("line"), "line")?,
+            x: read_value::<f32>(stream, definition.get_entry("x"), "x")?,
+            y: read_value::<f32>(stream, definition.get_entry("y"), "y")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "player" => Ok(self.player.clone().into()),
+            "panel" => Ok(self.panel.clone().into()),
+            "line" => Ok(self.line.clone().into()),
+            "x" => Ok(self.x.clone().into()),
+            "y" => Ok(self.y.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ClDrawline",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RestartTimerTimeEvent {
     pub time: u8,
 }
 impl RestartTimerTimeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RestartTimerTimeEvent {
-            time: read_value::<u8>(stream, iter.next(), "time")?,
+            time: read_value::<u8>(stream, definition.get_entry("time"), "time")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "time" => Ok(self.time.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RestartTimerTime",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct WinLimitChangedEvent {}
 impl WinLimitChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(WinLimitChangedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "WinLimitChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct WinPanelShowScoresEvent {}
 impl WinPanelShowScoresEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(WinPanelShowScoresEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "WinPanelShowScores",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TopStreamsRequestFinishedEvent {}
 impl TopStreamsRequestFinishedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TopStreamsRequestFinishedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "TopStreamsRequestFinished",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct CompetitiveStateChangedEvent {}
 impl CompetitiveStateChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(CompetitiveStateChangedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "CompetitiveStateChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GlobalWarDataUpdatedEvent {}
 impl GlobalWarDataUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(GlobalWarDataUpdatedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "GlobalWarDataUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct StopWatchChangedEvent {}
 impl StopWatchChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(StopWatchChangedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "StopWatchChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct DsStopEvent {}
 impl DsStopEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(DsStopEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "DsStop",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct DsScreenshotEvent {
     pub delay: f32,
 }
 impl DsScreenshotEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(DsScreenshotEvent {
-            delay: read_value::<f32>(stream, iter.next(), "delay")?,
+            delay: read_value::<f32>(stream, definition.get_entry("delay"), "delay")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "delay" => Ok(self.delay.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "DsScreenshot",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ShowMatchSummaryEvent {}
 impl ShowMatchSummaryEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ShowMatchSummaryEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ShowMatchSummary",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ExperienceChangedEvent {}
 impl ExperienceChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ExperienceChangedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ExperienceChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct BeginXpLerpEvent {}
 impl BeginXpLerpEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(BeginXpLerpEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "BeginXpLerp",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MatchmakerStatsUpdatedEvent {}
 impl MatchmakerStatsUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MatchmakerStatsUpdatedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MatchmakerStatsUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RematchVotePeriodOverEvent {
     pub success: bool,
 }
 impl RematchVotePeriodOverEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(RematchVotePeriodOverEvent {
-            success: read_value::<bool>(stream, iter.next(), "success")?,
+            success: read_value::<
+                bool,
+            >(stream, definition.get_entry("success"), "success")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "success" => Ok(self.success.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RematchVotePeriodOver",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct RematchFailedToCreateEvent {}
 impl RematchFailedToCreateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RematchFailedToCreateEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "RematchFailedToCreate",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerRematchChangeEvent {}
 impl PlayerRematchChangeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerRematchChangeEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerRematchChange",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PingUpdatedEvent {}
 impl PingUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PingUpdatedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PingUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MMStatsUpdatedEvent {}
 impl MMStatsUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MMStatsUpdatedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MMStatsUpdated",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerNextMapVoteChangeEvent {
     pub map_index: u8,
     pub vote: u8,
@@ -5936,24 +16817,77 @@ pub struct PlayerNextMapVoteChangeEvent {
 impl PlayerNextMapVoteChangeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerNextMapVoteChangeEvent {
-            map_index: read_value::<u8>(stream, iter.next(), "map_index")?,
-            vote: read_value::<u8>(stream, iter.next(), "vote")?,
+            map_index: read_value::<
+                u8,
+            >(stream, definition.get_entry("map_index"), "map_index")?,
+            vote: read_value::<u8>(stream, definition.get_entry("vote"), "vote")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "map_index" => Ok(self.map_index.clone().into()),
+            "vote" => Ok(self.vote.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerNextMapVoteChange",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct VoteMapsChangedEvent {}
 impl VoteMapsChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(VoteMapsChangedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "VoteMapsChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ProtoDefChangedEvent {
     pub kind: u8,
     pub definition_index: u32,
@@ -5964,20 +16898,55 @@ pub struct ProtoDefChangedEvent {
 impl ProtoDefChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ProtoDefChangedEvent {
-            kind: read_value::<u8>(stream, iter.next(), "kind")?,
+            kind: read_value::<u8>(stream, definition.get_entry("type"), "kind")?,
             definition_index: read_value::<
                 u32,
-            >(stream, iter.next(), "definition_index")?,
-            created: read_value::<bool>(stream, iter.next(), "created")?,
-            deleted: read_value::<bool>(stream, iter.next(), "deleted")?,
-            erase_history: read_value::<bool>(stream, iter.next(), "erase_history")?,
+            >(stream, definition.get_entry("defindex"), "definition_index")?,
+            created: read_value::<
+                bool,
+            >(stream, definition.get_entry("created"), "created")?,
+            deleted: read_value::<
+                bool,
+            >(stream, definition.get_entry("deleted"), "deleted")?,
+            erase_history: read_value::<
+                bool,
+            >(stream, definition.get_entry("erase_history"), "erase_history")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "type" => Ok(self.kind.clone().into()),
+            "defindex" => Ok(self.definition_index.clone().into()),
+            "created" => Ok(self.created.clone().into()),
+            "deleted" => Ok(self.deleted.clone().into()),
+            "erase_history" => Ok(self.erase_history.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ProtoDefChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerDominationEvent {
     pub dominator: u16,
     pub dominated: u16,
@@ -5986,16 +16955,49 @@ pub struct PlayerDominationEvent {
 impl PlayerDominationEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerDominationEvent {
-            dominator: read_value::<u16>(stream, iter.next(), "dominator")?,
-            dominated: read_value::<u16>(stream, iter.next(), "dominated")?,
-            dominations: read_value::<u16>(stream, iter.next(), "dominations")?,
+            dominator: read_value::<
+                u16,
+            >(stream, definition.get_entry("dominator"), "dominator")?,
+            dominated: read_value::<
+                u16,
+            >(stream, definition.get_entry("dominated"), "dominated")?,
+            dominations: read_value::<
+                u16,
+            >(stream, definition.get_entry("dominations"), "dominations")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "dominator" => Ok(self.dominator.clone().into()),
+            "dominated" => Ok(self.dominated.clone().into()),
+            "dominations" => Ok(self.dominations.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerDomination",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PlayerRocketPackPushedEvent {
     pub pusher: u16,
     pub pushed: u16,
@@ -6003,15 +17005,41 @@ pub struct PlayerRocketPackPushedEvent {
 impl PlayerRocketPackPushedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(PlayerRocketPackPushedEvent {
-            pusher: read_value::<u16>(stream, iter.next(), "pusher")?,
-            pushed: read_value::<u16>(stream, iter.next(), "pushed")?,
+            pusher: read_value::<u16>(stream, definition.get_entry("pusher"), "pusher")?,
+            pushed: read_value::<u16>(stream, definition.get_entry("pushed"), "pushed")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "pusher" => Ok(self.pusher.clone().into()),
+            "pushed" => Ok(self.pushed.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "PlayerRocketPackPushed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct QuestRequestEvent {
     pub request: u32,
     pub msg: MaybeUtf8String,
@@ -6019,15 +17047,45 @@ pub struct QuestRequestEvent {
 impl QuestRequestEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(QuestRequestEvent {
-            request: read_value::<u32>(stream, iter.next(), "request")?,
-            msg: read_value::<MaybeUtf8String>(stream, iter.next(), "msg")?,
+            request: read_value::<
+                u32,
+            >(stream, definition.get_entry("request"), "request")?,
+            msg: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("msg"), "msg")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "request" => Ok(self.request.clone().into()),
+            "msg" => Ok(self.msg.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "QuestRequest",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct QuestResponseEvent {
     pub request: u32,
     pub success: bool,
@@ -6036,16 +17094,49 @@ pub struct QuestResponseEvent {
 impl QuestResponseEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(QuestResponseEvent {
-            request: read_value::<u32>(stream, iter.next(), "request")?,
-            success: read_value::<bool>(stream, iter.next(), "success")?,
-            msg: read_value::<MaybeUtf8String>(stream, iter.next(), "msg")?,
+            request: read_value::<
+                u32,
+            >(stream, definition.get_entry("request"), "request")?,
+            success: read_value::<
+                bool,
+            >(stream, definition.get_entry("success"), "success")?,
+            msg: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("msg"), "msg")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "request" => Ok(self.request.clone().into()),
+            "success" => Ok(self.success.clone().into()),
+            "msg" => Ok(self.msg.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "QuestResponse",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct QuestProgressEvent {
     pub owner: u16,
     pub scorer: u16,
@@ -6056,20 +17147,51 @@ pub struct QuestProgressEvent {
 impl QuestProgressEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(QuestProgressEvent {
-            owner: read_value::<u16>(stream, iter.next(), "owner")?,
-            scorer: read_value::<u16>(stream, iter.next(), "scorer")?,
-            kind: read_value::<u8>(stream, iter.next(), "kind")?,
-            completed: read_value::<bool>(stream, iter.next(), "completed")?,
+            owner: read_value::<u16>(stream, definition.get_entry("owner"), "owner")?,
+            scorer: read_value::<u16>(stream, definition.get_entry("scorer"), "scorer")?,
+            kind: read_value::<u8>(stream, definition.get_entry("type"), "kind")?,
+            completed: read_value::<
+                bool,
+            >(stream, definition.get_entry("completed"), "completed")?,
             quest_definition_index: read_value::<
                 u32,
-            >(stream, iter.next(), "quest_definition_index")?,
+            >(stream, definition.get_entry("quest_defindex"), "quest_definition_index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "owner" => Ok(self.owner.clone().into()),
+            "scorer" => Ok(self.scorer.clone().into()),
+            "type" => Ok(self.kind.clone().into()),
+            "completed" => Ok(self.completed.clone().into()),
+            "quest_defindex" => Ok(self.quest_definition_index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "QuestProgress",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ProjectileRemovedEvent {
     pub attacker: u8,
     pub weapon_def_index: u32,
@@ -6079,28 +17201,87 @@ pub struct ProjectileRemovedEvent {
 impl ProjectileRemovedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ProjectileRemovedEvent {
-            attacker: read_value::<u8>(stream, iter.next(), "attacker")?,
+            attacker: read_value::<
+                u8,
+            >(stream, definition.get_entry("attacker"), "attacker")?,
             weapon_def_index: read_value::<
                 u32,
-            >(stream, iter.next(), "weapon_def_index")?,
-            num_hit: read_value::<u8>(stream, iter.next(), "num_hit")?,
-            num_direct_hit: read_value::<u8>(stream, iter.next(), "num_direct_hit")?,
+            >(stream, definition.get_entry("weapon_def_index"), "weapon_def_index")?,
+            num_hit: read_value::<
+                u8,
+            >(stream, definition.get_entry("num_hit"), "num_hit")?,
+            num_direct_hit: read_value::<
+                u8,
+            >(stream, definition.get_entry("num_direct_hit"), "num_direct_hit")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "attacker" => Ok(self.attacker.clone().into()),
+            "weapon_def_index" => Ok(self.weapon_def_index.clone().into()),
+            "num_hit" => Ok(self.num_hit.clone().into()),
+            "num_direct_hit" => Ok(self.num_direct_hit.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ProjectileRemoved",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct QuestMapDataChangedEvent {}
 impl QuestMapDataChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(QuestMapDataChangedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "QuestMapDataChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GasDousedPlayerIgnitedEvent {
     pub igniter: u16,
     pub douser: u16,
@@ -6109,39 +17290,118 @@ pub struct GasDousedPlayerIgnitedEvent {
 impl GasDousedPlayerIgnitedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(GasDousedPlayerIgnitedEvent {
-            igniter: read_value::<u16>(stream, iter.next(), "igniter")?,
-            douser: read_value::<u16>(stream, iter.next(), "douser")?,
-            victim: read_value::<u16>(stream, iter.next(), "victim")?,
+            igniter: read_value::<
+                u16,
+            >(stream, definition.get_entry("igniter"), "igniter")?,
+            douser: read_value::<u16>(stream, definition.get_entry("douser"), "douser")?,
+            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "igniter" => Ok(self.igniter.clone().into()),
+            "douser" => Ok(self.douser.clone().into()),
+            "victim" => Ok(self.victim.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "GasDousedPlayerIgnited",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct QuestTurnInStateEvent {
     pub state: u16,
 }
 impl QuestTurnInStateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(QuestTurnInStateEvent {
-            state: read_value::<u16>(stream, iter.next(), "state")?,
+            state: read_value::<u16>(stream, definition.get_entry("state"), "state")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "state" => Ok(self.state.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "QuestTurnInState",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ItemsAcknowledgedEvent {}
 impl ItemsAcknowledgedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ItemsAcknowledgedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ItemsAcknowledged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct CapperKilledEvent {
     pub blocker: u16,
     pub victim: u16,
@@ -6149,33 +17409,111 @@ pub struct CapperKilledEvent {
 impl CapperKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(CapperKilledEvent {
-            blocker: read_value::<u16>(stream, iter.next(), "blocker")?,
-            victim: read_value::<u16>(stream, iter.next(), "victim")?,
+            blocker: read_value::<
+                u16,
+            >(stream, definition.get_entry("blocker"), "blocker")?,
+            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "blocker" => Ok(self.blocker.clone().into()),
+            "victim" => Ok(self.victim.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "CapperKilled",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct MainMenuStabilizedEvent {}
 impl MainMenuStabilizedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MainMenuStabilizedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "MainMenuStabilized",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct WorldStatusChangedEvent {}
 impl WorldStatusChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(WorldStatusChangedEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "WorldStatusChanged",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HLTVStatusEvent {
     pub clients: u32,
     pub slots: u32,
@@ -6185,31 +17523,90 @@ pub struct HLTVStatusEvent {
 impl HLTVStatusEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HLTVStatusEvent {
-            clients: read_value::<u32>(stream, iter.next(), "clients")?,
-            slots: read_value::<u32>(stream, iter.next(), "slots")?,
-            proxies: read_value::<u16>(stream, iter.next(), "proxies")?,
-            master: read_value::<MaybeUtf8String>(stream, iter.next(), "master")?,
+            clients: read_value::<
+                u32,
+            >(stream, definition.get_entry("clients"), "clients")?,
+            slots: read_value::<u32>(stream, definition.get_entry("slots"), "slots")?,
+            proxies: read_value::<
+                u16,
+            >(stream, definition.get_entry("proxies"), "proxies")?,
+            master: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("master"), "master")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "clients" => Ok(self.clients.clone().into()),
+            "slots" => Ok(self.slots.clone().into()),
+            "proxies" => Ok(self.proxies.clone().into()),
+            "master" => Ok(self.master.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HLTVStatus",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HLTVCameramanEvent {
     pub index: u16,
 }
 impl HLTVCameramanEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HLTVCameramanEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HLTVCameraman",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HLTVRankCameraEvent {
     pub index: u8,
     pub rank: f32,
@@ -6218,16 +17615,43 @@ pub struct HLTVRankCameraEvent {
 impl HLTVRankCameraEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HLTVRankCameraEvent {
-            index: read_value::<u8>(stream, iter.next(), "index")?,
-            rank: read_value::<f32>(stream, iter.next(), "rank")?,
-            target: read_value::<u16>(stream, iter.next(), "target")?,
+            index: read_value::<u8>(stream, definition.get_entry("index"), "index")?,
+            rank: read_value::<f32>(stream, definition.get_entry("rank"), "rank")?,
+            target: read_value::<u16>(stream, definition.get_entry("target"), "target")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            "rank" => Ok(self.rank.clone().into()),
+            "target" => Ok(self.target.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HLTVRankCamera",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HLTVRankEntityEvent {
     pub index: u16,
     pub rank: f32,
@@ -6236,16 +17660,43 @@ pub struct HLTVRankEntityEvent {
 impl HLTVRankEntityEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HLTVRankEntityEvent {
-            index: read_value::<u16>(stream, iter.next(), "index")?,
-            rank: read_value::<f32>(stream, iter.next(), "rank")?,
-            target: read_value::<u16>(stream, iter.next(), "target")?,
+            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            rank: read_value::<f32>(stream, definition.get_entry("rank"), "rank")?,
+            target: read_value::<u16>(stream, definition.get_entry("target"), "target")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "index" => Ok(self.index.clone().into()),
+            "rank" => Ok(self.rank.clone().into()),
+            "target" => Ok(self.target.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HLTVRankEntity",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HLTVFixedEvent {
     pub pos_x: u32,
     pub pos_y: u32,
@@ -6259,21 +17710,53 @@ pub struct HLTVFixedEvent {
 impl HLTVFixedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HLTVFixedEvent {
-            pos_x: read_value::<u32>(stream, iter.next(), "pos_x")?,
-            pos_y: read_value::<u32>(stream, iter.next(), "pos_y")?,
-            pos_z: read_value::<u32>(stream, iter.next(), "pos_z")?,
-            theta: read_value::<u16>(stream, iter.next(), "theta")?,
-            phi: read_value::<u16>(stream, iter.next(), "phi")?,
-            offset: read_value::<u16>(stream, iter.next(), "offset")?,
-            fov: read_value::<f32>(stream, iter.next(), "fov")?,
-            target: read_value::<u16>(stream, iter.next(), "target")?,
+            pos_x: read_value::<u32>(stream, definition.get_entry("posx"), "pos_x")?,
+            pos_y: read_value::<u32>(stream, definition.get_entry("posy"), "pos_y")?,
+            pos_z: read_value::<u32>(stream, definition.get_entry("posz"), "pos_z")?,
+            theta: read_value::<u16>(stream, definition.get_entry("theta"), "theta")?,
+            phi: read_value::<u16>(stream, definition.get_entry("phi"), "phi")?,
+            offset: read_value::<u16>(stream, definition.get_entry("offset"), "offset")?,
+            fov: read_value::<f32>(stream, definition.get_entry("fov"), "fov")?,
+            target: read_value::<u16>(stream, definition.get_entry("target"), "target")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "posx" => Ok(self.pos_x.clone().into()),
+            "posy" => Ok(self.pos_y.clone().into()),
+            "posz" => Ok(self.pos_z.clone().into()),
+            "theta" => Ok(self.theta.clone().into()),
+            "phi" => Ok(self.phi.clone().into()),
+            "offset" => Ok(self.offset.clone().into()),
+            "fov" => Ok(self.fov.clone().into()),
+            "target" => Ok(self.target.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HLTVFixed",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HLTVChaseEvent {
     pub target_1: u16,
     pub target_2: u16,
@@ -6286,71 +17769,216 @@ pub struct HLTVChaseEvent {
 impl HLTVChaseEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HLTVChaseEvent {
-            target_1: read_value::<u16>(stream, iter.next(), "target_1")?,
-            target_2: read_value::<u16>(stream, iter.next(), "target_2")?,
-            distance: read_value::<u16>(stream, iter.next(), "distance")?,
-            theta: read_value::<u16>(stream, iter.next(), "theta")?,
-            phi: read_value::<u16>(stream, iter.next(), "phi")?,
-            inertia: read_value::<u8>(stream, iter.next(), "inertia")?,
-            in_eye: read_value::<u8>(stream, iter.next(), "in_eye")?,
+            target_1: read_value::<
+                u16,
+            >(stream, definition.get_entry("target1"), "target_1")?,
+            target_2: read_value::<
+                u16,
+            >(stream, definition.get_entry("target2"), "target_2")?,
+            distance: read_value::<
+                u16,
+            >(stream, definition.get_entry("distance"), "distance")?,
+            theta: read_value::<u16>(stream, definition.get_entry("theta"), "theta")?,
+            phi: read_value::<u16>(stream, definition.get_entry("phi"), "phi")?,
+            inertia: read_value::<
+                u8,
+            >(stream, definition.get_entry("inertia"), "inertia")?,
+            in_eye: read_value::<u8>(stream, definition.get_entry("ineye"), "in_eye")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "target1" => Ok(self.target_1.clone().into()),
+            "target2" => Ok(self.target_2.clone().into()),
+            "distance" => Ok(self.distance.clone().into()),
+            "theta" => Ok(self.theta.clone().into()),
+            "phi" => Ok(self.phi.clone().into()),
+            "inertia" => Ok(self.inertia.clone().into()),
+            "ineye" => Ok(self.in_eye.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HLTVChase",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HLTVMessageEvent {
     pub text: MaybeUtf8String,
 }
 impl HLTVMessageEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HLTVMessageEvent {
-            text: read_value::<MaybeUtf8String>(stream, iter.next(), "text")?,
+            text: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("text"), "text")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "text" => Ok(self.text.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HLTVMessage",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HLTVTitleEvent {
     pub text: MaybeUtf8String,
 }
 impl HLTVTitleEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HLTVTitleEvent {
-            text: read_value::<MaybeUtf8String>(stream, iter.next(), "text")?,
+            text: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("text"), "text")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "text" => Ok(self.text.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HLTVTitle",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HLTVChatEvent {
     pub text: MaybeUtf8String,
 }
 impl HLTVChatEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(HLTVChatEvent {
-            text: read_value::<MaybeUtf8String>(stream, iter.next(), "text")?,
+            text: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("text"), "text")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "text" => Ok(self.text.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "HLTVChat",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ReplayStartRecordEvent {}
 impl ReplayStartRecordEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ReplayStartRecordEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ReplayStartRecord",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ReplaySessionInfoEvent {
     pub sn: MaybeUtf8String,
     pub di: u8,
@@ -6360,45 +17988,150 @@ pub struct ReplaySessionInfoEvent {
 impl ReplaySessionInfoEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ReplaySessionInfoEvent {
-            sn: read_value::<MaybeUtf8String>(stream, iter.next(), "sn")?,
-            di: read_value::<u8>(stream, iter.next(), "di")?,
-            cb: read_value::<u32>(stream, iter.next(), "cb")?,
-            st: read_value::<u32>(stream, iter.next(), "st")?,
+            sn: read_value::<MaybeUtf8String>(stream, definition.get_entry("sn"), "sn")?,
+            di: read_value::<u8>(stream, definition.get_entry("di"), "di")?,
+            cb: read_value::<u32>(stream, definition.get_entry("cb"), "cb")?,
+            st: read_value::<u32>(stream, definition.get_entry("st"), "st")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "sn" => Ok(self.sn.clone().into()),
+            "di" => Ok(self.di.clone().into()),
+            "cb" => Ok(self.cb.clone().into()),
+            "st" => Ok(self.st.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ReplaySessionInfo",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ReplayEndRecordEvent {}
 impl ReplayEndRecordEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ReplayEndRecordEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ReplayEndRecord",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ReplayReplaysAvailableEvent {}
 impl ReplayReplaysAvailableEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ReplayReplaysAvailableEvent {})
     }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ReplayReplaysAvailable",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
+    }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ReplayServerErrorEvent {
     pub error: MaybeUtf8String,
 }
 impl ReplayServerErrorEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
-        let mut iter = definition.entries.iter();
         Ok(ReplayServerErrorEvent {
-            error: read_value::<MaybeUtf8String>(stream, iter.next(), "error")?,
+            error: read_value::<
+                MaybeUtf8String,
+            >(stream, definition.get_entry("error"), "error")?,
         })
+    }
+    #[allow(unused_variables)]
+    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+        match field {
+            "error" => Ok(self.error.clone().into()),
+            _ => {
+                Err(ParseError::MissingGameEventValue {
+                    ty: "ReplayServerError",
+                    field: field.into(),
+                })
+            }
+        }
+    }
+    #[allow(unused_variables)]
+    fn write(
+        &self,
+        stream: &mut BitWriteStream<LittleEndian>,
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
+        for entry in &definition.entries {
+            let value = self
+                .get_field(&entry.name)
+                .unwrap_or_else(|_| entry.kind.default_value());
+            stream.write(&value)?;
+        }
+        Ok(())
     }
 }
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -6742,6 +18475,8 @@ pub enum GameEvent {
     MerasmusStunned(MerasmusStunnedEvent),
     MerasmusPropFound(MerasmusPropFoundEvent),
     HalloweenSkeletonKilled(HalloweenSkeletonKilledEvent),
+    SkeletonKilledQuest(SkeletonKilledQuestEvent),
+    SkeletonKingKilledQuest(SkeletonKingKilledQuestEvent),
     EscapeHell(EscapeHellEvent),
     CrossSpectralBridge(CrossSpectralBridgeEvent),
     MiniGameWon(MiniGameWonEvent),
@@ -6811,406 +18546,811 @@ pub enum GameEvent {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum GameEventType {
+    #[serde(rename = "server_spawn")]
     ServerSpawn,
+    #[serde(rename = "server_changelevel_failed")]
     ServerChangeLevelFailed,
+    #[serde(rename = "server_shutdown")]
     ServerShutdown,
+    #[serde(rename = "server_cvar")]
     ServerCvar,
+    #[serde(rename = "server_message")]
     ServerMessage,
+    #[serde(rename = "server_addban")]
     ServerAddBan,
+    #[serde(rename = "server_removeban")]
     ServerRemoveBan,
+    #[serde(rename = "player_connect")]
     PlayerConnect,
+    #[serde(rename = "player_connect_client")]
     PlayerConnectClient,
+    #[serde(rename = "player_info")]
     PlayerInfo,
+    #[serde(rename = "player_disconnect")]
     PlayerDisconnect,
+    #[serde(rename = "player_activate")]
     PlayerActivate,
+    #[serde(rename = "player_say")]
     PlayerSay,
+    #[serde(rename = "client_disconnect")]
     ClientDisconnect,
+    #[serde(rename = "client_beginconnect")]
     ClientBeginConnect,
+    #[serde(rename = "client_connected")]
     ClientConnected,
+    #[serde(rename = "client_fullconnect")]
     ClientFullConnect,
+    #[serde(rename = "host_quit")]
     HostQuit,
+    #[serde(rename = "team_info")]
     TeamInfo,
+    #[serde(rename = "team_score")]
     TeamScore,
+    #[serde(rename = "teamplay_broadcast_audio")]
     TeamPlayBroadcastAudio,
+    #[serde(rename = "player_team")]
     PlayerTeam,
+    #[serde(rename = "player_class")]
     PlayerClass,
+    #[serde(rename = "player_death")]
     PlayerDeath,
+    #[serde(rename = "player_hurt")]
     PlayerHurt,
+    #[serde(rename = "player_chat")]
     PlayerChat,
+    #[serde(rename = "player_score")]
     PlayerScore,
+    #[serde(rename = "player_spawn")]
     PlayerSpawn,
+    #[serde(rename = "player_shoot")]
     PlayerShoot,
+    #[serde(rename = "player_use")]
     PlayerUse,
+    #[serde(rename = "player_changename")]
     PlayerChangeName,
+    #[serde(rename = "player_hintmessage")]
     PlayerHintMessage,
+    #[serde(rename = "base_player_teleported")]
     BasePlayerTeleported,
+    #[serde(rename = "game_init")]
     GameInit,
+    #[serde(rename = "game_newmap")]
     GameNewMap,
+    #[serde(rename = "game_start")]
     GameStart,
+    #[serde(rename = "game_end")]
     GameEnd,
+    #[serde(rename = "round_start")]
     RoundStart,
+    #[serde(rename = "round_end")]
     RoundEnd,
+    #[serde(rename = "game_message")]
     GameMessage,
+    #[serde(rename = "break_breakable")]
     BreakBreakable,
+    #[serde(rename = "break_prop")]
     BreakProp,
+    #[serde(rename = "entity_killed")]
     EntityKilled,
+    #[serde(rename = "bonus_updated")]
     BonusUpdated,
+    #[serde(rename = "achievement_event")]
     AchievementEvent,
+    #[serde(rename = "achievement_increment")]
     AchievementIncrement,
+    #[serde(rename = "physgun_pickup")]
     PhysgunPickup,
+    #[serde(rename = "flare_ignite_npc")]
     FlareIgniteNpc,
+    #[serde(rename = "helicopter_grenade_punt_miss")]
     HelicopterGrenadePuntMiss,
+    #[serde(rename = "user_data_downloaded")]
     UserDataDownloaded,
+    #[serde(rename = "ragdoll_dissolved")]
     RagdollDissolved,
+    #[serde(rename = "hltv_changed_mode")]
     HLTVChangedMode,
+    #[serde(rename = "hltv_changed_target")]
     HLTVChangedTarget,
+    #[serde(rename = "vote_ended")]
     VoteEnded,
+    #[serde(rename = "vote_started")]
     VoteStarted,
+    #[serde(rename = "vote_changed")]
     VoteChanged,
+    #[serde(rename = "vote_passed")]
     VotePassed,
+    #[serde(rename = "vote_failed")]
     VoteFailed,
+    #[serde(rename = "vote_cast")]
     VoteCast,
+    #[serde(rename = "vote_options")]
     VoteOptions,
+    #[serde(rename = "replay_saved")]
     ReplaySaved,
+    #[serde(rename = "entered_performance_mode")]
     EnteredPerformanceMode,
+    #[serde(rename = "browse_replays")]
     BrowseReplays,
+    #[serde(rename = "replay_youtube_stats")]
     ReplayYoutubeStats,
+    #[serde(rename = "inventory_updated")]
     InventoryUpdated,
+    #[serde(rename = "cart_updated")]
     CartUpdated,
+    #[serde(rename = "store_pricesheet_updated")]
     StorePriceSheetUpdated,
+    #[serde(rename = "econ_inventory_connected")]
     EconInventoryConnected,
+    #[serde(rename = "item_schema_initialized")]
     ItemSchemaInitialized,
+    #[serde(rename = "gc_new_session")]
     GcNewSession,
+    #[serde(rename = "gc_lost_session")]
     GcLostSession,
+    #[serde(rename = "intro_finish")]
     IntroFinish,
+    #[serde(rename = "intro_nextcamera")]
     IntroNextCamera,
+    #[serde(rename = "player_changeclass")]
     PlayerChangeClass,
+    #[serde(rename = "tf_map_time_remaining")]
     TfMapTimeRemaining,
+    #[serde(rename = "tf_game_over")]
     TfGameOver,
+    #[serde(rename = "ctf_flag_captured")]
     CtfFlagCaptured,
+    #[serde(rename = "controlpoint_initialized")]
     ControlPointInitialized,
+    #[serde(rename = "controlpoint_updateimages")]
     ControlPointUpdateImages,
+    #[serde(rename = "controlpoint_updatelayout")]
     ControlPointUpdateLayout,
+    #[serde(rename = "controlpoint_updatecapping")]
     ControlPointUpdateCapping,
+    #[serde(rename = "controlpoint_updateowner")]
     ControlPointUpdateOwner,
+    #[serde(rename = "controlpoint_starttouch")]
     ControlPointStartTouch,
+    #[serde(rename = "controlpoint_endtouch")]
     ControlPointEndTouch,
+    #[serde(rename = "controlpoint_pulse_element")]
     ControlPointPulseElement,
+    #[serde(rename = "controlpoint_fake_capture")]
     ControlPointFakeCapture,
+    #[serde(rename = "controlpoint_fake_capture_mult")]
     ControlPointFakeCaptureMultiplier,
+    #[serde(rename = "teamplay_round_selected")]
     TeamPlayRoundSelected,
+    #[serde(rename = "teamplay_round_start")]
     TeamPlayRoundStart,
+    #[serde(rename = "teamplay_round_active")]
     TeamPlayRoundActive,
+    #[serde(rename = "teamplay_waiting_begins")]
     TeamPlayWaitingBegins,
+    #[serde(rename = "teamplay_waiting_ends")]
     TeamPlayWaitingEnds,
+    #[serde(rename = "teamplay_waiting_abouttoend")]
     TeamPlayWaitingAboutToEnd,
+    #[serde(rename = "teamplay_restart_round")]
     TeamPlayRestartRound,
+    #[serde(rename = "teamplay_ready_restart")]
     TeamPlayReadyRestart,
+    #[serde(rename = "teamplay_round_restart_seconds")]
     TeamPlayRoundRestartSeconds,
+    #[serde(rename = "teamplay_team_ready")]
     TeamPlayTeamReady,
+    #[serde(rename = "teamplay_round_win")]
     TeamPlayRoundWin,
+    #[serde(rename = "teamplay_update_timer")]
     TeamPlayUpdateTimer,
+    #[serde(rename = "teamplay_round_stalemate")]
     TeamPlayRoundStalemate,
+    #[serde(rename = "teamplay_overtime_begin")]
     TeamPlayOvertimeBegin,
+    #[serde(rename = "teamplay_overtime_end")]
     TeamPlayOvertimeEnd,
+    #[serde(rename = "teamplay_suddendeath_begin")]
     TeamPlaySuddenDeathBegin,
+    #[serde(rename = "teamplay_suddendeath_end")]
     TeamPlaySuddenDeathEnd,
+    #[serde(rename = "teamplay_game_over")]
     TeamPlayGameOver,
+    #[serde(rename = "teamplay_map_time_remaining")]
     TeamPlayMapTimeRemaining,
+    #[serde(rename = "teamplay_timer_flash")]
     TeamPlayTimerFlash,
+    #[serde(rename = "teamplay_timer_time_added")]
     TeamPlayTimerTimeAdded,
+    #[serde(rename = "teamplay_point_startcapture")]
     TeamPlayPointStartCapture,
+    #[serde(rename = "teamplay_point_captured")]
     TeamPlayPointCaptured,
+    #[serde(rename = "teamplay_point_locked")]
     TeamPlayPointLocked,
+    #[serde(rename = "teamplay_point_unlocked")]
     TeamPlayPointUnlocked,
+    #[serde(rename = "teamplay_capture_broken")]
     TeamPlayCaptureBroken,
+    #[serde(rename = "teamplay_capture_blocked")]
     TeamPlayCaptureBlocked,
+    #[serde(rename = "teamplay_flag_event")]
     TeamPlayFlagEvent,
+    #[serde(rename = "teamplay_win_panel")]
     TeamPlayWinPanel,
+    #[serde(rename = "teamplay_teambalanced_player")]
     TeamPlayTeamBalancedPlayer,
+    #[serde(rename = "teamplay_setup_finished")]
     TeamPlaySetupFinished,
+    #[serde(rename = "teamplay_alert")]
     TeamPlayAlert,
+    #[serde(rename = "training_complete")]
     TrainingComplete,
+    #[serde(rename = "show_freezepanel")]
     ShowFreezePanel,
+    #[serde(rename = "hide_freezepanel")]
     HideFreezePanel,
+    #[serde(rename = "freezecam_started")]
     FreezeCamStarted,
+    #[serde(rename = "localplayer_changeteam")]
     LocalPlayerChangeTeam,
+    #[serde(rename = "localplayer_score_changed")]
     LocalPlayerScoreChanged,
+    #[serde(rename = "localplayer_changeclass")]
     LocalPlayerChangeClass,
+    #[serde(rename = "localplayer_respawn")]
     LocalPlayerRespawn,
+    #[serde(rename = "building_info_changed")]
     BuildingInfoChanged,
+    #[serde(rename = "localplayer_changedisguise")]
     LocalPlayerChangeDisguise,
+    #[serde(rename = "player_account_changed")]
     PlayerAccountChanged,
+    #[serde(rename = "spy_pda_reset")]
     SpyPdaReset,
+    #[serde(rename = "flagstatus_update")]
     FlagStatusUpdate,
+    #[serde(rename = "player_stats_updated")]
     PlayerStatsUpdated,
+    #[serde(rename = "playing_commentary")]
     PlayingCommentary,
+    #[serde(rename = "player_chargedeployed")]
     PlayerChargeDeployed,
+    #[serde(rename = "player_builtobject")]
     PlayerBuiltObject,
+    #[serde(rename = "player_upgradedobject")]
     PlayerUpgradedObject,
+    #[serde(rename = "player_carryobject")]
     PlayerCarryObject,
+    #[serde(rename = "player_dropobject")]
     PlayerDropObject,
+    #[serde(rename = "object_removed")]
     ObjectRemoved,
+    #[serde(rename = "object_destroyed")]
     ObjectDestroyed,
+    #[serde(rename = "object_detonated")]
     ObjectDetonated,
+    #[serde(rename = "achievement_earned")]
     AchievementEarned,
+    #[serde(rename = "spec_target_updated")]
     SpecTargetUpdated,
+    #[serde(rename = "tournament_stateupdate")]
     TournamentStateUpdate,
+    #[serde(rename = "tournament_enablecountdown")]
     TournamentEnableCountdown,
+    #[serde(rename = "player_calledformedic")]
     PlayerCalledForMedic,
+    #[serde(rename = "player_askedforball")]
     PlayerAskedForBall,
+    #[serde(rename = "localplayer_becameobserver")]
     LocalPlayerBecameObserver,
+    #[serde(rename = "player_ignited_inv")]
     PlayerIgnitedInv,
+    #[serde(rename = "player_ignited")]
     PlayerIgnited,
+    #[serde(rename = "player_extinguished")]
     PlayerExtinguished,
+    #[serde(rename = "player_teleported")]
     PlayerTeleported,
+    #[serde(rename = "player_healedmediccall")]
     PlayerHealedMedicCall,
+    #[serde(rename = "localplayer_chargeready")]
     LocalPlayerChargeReady,
+    #[serde(rename = "localplayer_winddown")]
     LocalPlayerWindDown,
+    #[serde(rename = "player_invulned")]
     PlayerInvulned,
+    #[serde(rename = "escort_speed")]
     EscortSpeed,
+    #[serde(rename = "escort_progress")]
     EscortProgress,
+    #[serde(rename = "escort_recede")]
     EscortRecede,
+    #[serde(rename = "gameui_activated")]
     GameUIActivated,
+    #[serde(rename = "gameui_hidden")]
     GameUIHidden,
+    #[serde(rename = "player_escort_score")]
     PlayerEscortScore,
+    #[serde(rename = "player_healonhit")]
     PlayerHealOnHit,
+    #[serde(rename = "player_stealsandvich")]
     PlayerStealSandvich,
+    #[serde(rename = "show_class_layout")]
     ShowClassLayout,
+    #[serde(rename = "show_vs_panel")]
     ShowVsPanel,
+    #[serde(rename = "player_damaged")]
     PlayerDamaged,
+    #[serde(rename = "arena_player_notification")]
     ArenaPlayerNotification,
+    #[serde(rename = "arena_match_maxstreak")]
     ArenaMatchMaxStreak,
+    #[serde(rename = "arena_round_start")]
     ArenaRoundStart,
+    #[serde(rename = "arena_win_panel")]
     ArenaWinPanel,
+    #[serde(rename = "pve_win_panel")]
     PveWinPanel,
+    #[serde(rename = "air_dash")]
     AirDash,
+    #[serde(rename = "landed")]
     Landed,
+    #[serde(rename = "player_damage_dodged")]
     PlayerDamageDodged,
+    #[serde(rename = "player_stunned")]
     PlayerStunned,
+    #[serde(rename = "scout_grand_slam")]
     ScoutGrandSlam,
+    #[serde(rename = "scout_slamdoll_landed")]
     ScoutSlamdollLanded,
+    #[serde(rename = "arrow_impact")]
     ArrowImpact,
+    #[serde(rename = "player_jarated")]
     PlayerJarated,
+    #[serde(rename = "player_jarated_fade")]
     PlayerJaratedFade,
+    #[serde(rename = "player_shield_blocked")]
     PlayerShieldBlocked,
+    #[serde(rename = "player_pinned")]
     PlayerPinned,
+    #[serde(rename = "player_healedbymedic")]
     PlayerHealedByMedic,
+    #[serde(rename = "player_sapped_object")]
     PlayerSappedObject,
+    #[serde(rename = "item_found")]
     ItemFound,
+    #[serde(rename = "show_annotation")]
     ShowAnnotation,
+    #[serde(rename = "hide_annotation")]
     HideAnnotation,
+    #[serde(rename = "post_inventory_application")]
     PostInventoryApplication,
+    #[serde(rename = "controlpoint_unlock_updated")]
     ControlPointUnlockUpdated,
+    #[serde(rename = "deploy_buff_banner")]
     DeployBuffBanner,
+    #[serde(rename = "player_buff")]
     PlayerBuff,
+    #[serde(rename = "medic_death")]
     MedicDeath,
+    #[serde(rename = "overtime_nag")]
     OvertimeNag,
+    #[serde(rename = "teams_changed")]
     TeamsChanged,
+    #[serde(rename = "halloween_pumpkin_grab")]
     HalloweenPumpkinGrab,
+    #[serde(rename = "rocket_jump")]
     RocketJump,
+    #[serde(rename = "rocket_jump_landed")]
     RocketJumpLanded,
+    #[serde(rename = "sticky_jump")]
     StickyJump,
+    #[serde(rename = "sticky_jump_landed")]
     StickyJumpLanded,
+    #[serde(rename = "rocketpack_launch")]
     RocketPackLaunch,
+    #[serde(rename = "rocketpack_landed")]
     RocketPackLanded,
+    #[serde(rename = "medic_defended")]
     MedicDefended,
+    #[serde(rename = "localplayer_healed")]
     LocalPlayerHealed,
+    #[serde(rename = "player_destroyed_pipebomb")]
     PlayerDestroyedPipeBomb,
+    #[serde(rename = "object_deflected")]
     ObjectDeflected,
+    #[serde(rename = "player_mvp")]
     PlayerMvp,
+    #[serde(rename = "raid_spawn_mob")]
     RaidSpawnMob,
+    #[serde(rename = "raid_spawn_squad")]
     RaidSpawnSquad,
+    #[serde(rename = "nav_blocked")]
     NavBlocked,
+    #[serde(rename = "path_track_passed")]
     PathTrackPassed,
+    #[serde(rename = "num_cappers_changed")]
     NumCappersChanged,
+    #[serde(rename = "player_regenerate")]
     PlayerRegenerate,
+    #[serde(rename = "update_status_item")]
     UpdateStatusItem,
+    #[serde(rename = "stats_resetround")]
     StatsResetRound,
+    #[serde(rename = "scorestats_accumulated_update")]
     ScoreStatsAccumulatedUpdate,
+    #[serde(rename = "scorestats_accumulated_reset")]
     ScoreStatsAccumulatedReset,
+    #[serde(rename = "achievement_earned_local")]
     AchievementEarnedLocal,
+    #[serde(rename = "player_healed")]
     PlayerHealed,
+    #[serde(rename = "building_healed")]
     BuildingHealed,
+    #[serde(rename = "item_pickup")]
     ItemPickup,
+    #[serde(rename = "duel_status")]
     DuelStatus,
+    #[serde(rename = "fish_notice")]
     FishNotice,
+    #[serde(rename = "fish_notice__arm")]
     FishNoticeArm,
+    #[serde(rename = "slap_notice")]
     SlapNotice,
+    #[serde(rename = "throwable_hit")]
     ThrowableHit,
+    #[serde(rename = "pumpkin_lord_summoned")]
     PumpkinLordSummoned,
+    #[serde(rename = "pumpkin_lord_killed")]
     PumpkinLordKilled,
+    #[serde(rename = "merasmus_summoned")]
     MerasmusSummoned,
+    #[serde(rename = "merasmus_killed")]
     MerasmusKilled,
+    #[serde(rename = "merasmus_escape_warning")]
     MerasmusEscapeWarning,
+    #[serde(rename = "merasmus_escaped")]
     MerasmusEscaped,
+    #[serde(rename = "eyeball_boss_summoned")]
     EyeballBossSummoned,
+    #[serde(rename = "eyeball_boss_stunned")]
     EyeballBossStunned,
+    #[serde(rename = "eyeball_boss_killed")]
     EyeballBossKilled,
+    #[serde(rename = "eyeball_boss_killer")]
     EyeballBossKiller,
+    #[serde(rename = "eyeball_boss_escape_imminent")]
     EyeballBossEscapeImminent,
+    #[serde(rename = "eyeball_boss_escaped")]
     EyeballBossEscaped,
+    #[serde(rename = "npc_hurt")]
     NpcHurt,
+    #[serde(rename = "controlpoint_timer_updated")]
     ControlPointTimerUpdated,
+    #[serde(rename = "player_highfive_start")]
     PlayerHighFiveStart,
+    #[serde(rename = "player_highfive_cancel")]
     PlayerHighFiveCancel,
+    #[serde(rename = "player_highfive_success")]
     PlayerHighFiveSuccess,
+    #[serde(rename = "player_bonuspoints")]
     PlayerBonusPoints,
+    #[serde(rename = "player_upgraded")]
     PlayerUpgraded,
+    #[serde(rename = "player_buyback")]
     PlayerBuyback,
+    #[serde(rename = "player_used_powerup_bottle")]
     PlayerUsedPowerUpBottle,
+    #[serde(rename = "christmas_gift_grab")]
     ChristmasGiftGrab,
+    #[serde(rename = "player_killed_achievement_zone")]
     PlayerKilledAchievementZone,
+    #[serde(rename = "party_updated")]
     PartyUpdated,
+    #[serde(rename = "party_pref_changed")]
     PartyPrefChanged,
+    #[serde(rename = "party_criteria_changed")]
     PartyCriteriaChanged,
+    #[serde(rename = "party_invites_changed")]
     PartyInvitesChanged,
+    #[serde(rename = "party_queue_state_changed")]
     PartyQueueStateChanged,
+    #[serde(rename = "party_chat")]
     PartyChat,
+    #[serde(rename = "party_member_join")]
     PartyMemberJoin,
+    #[serde(rename = "party_member_leave")]
     PartyMemberLeave,
+    #[serde(rename = "match_invites_updated")]
     MatchInvitesUpdated,
+    #[serde(rename = "lobby_updated")]
     LobbyUpdated,
+    #[serde(rename = "mvm_mission_update")]
     MvmMissionUpdate,
+    #[serde(rename = "recalculate_holidays")]
     RecalculateHolidays,
+    #[serde(rename = "player_currency_changed")]
     PlayerCurrencyChanged,
+    #[serde(rename = "doomsday_rocket_open")]
     DoomsdayRocketOpen,
+    #[serde(rename = "remove_nemesis_relationships")]
     RemoveNemesisRelationships,
+    #[serde(rename = "mvm_creditbonus_wave")]
     MvmCreditBonusWave,
+    #[serde(rename = "mvm_creditbonus_all")]
     MvmCreditBonusAll,
+    #[serde(rename = "mvm_creditbonus_all_advanced")]
     MvmCreditBonusAllAdvanced,
+    #[serde(rename = "mvm_quick_sentry_upgrade")]
     MvmQuickSentryUpgrade,
+    #[serde(rename = "mvm_tank_destroyed_by_players")]
     MvmTankDestroyedByPlayers,
+    #[serde(rename = "mvm_kill_robot_delivering_bomb")]
     MvmKillRobotDeliveringBomb,
+    #[serde(rename = "mvm_pickup_currency")]
     MvmPickupCurrency,
+    #[serde(rename = "mvm_bomb_carrier_killed")]
     MvmBombCarrierKilled,
+    #[serde(rename = "mvm_sentrybuster_detonate")]
     MvmSentryBusterDetonate,
+    #[serde(rename = "mvm_scout_marked_for_death")]
     MvmScoutMarkedForDeath,
+    #[serde(rename = "mvm_medic_powerup_shared")]
     MvmMedicPowerUpShared,
+    #[serde(rename = "mvm_begin_wave")]
     MvmBeginWave,
+    #[serde(rename = "mvm_wave_complete")]
     MvmWaveComplete,
+    #[serde(rename = "mvm_mission_complete")]
     MvmMissionComplete,
+    #[serde(rename = "mvm_bomb_reset_by_player")]
     MvmBombResetByPlayer,
+    #[serde(rename = "mvm_bomb_alarm_triggered")]
     MvmBombAlarmTriggered,
+    #[serde(rename = "mvm_bomb_deploy_reset_by_player")]
     MvmBombDeployResetByPlayer,
+    #[serde(rename = "mvm_wave_failed")]
     MvmWaveFailed,
+    #[serde(rename = "mvm_reset_stats")]
     MvmResetStats,
+    #[serde(rename = "damage_resisted")]
     DamageResisted,
+    #[serde(rename = "revive_player_notify")]
     RevivePlayerNotify,
+    #[serde(rename = "revive_player_stopped")]
     RevivePlayerStopped,
+    #[serde(rename = "revive_player_complete")]
     RevivePlayerComplete,
+    #[serde(rename = "player_turned_to_ghost")]
     PlayerTurnedToGhost,
+    #[serde(rename = "medigun_shield_blocked_damage")]
     MedigunShieldBlockedDamage,
+    #[serde(rename = "mvm_adv_wave_complete_no_gates")]
     MvmAdvWaveCompleteNoGates,
+    #[serde(rename = "mvm_sniper_headshot_currency")]
     MvmSniperHeadshotCurrency,
+    #[serde(rename = "mvm_mannhattan_pit")]
     MvmMannhattanPit,
+    #[serde(rename = "flag_carried_in_detection_zone")]
     FlagCarriedInDetectionZone,
+    #[serde(rename = "mvm_adv_wave_killed_stun_radio")]
     MvmAdvWaveKilledStunRadio,
+    #[serde(rename = "player_directhit_stun")]
     PlayerDirectHitStun,
+    #[serde(rename = "mvm_sentrybuster_killed")]
     MvmSentryBusterKilled,
+    #[serde(rename = "upgrades_file_changed")]
     UpgradesFileChanged,
+    #[serde(rename = "rd_team_points_changed")]
     RdTeamPointsChanged,
+    #[serde(rename = "rd_rules_state_changed")]
     RdRulesStateChanged,
+    #[serde(rename = "rd_robot_killed")]
     RdRobotKilled,
+    #[serde(rename = "rd_robot_impact")]
     RdRobotImpact,
+    #[serde(rename = "teamplay_pre_round_time_left")]
     TeamPlayPreRoundTimeLeft,
+    #[serde(rename = "parachute_deploy")]
     ParachuteDeploy,
+    #[serde(rename = "parachute_holster")]
     ParachuteHolster,
+    #[serde(rename = "kill_refills_meter")]
     KillRefillsMeter,
+    #[serde(rename = "rps_taunt_event")]
     RpsTauntEvent,
+    #[serde(rename = "conga_kill")]
     CongaKill,
+    #[serde(rename = "player_initial_spawn")]
     PlayerInitialSpawn,
+    #[serde(rename = "competitive_victory")]
     CompetitiveVictory,
+    #[serde(rename = "competitive_stats_update")]
     CompetitiveStatsUpdate,
+    #[serde(rename = "minigame_win")]
     MiniGameWin,
+    #[serde(rename = "sentry_on_go_active")]
     SentryOnGoActive,
+    #[serde(rename = "duck_xp_level_up")]
     DuckXpLevelUp,
+    #[serde(rename = "questlog_opened")]
     QuestLogOpened,
+    #[serde(rename = "schema_updated")]
     SchemaUpdated,
+    #[serde(rename = "localplayer_pickup_weapon")]
     LocalPlayerPickupWeapon,
+    #[serde(rename = "rd_player_score_points")]
     RdPlayerScorePoints,
+    #[serde(rename = "demoman_det_stickies")]
     DemomanDetStickies,
+    #[serde(rename = "quest_objective_completed")]
     QuestObjectiveCompleted,
+    #[serde(rename = "player_score_changed")]
     PlayerScoreChanged,
+    #[serde(rename = "killed_capping_player")]
     KilledCappingPlayer,
+    #[serde(rename = "environmental_death")]
     EnvironmentalDeath,
+    #[serde(rename = "projectile_direct_hit")]
     ProjectileDirectHit,
+    #[serde(rename = "pass_get")]
     PassGet,
+    #[serde(rename = "pass_score")]
     PassScore,
+    #[serde(rename = "pass_free")]
     PassFree,
+    #[serde(rename = "pass_pass_caught")]
     PassPassCaught,
+    #[serde(rename = "pass_ball_stolen")]
     PassBallStolen,
+    #[serde(rename = "pass_ball_blocked")]
     PassBallBlocked,
+    #[serde(rename = "damage_prevented")]
     DamagePrevented,
+    #[serde(rename = "halloween_boss_killed")]
     HalloweenBossKilled,
+    #[serde(rename = "escaped_loot_island")]
     EscapedLootIsland,
+    #[serde(rename = "tagged_player_as_it")]
     TaggedPlayerAsIt,
+    #[serde(rename = "merasmus_stunned")]
     MerasmusStunned,
+    #[serde(rename = "merasmus_prop_found")]
     MerasmusPropFound,
+    #[serde(rename = "halloween_skeleton_killed")]
     HalloweenSkeletonKilled,
+    #[serde(rename = "skeleton_killed_quest")]
+    SkeletonKilledQuest,
+    #[serde(rename = "skeleton_king_killed_quest")]
+    SkeletonKingKilledQuest,
+    #[serde(rename = "escape_hell")]
     EscapeHell,
+    #[serde(rename = "cross_spectral_bridge")]
     CrossSpectralBridge,
+    #[serde(rename = "minigame_won")]
     MiniGameWon,
+    #[serde(rename = "respawn_ghost")]
     RespawnGhost,
+    #[serde(rename = "kill_in_hell")]
     KillInHell,
+    #[serde(rename = "halloween_duck_collected")]
     HalloweenDuckCollected,
+    #[serde(rename = "special_score")]
     SpecialScore,
+    #[serde(rename = "team_leader_killed")]
     TeamLeaderKilled,
+    #[serde(rename = "halloween_soul_collected")]
     HalloweenSoulCollected,
+    #[serde(rename = "recalculate_truce")]
     RecalculateTruce,
+    #[serde(rename = "deadringer_cheat_death")]
     DeadRingerCheatDeath,
+    #[serde(rename = "crossbow_heal")]
     CrossbowHeal,
+    #[serde(rename = "damage_mitigated")]
     DamageMitigated,
+    #[serde(rename = "payload_pushed")]
     PayloadPushed,
+    #[serde(rename = "player_abandoned_match")]
     PlayerAbandonedMatch,
+    #[serde(rename = "cl_drawline")]
     ClDrawline,
+    #[serde(rename = "restart_timer_time")]
     RestartTimerTime,
+    #[serde(rename = "winlimit_changed")]
     WinLimitChanged,
+    #[serde(rename = "winpanel_show_scores")]
     WinPanelShowScores,
+    #[serde(rename = "top_streams_request_finished")]
     TopStreamsRequestFinished,
+    #[serde(rename = "competitive_state_changed")]
     CompetitiveStateChanged,
+    #[serde(rename = "global_war_data_updated")]
     GlobalWarDataUpdated,
+    #[serde(rename = "stop_watch_changed")]
     StopWatchChanged,
+    #[serde(rename = "ds_stop")]
     DsStop,
+    #[serde(rename = "ds_screenshot")]
     DsScreenshot,
+    #[serde(rename = "show_match_summary")]
     ShowMatchSummary,
+    #[serde(rename = "experience_changed")]
     ExperienceChanged,
+    #[serde(rename = "begin_xp_lerp")]
     BeginXpLerp,
+    #[serde(rename = "matchmaker_stats_updated")]
     MatchmakerStatsUpdated,
+    #[serde(rename = "rematch_vote_period_over")]
     RematchVotePeriodOver,
+    #[serde(rename = "rematch_failed_to_create")]
     RematchFailedToCreate,
+    #[serde(rename = "player_rematch_change")]
     PlayerRematchChange,
+    #[serde(rename = "ping_updated")]
     PingUpdated,
+    #[serde(rename = "mmstats_updated")]
     MMStatsUpdated,
+    #[serde(rename = "player_next_map_vote_change")]
     PlayerNextMapVoteChange,
+    #[serde(rename = "vote_maps_changed")]
     VoteMapsChanged,
+    #[serde(rename = "proto_def_changed")]
     ProtoDefChanged,
+    #[serde(rename = "player_domination")]
     PlayerDomination,
+    #[serde(rename = "player_rocketpack_pushed")]
     PlayerRocketPackPushed,
+    #[serde(rename = "quest_request")]
     QuestRequest,
+    #[serde(rename = "quest_response")]
     QuestResponse,
+    #[serde(rename = "quest_progress")]
     QuestProgress,
+    #[serde(rename = "projectile_removed")]
     ProjectileRemoved,
+    #[serde(rename = "quest_map_data_changed")]
     QuestMapDataChanged,
+    #[serde(rename = "gas_doused_player_ignited")]
     GasDousedPlayerIgnited,
+    #[serde(rename = "quest_turn_in_state")]
     QuestTurnInState,
+    #[serde(rename = "items_acknowledged")]
     ItemsAcknowledged,
+    #[serde(rename = "capper_killed")]
     CapperKilled,
+    #[serde(rename = "mainmenu_stabilized")]
     MainMenuStabilized,
+    #[serde(rename = "world_status_changed")]
     WorldStatusChanged,
+    #[serde(rename = "hltv_status")]
     HLTVStatus,
+    #[serde(rename = "hltv_cameraman")]
     HLTVCameraman,
+    #[serde(rename = "hltv_rank_camera")]
     HLTVRankCamera,
+    #[serde(rename = "hltv_rank_entity")]
     HLTVRankEntity,
+    #[serde(rename = "hltv_fixed")]
     HLTVFixed,
+    #[serde(rename = "hltv_chase")]
     HLTVChase,
+    #[serde(rename = "hltv_message")]
     HLTVMessage,
+    #[serde(rename = "hltv_title")]
     HLTVTitle,
+    #[serde(rename = "hltv_chat")]
     HLTVChat,
+    #[serde(rename = "replay_startrecord")]
     ReplayStartRecord,
+    #[serde(rename = "replay_sessioninfo")]
     ReplaySessionInfo,
+    #[serde(rename = "replay_endrecord")]
     ReplayEndRecord,
+    #[serde(rename = "replay_replaysavailable")]
     ReplayReplaysAvailable,
+    #[serde(rename = "replay_servererror")]
     ReplayServerError,
     Unknown(String),
 }
@@ -7562,6 +19702,8 @@ impl GameEventType {
             "merasmus_stunned" => GameEventType::MerasmusStunned,
             "merasmus_prop_found" => GameEventType::MerasmusPropFound,
             "halloween_skeleton_killed" => GameEventType::HalloweenSkeletonKilled,
+            "skeleton_killed_quest" => GameEventType::SkeletonKilledQuest,
+            "skeleton_king_killed_quest" => GameEventType::SkeletonKingKilledQuest,
             "escape_hell" => GameEventType::EscapeHell,
             "cross_spectral_bridge" => GameEventType::CrossSpectralBridge,
             "minigame_won" => GameEventType::MiniGameWon,
@@ -7976,6 +20118,8 @@ impl GameEventType {
             GameEventType::MerasmusStunned => "merasmus_stunned",
             GameEventType::MerasmusPropFound => "merasmus_prop_found",
             GameEventType::HalloweenSkeletonKilled => "halloween_skeleton_killed",
+            GameEventType::SkeletonKilledQuest => "skeleton_killed_quest",
+            GameEventType::SkeletonKingKilledQuest => "skeleton_king_killed_quest",
             GameEventType::EscapeHell => "escape_hell",
             GameEventType::CrossSpectralBridge => "cross_spectral_bridge",
             GameEventType::MiniGameWon => "minigame_won",
@@ -9597,6 +21741,16 @@ impl GameEvent {
                         HalloweenSkeletonKilledEvent::read(stream, definition)?,
                     )
                 }
+                GameEventType::SkeletonKilledQuest => {
+                    GameEvent::SkeletonKilledQuest(
+                        SkeletonKilledQuestEvent::read(stream, definition)?,
+                    )
+                }
+                GameEventType::SkeletonKingKilledQuest => {
+                    GameEvent::SkeletonKingKilledQuest(
+                        SkeletonKingKilledQuestEvent::read(stream, definition)?,
+                    )
+                }
                 GameEventType::EscapeHell => {
                     GameEvent::EscapeHell(EscapeHellEvent::read(stream, definition)?)
                 }
@@ -9888,410 +22042,465 @@ impl GameEvent {
     pub fn write(
         &self,
         stream: &mut BitWriteStream<LittleEndian>,
-    ) -> bitbuffer::Result<()> {
+        definition: &GameEventDefinition,
+    ) -> Result<()> {
         match &self {
-            GameEvent::ServerSpawn(event) => event.write(stream),
-            GameEvent::ServerChangeLevelFailed(event) => event.write(stream),
-            GameEvent::ServerShutdown(event) => event.write(stream),
-            GameEvent::ServerCvar(event) => event.write(stream),
-            GameEvent::ServerMessage(event) => event.write(stream),
-            GameEvent::ServerAddBan(event) => event.write(stream),
-            GameEvent::ServerRemoveBan(event) => event.write(stream),
-            GameEvent::PlayerConnect(event) => event.write(stream),
-            GameEvent::PlayerConnectClient(event) => event.write(stream),
-            GameEvent::PlayerInfo(event) => event.write(stream),
-            GameEvent::PlayerDisconnect(event) => event.write(stream),
-            GameEvent::PlayerActivate(event) => event.write(stream),
-            GameEvent::PlayerSay(event) => event.write(stream),
-            GameEvent::ClientDisconnect(event) => event.write(stream),
-            GameEvent::ClientBeginConnect(event) => event.write(stream),
-            GameEvent::ClientConnected(event) => event.write(stream),
-            GameEvent::ClientFullConnect(event) => event.write(stream),
-            GameEvent::HostQuit(event) => event.write(stream),
-            GameEvent::TeamInfo(event) => event.write(stream),
-            GameEvent::TeamScore(event) => event.write(stream),
-            GameEvent::TeamPlayBroadcastAudio(event) => event.write(stream),
-            GameEvent::PlayerTeam(event) => event.write(stream),
-            GameEvent::PlayerClass(event) => event.write(stream),
-            GameEvent::PlayerDeath(event) => event.write(stream),
-            GameEvent::PlayerHurt(event) => event.write(stream),
-            GameEvent::PlayerChat(event) => event.write(stream),
-            GameEvent::PlayerScore(event) => event.write(stream),
-            GameEvent::PlayerSpawn(event) => event.write(stream),
-            GameEvent::PlayerShoot(event) => event.write(stream),
-            GameEvent::PlayerUse(event) => event.write(stream),
-            GameEvent::PlayerChangeName(event) => event.write(stream),
-            GameEvent::PlayerHintMessage(event) => event.write(stream),
-            GameEvent::BasePlayerTeleported(event) => event.write(stream),
-            GameEvent::GameInit(event) => event.write(stream),
-            GameEvent::GameNewMap(event) => event.write(stream),
-            GameEvent::GameStart(event) => event.write(stream),
-            GameEvent::GameEnd(event) => event.write(stream),
-            GameEvent::RoundStart(event) => event.write(stream),
-            GameEvent::RoundEnd(event) => event.write(stream),
-            GameEvent::GameMessage(event) => event.write(stream),
-            GameEvent::BreakBreakable(event) => event.write(stream),
-            GameEvent::BreakProp(event) => event.write(stream),
-            GameEvent::EntityKilled(event) => event.write(stream),
-            GameEvent::BonusUpdated(event) => event.write(stream),
-            GameEvent::AchievementEvent(event) => event.write(stream),
-            GameEvent::AchievementIncrement(event) => event.write(stream),
-            GameEvent::PhysgunPickup(event) => event.write(stream),
-            GameEvent::FlareIgniteNpc(event) => event.write(stream),
-            GameEvent::HelicopterGrenadePuntMiss(event) => event.write(stream),
-            GameEvent::UserDataDownloaded(event) => event.write(stream),
-            GameEvent::RagdollDissolved(event) => event.write(stream),
-            GameEvent::HLTVChangedMode(event) => event.write(stream),
-            GameEvent::HLTVChangedTarget(event) => event.write(stream),
-            GameEvent::VoteEnded(event) => event.write(stream),
-            GameEvent::VoteStarted(event) => event.write(stream),
-            GameEvent::VoteChanged(event) => event.write(stream),
-            GameEvent::VotePassed(event) => event.write(stream),
-            GameEvent::VoteFailed(event) => event.write(stream),
-            GameEvent::VoteCast(event) => event.write(stream),
-            GameEvent::VoteOptions(event) => event.write(stream),
-            GameEvent::ReplaySaved(event) => event.write(stream),
-            GameEvent::EnteredPerformanceMode(event) => event.write(stream),
-            GameEvent::BrowseReplays(event) => event.write(stream),
-            GameEvent::ReplayYoutubeStats(event) => event.write(stream),
-            GameEvent::InventoryUpdated(event) => event.write(stream),
-            GameEvent::CartUpdated(event) => event.write(stream),
-            GameEvent::StorePriceSheetUpdated(event) => event.write(stream),
-            GameEvent::EconInventoryConnected(event) => event.write(stream),
-            GameEvent::ItemSchemaInitialized(event) => event.write(stream),
-            GameEvent::GcNewSession(event) => event.write(stream),
-            GameEvent::GcLostSession(event) => event.write(stream),
-            GameEvent::IntroFinish(event) => event.write(stream),
-            GameEvent::IntroNextCamera(event) => event.write(stream),
-            GameEvent::PlayerChangeClass(event) => event.write(stream),
-            GameEvent::TfMapTimeRemaining(event) => event.write(stream),
-            GameEvent::TfGameOver(event) => event.write(stream),
-            GameEvent::CtfFlagCaptured(event) => event.write(stream),
-            GameEvent::ControlPointInitialized(event) => event.write(stream),
-            GameEvent::ControlPointUpdateImages(event) => event.write(stream),
-            GameEvent::ControlPointUpdateLayout(event) => event.write(stream),
-            GameEvent::ControlPointUpdateCapping(event) => event.write(stream),
-            GameEvent::ControlPointUpdateOwner(event) => event.write(stream),
-            GameEvent::ControlPointStartTouch(event) => event.write(stream),
-            GameEvent::ControlPointEndTouch(event) => event.write(stream),
-            GameEvent::ControlPointPulseElement(event) => event.write(stream),
-            GameEvent::ControlPointFakeCapture(event) => event.write(stream),
-            GameEvent::ControlPointFakeCaptureMultiplier(event) => event.write(stream),
-            GameEvent::TeamPlayRoundSelected(event) => event.write(stream),
-            GameEvent::TeamPlayRoundStart(event) => event.write(stream),
-            GameEvent::TeamPlayRoundActive(event) => event.write(stream),
-            GameEvent::TeamPlayWaitingBegins(event) => event.write(stream),
-            GameEvent::TeamPlayWaitingEnds(event) => event.write(stream),
-            GameEvent::TeamPlayWaitingAboutToEnd(event) => event.write(stream),
-            GameEvent::TeamPlayRestartRound(event) => event.write(stream),
-            GameEvent::TeamPlayReadyRestart(event) => event.write(stream),
-            GameEvent::TeamPlayRoundRestartSeconds(event) => event.write(stream),
-            GameEvent::TeamPlayTeamReady(event) => event.write(stream),
-            GameEvent::TeamPlayRoundWin(event) => event.write(stream),
-            GameEvent::TeamPlayUpdateTimer(event) => event.write(stream),
-            GameEvent::TeamPlayRoundStalemate(event) => event.write(stream),
-            GameEvent::TeamPlayOvertimeBegin(event) => event.write(stream),
-            GameEvent::TeamPlayOvertimeEnd(event) => event.write(stream),
-            GameEvent::TeamPlaySuddenDeathBegin(event) => event.write(stream),
-            GameEvent::TeamPlaySuddenDeathEnd(event) => event.write(stream),
-            GameEvent::TeamPlayGameOver(event) => event.write(stream),
-            GameEvent::TeamPlayMapTimeRemaining(event) => event.write(stream),
-            GameEvent::TeamPlayTimerFlash(event) => event.write(stream),
-            GameEvent::TeamPlayTimerTimeAdded(event) => event.write(stream),
-            GameEvent::TeamPlayPointStartCapture(event) => event.write(stream),
-            GameEvent::TeamPlayPointCaptured(event) => event.write(stream),
-            GameEvent::TeamPlayPointLocked(event) => event.write(stream),
-            GameEvent::TeamPlayPointUnlocked(event) => event.write(stream),
-            GameEvent::TeamPlayCaptureBroken(event) => event.write(stream),
-            GameEvent::TeamPlayCaptureBlocked(event) => event.write(stream),
-            GameEvent::TeamPlayFlagEvent(event) => event.write(stream),
-            GameEvent::TeamPlayWinPanel(event) => event.write(stream),
-            GameEvent::TeamPlayTeamBalancedPlayer(event) => event.write(stream),
-            GameEvent::TeamPlaySetupFinished(event) => event.write(stream),
-            GameEvent::TeamPlayAlert(event) => event.write(stream),
-            GameEvent::TrainingComplete(event) => event.write(stream),
-            GameEvent::ShowFreezePanel(event) => event.write(stream),
-            GameEvent::HideFreezePanel(event) => event.write(stream),
-            GameEvent::FreezeCamStarted(event) => event.write(stream),
-            GameEvent::LocalPlayerChangeTeam(event) => event.write(stream),
-            GameEvent::LocalPlayerScoreChanged(event) => event.write(stream),
-            GameEvent::LocalPlayerChangeClass(event) => event.write(stream),
-            GameEvent::LocalPlayerRespawn(event) => event.write(stream),
-            GameEvent::BuildingInfoChanged(event) => event.write(stream),
-            GameEvent::LocalPlayerChangeDisguise(event) => event.write(stream),
-            GameEvent::PlayerAccountChanged(event) => event.write(stream),
-            GameEvent::SpyPdaReset(event) => event.write(stream),
-            GameEvent::FlagStatusUpdate(event) => event.write(stream),
-            GameEvent::PlayerStatsUpdated(event) => event.write(stream),
-            GameEvent::PlayingCommentary(event) => event.write(stream),
-            GameEvent::PlayerChargeDeployed(event) => event.write(stream),
-            GameEvent::PlayerBuiltObject(event) => event.write(stream),
-            GameEvent::PlayerUpgradedObject(event) => event.write(stream),
-            GameEvent::PlayerCarryObject(event) => event.write(stream),
-            GameEvent::PlayerDropObject(event) => event.write(stream),
-            GameEvent::ObjectRemoved(event) => event.write(stream),
-            GameEvent::ObjectDestroyed(event) => event.write(stream),
-            GameEvent::ObjectDetonated(event) => event.write(stream),
-            GameEvent::AchievementEarned(event) => event.write(stream),
-            GameEvent::SpecTargetUpdated(event) => event.write(stream),
-            GameEvent::TournamentStateUpdate(event) => event.write(stream),
-            GameEvent::TournamentEnableCountdown(event) => event.write(stream),
-            GameEvent::PlayerCalledForMedic(event) => event.write(stream),
-            GameEvent::PlayerAskedForBall(event) => event.write(stream),
-            GameEvent::LocalPlayerBecameObserver(event) => event.write(stream),
-            GameEvent::PlayerIgnitedInv(event) => event.write(stream),
-            GameEvent::PlayerIgnited(event) => event.write(stream),
-            GameEvent::PlayerExtinguished(event) => event.write(stream),
-            GameEvent::PlayerTeleported(event) => event.write(stream),
-            GameEvent::PlayerHealedMedicCall(event) => event.write(stream),
-            GameEvent::LocalPlayerChargeReady(event) => event.write(stream),
-            GameEvent::LocalPlayerWindDown(event) => event.write(stream),
-            GameEvent::PlayerInvulned(event) => event.write(stream),
-            GameEvent::EscortSpeed(event) => event.write(stream),
-            GameEvent::EscortProgress(event) => event.write(stream),
-            GameEvent::EscortRecede(event) => event.write(stream),
-            GameEvent::GameUIActivated(event) => event.write(stream),
-            GameEvent::GameUIHidden(event) => event.write(stream),
-            GameEvent::PlayerEscortScore(event) => event.write(stream),
-            GameEvent::PlayerHealOnHit(event) => event.write(stream),
-            GameEvent::PlayerStealSandvich(event) => event.write(stream),
-            GameEvent::ShowClassLayout(event) => event.write(stream),
-            GameEvent::ShowVsPanel(event) => event.write(stream),
-            GameEvent::PlayerDamaged(event) => event.write(stream),
-            GameEvent::ArenaPlayerNotification(event) => event.write(stream),
-            GameEvent::ArenaMatchMaxStreak(event) => event.write(stream),
-            GameEvent::ArenaRoundStart(event) => event.write(stream),
-            GameEvent::ArenaWinPanel(event) => event.write(stream),
-            GameEvent::PveWinPanel(event) => event.write(stream),
-            GameEvent::AirDash(event) => event.write(stream),
-            GameEvent::Landed(event) => event.write(stream),
-            GameEvent::PlayerDamageDodged(event) => event.write(stream),
-            GameEvent::PlayerStunned(event) => event.write(stream),
-            GameEvent::ScoutGrandSlam(event) => event.write(stream),
-            GameEvent::ScoutSlamdollLanded(event) => event.write(stream),
-            GameEvent::ArrowImpact(event) => event.write(stream),
-            GameEvent::PlayerJarated(event) => event.write(stream),
-            GameEvent::PlayerJaratedFade(event) => event.write(stream),
-            GameEvent::PlayerShieldBlocked(event) => event.write(stream),
-            GameEvent::PlayerPinned(event) => event.write(stream),
-            GameEvent::PlayerHealedByMedic(event) => event.write(stream),
-            GameEvent::PlayerSappedObject(event) => event.write(stream),
-            GameEvent::ItemFound(event) => event.write(stream),
-            GameEvent::ShowAnnotation(event) => event.write(stream),
-            GameEvent::HideAnnotation(event) => event.write(stream),
-            GameEvent::PostInventoryApplication(event) => event.write(stream),
-            GameEvent::ControlPointUnlockUpdated(event) => event.write(stream),
-            GameEvent::DeployBuffBanner(event) => event.write(stream),
-            GameEvent::PlayerBuff(event) => event.write(stream),
-            GameEvent::MedicDeath(event) => event.write(stream),
-            GameEvent::OvertimeNag(event) => event.write(stream),
-            GameEvent::TeamsChanged(event) => event.write(stream),
-            GameEvent::HalloweenPumpkinGrab(event) => event.write(stream),
-            GameEvent::RocketJump(event) => event.write(stream),
-            GameEvent::RocketJumpLanded(event) => event.write(stream),
-            GameEvent::StickyJump(event) => event.write(stream),
-            GameEvent::StickyJumpLanded(event) => event.write(stream),
-            GameEvent::RocketPackLaunch(event) => event.write(stream),
-            GameEvent::RocketPackLanded(event) => event.write(stream),
-            GameEvent::MedicDefended(event) => event.write(stream),
-            GameEvent::LocalPlayerHealed(event) => event.write(stream),
-            GameEvent::PlayerDestroyedPipeBomb(event) => event.write(stream),
-            GameEvent::ObjectDeflected(event) => event.write(stream),
-            GameEvent::PlayerMvp(event) => event.write(stream),
-            GameEvent::RaidSpawnMob(event) => event.write(stream),
-            GameEvent::RaidSpawnSquad(event) => event.write(stream),
-            GameEvent::NavBlocked(event) => event.write(stream),
-            GameEvent::PathTrackPassed(event) => event.write(stream),
-            GameEvent::NumCappersChanged(event) => event.write(stream),
-            GameEvent::PlayerRegenerate(event) => event.write(stream),
-            GameEvent::UpdateStatusItem(event) => event.write(stream),
-            GameEvent::StatsResetRound(event) => event.write(stream),
-            GameEvent::ScoreStatsAccumulatedUpdate(event) => event.write(stream),
-            GameEvent::ScoreStatsAccumulatedReset(event) => event.write(stream),
-            GameEvent::AchievementEarnedLocal(event) => event.write(stream),
-            GameEvent::PlayerHealed(event) => event.write(stream),
-            GameEvent::BuildingHealed(event) => event.write(stream),
-            GameEvent::ItemPickup(event) => event.write(stream),
-            GameEvent::DuelStatus(event) => event.write(stream),
-            GameEvent::FishNotice(event) => event.write(stream),
-            GameEvent::FishNoticeArm(event) => event.write(stream),
-            GameEvent::SlapNotice(event) => event.write(stream),
-            GameEvent::ThrowableHit(event) => event.write(stream),
-            GameEvent::PumpkinLordSummoned(event) => event.write(stream),
-            GameEvent::PumpkinLordKilled(event) => event.write(stream),
-            GameEvent::MerasmusSummoned(event) => event.write(stream),
-            GameEvent::MerasmusKilled(event) => event.write(stream),
-            GameEvent::MerasmusEscapeWarning(event) => event.write(stream),
-            GameEvent::MerasmusEscaped(event) => event.write(stream),
-            GameEvent::EyeballBossSummoned(event) => event.write(stream),
-            GameEvent::EyeballBossStunned(event) => event.write(stream),
-            GameEvent::EyeballBossKilled(event) => event.write(stream),
-            GameEvent::EyeballBossKiller(event) => event.write(stream),
-            GameEvent::EyeballBossEscapeImminent(event) => event.write(stream),
-            GameEvent::EyeballBossEscaped(event) => event.write(stream),
-            GameEvent::NpcHurt(event) => event.write(stream),
-            GameEvent::ControlPointTimerUpdated(event) => event.write(stream),
-            GameEvent::PlayerHighFiveStart(event) => event.write(stream),
-            GameEvent::PlayerHighFiveCancel(event) => event.write(stream),
-            GameEvent::PlayerHighFiveSuccess(event) => event.write(stream),
-            GameEvent::PlayerBonusPoints(event) => event.write(stream),
-            GameEvent::PlayerUpgraded(event) => event.write(stream),
-            GameEvent::PlayerBuyback(event) => event.write(stream),
-            GameEvent::PlayerUsedPowerUpBottle(event) => event.write(stream),
-            GameEvent::ChristmasGiftGrab(event) => event.write(stream),
-            GameEvent::PlayerKilledAchievementZone(event) => event.write(stream),
-            GameEvent::PartyUpdated(event) => event.write(stream),
-            GameEvent::PartyPrefChanged(event) => event.write(stream),
-            GameEvent::PartyCriteriaChanged(event) => event.write(stream),
-            GameEvent::PartyInvitesChanged(event) => event.write(stream),
-            GameEvent::PartyQueueStateChanged(event) => event.write(stream),
-            GameEvent::PartyChat(event) => event.write(stream),
-            GameEvent::PartyMemberJoin(event) => event.write(stream),
-            GameEvent::PartyMemberLeave(event) => event.write(stream),
-            GameEvent::MatchInvitesUpdated(event) => event.write(stream),
-            GameEvent::LobbyUpdated(event) => event.write(stream),
-            GameEvent::MvmMissionUpdate(event) => event.write(stream),
-            GameEvent::RecalculateHolidays(event) => event.write(stream),
-            GameEvent::PlayerCurrencyChanged(event) => event.write(stream),
-            GameEvent::DoomsdayRocketOpen(event) => event.write(stream),
-            GameEvent::RemoveNemesisRelationships(event) => event.write(stream),
-            GameEvent::MvmCreditBonusWave(event) => event.write(stream),
-            GameEvent::MvmCreditBonusAll(event) => event.write(stream),
-            GameEvent::MvmCreditBonusAllAdvanced(event) => event.write(stream),
-            GameEvent::MvmQuickSentryUpgrade(event) => event.write(stream),
-            GameEvent::MvmTankDestroyedByPlayers(event) => event.write(stream),
-            GameEvent::MvmKillRobotDeliveringBomb(event) => event.write(stream),
-            GameEvent::MvmPickupCurrency(event) => event.write(stream),
-            GameEvent::MvmBombCarrierKilled(event) => event.write(stream),
-            GameEvent::MvmSentryBusterDetonate(event) => event.write(stream),
-            GameEvent::MvmScoutMarkedForDeath(event) => event.write(stream),
-            GameEvent::MvmMedicPowerUpShared(event) => event.write(stream),
-            GameEvent::MvmBeginWave(event) => event.write(stream),
-            GameEvent::MvmWaveComplete(event) => event.write(stream),
-            GameEvent::MvmMissionComplete(event) => event.write(stream),
-            GameEvent::MvmBombResetByPlayer(event) => event.write(stream),
-            GameEvent::MvmBombAlarmTriggered(event) => event.write(stream),
-            GameEvent::MvmBombDeployResetByPlayer(event) => event.write(stream),
-            GameEvent::MvmWaveFailed(event) => event.write(stream),
-            GameEvent::MvmResetStats(event) => event.write(stream),
-            GameEvent::DamageResisted(event) => event.write(stream),
-            GameEvent::RevivePlayerNotify(event) => event.write(stream),
-            GameEvent::RevivePlayerStopped(event) => event.write(stream),
-            GameEvent::RevivePlayerComplete(event) => event.write(stream),
-            GameEvent::PlayerTurnedToGhost(event) => event.write(stream),
-            GameEvent::MedigunShieldBlockedDamage(event) => event.write(stream),
-            GameEvent::MvmAdvWaveCompleteNoGates(event) => event.write(stream),
-            GameEvent::MvmSniperHeadshotCurrency(event) => event.write(stream),
-            GameEvent::MvmMannhattanPit(event) => event.write(stream),
-            GameEvent::FlagCarriedInDetectionZone(event) => event.write(stream),
-            GameEvent::MvmAdvWaveKilledStunRadio(event) => event.write(stream),
-            GameEvent::PlayerDirectHitStun(event) => event.write(stream),
-            GameEvent::MvmSentryBusterKilled(event) => event.write(stream),
-            GameEvent::UpgradesFileChanged(event) => event.write(stream),
-            GameEvent::RdTeamPointsChanged(event) => event.write(stream),
-            GameEvent::RdRulesStateChanged(event) => event.write(stream),
-            GameEvent::RdRobotKilled(event) => event.write(stream),
-            GameEvent::RdRobotImpact(event) => event.write(stream),
-            GameEvent::TeamPlayPreRoundTimeLeft(event) => event.write(stream),
-            GameEvent::ParachuteDeploy(event) => event.write(stream),
-            GameEvent::ParachuteHolster(event) => event.write(stream),
-            GameEvent::KillRefillsMeter(event) => event.write(stream),
-            GameEvent::RpsTauntEvent(event) => event.write(stream),
-            GameEvent::CongaKill(event) => event.write(stream),
-            GameEvent::PlayerInitialSpawn(event) => event.write(stream),
-            GameEvent::CompetitiveVictory(event) => event.write(stream),
-            GameEvent::CompetitiveStatsUpdate(event) => event.write(stream),
-            GameEvent::MiniGameWin(event) => event.write(stream),
-            GameEvent::SentryOnGoActive(event) => event.write(stream),
-            GameEvent::DuckXpLevelUp(event) => event.write(stream),
-            GameEvent::QuestLogOpened(event) => event.write(stream),
-            GameEvent::SchemaUpdated(event) => event.write(stream),
-            GameEvent::LocalPlayerPickupWeapon(event) => event.write(stream),
-            GameEvent::RdPlayerScorePoints(event) => event.write(stream),
-            GameEvent::DemomanDetStickies(event) => event.write(stream),
-            GameEvent::QuestObjectiveCompleted(event) => event.write(stream),
-            GameEvent::PlayerScoreChanged(event) => event.write(stream),
-            GameEvent::KilledCappingPlayer(event) => event.write(stream),
-            GameEvent::EnvironmentalDeath(event) => event.write(stream),
-            GameEvent::ProjectileDirectHit(event) => event.write(stream),
-            GameEvent::PassGet(event) => event.write(stream),
-            GameEvent::PassScore(event) => event.write(stream),
-            GameEvent::PassFree(event) => event.write(stream),
-            GameEvent::PassPassCaught(event) => event.write(stream),
-            GameEvent::PassBallStolen(event) => event.write(stream),
-            GameEvent::PassBallBlocked(event) => event.write(stream),
-            GameEvent::DamagePrevented(event) => event.write(stream),
-            GameEvent::HalloweenBossKilled(event) => event.write(stream),
-            GameEvent::EscapedLootIsland(event) => event.write(stream),
-            GameEvent::TaggedPlayerAsIt(event) => event.write(stream),
-            GameEvent::MerasmusStunned(event) => event.write(stream),
-            GameEvent::MerasmusPropFound(event) => event.write(stream),
-            GameEvent::HalloweenSkeletonKilled(event) => event.write(stream),
-            GameEvent::EscapeHell(event) => event.write(stream),
-            GameEvent::CrossSpectralBridge(event) => event.write(stream),
-            GameEvent::MiniGameWon(event) => event.write(stream),
-            GameEvent::RespawnGhost(event) => event.write(stream),
-            GameEvent::KillInHell(event) => event.write(stream),
-            GameEvent::HalloweenDuckCollected(event) => event.write(stream),
-            GameEvent::SpecialScore(event) => event.write(stream),
-            GameEvent::TeamLeaderKilled(event) => event.write(stream),
-            GameEvent::HalloweenSoulCollected(event) => event.write(stream),
-            GameEvent::RecalculateTruce(event) => event.write(stream),
-            GameEvent::DeadRingerCheatDeath(event) => event.write(stream),
-            GameEvent::CrossbowHeal(event) => event.write(stream),
-            GameEvent::DamageMitigated(event) => event.write(stream),
-            GameEvent::PayloadPushed(event) => event.write(stream),
-            GameEvent::PlayerAbandonedMatch(event) => event.write(stream),
-            GameEvent::ClDrawline(event) => event.write(stream),
-            GameEvent::RestartTimerTime(event) => event.write(stream),
-            GameEvent::WinLimitChanged(event) => event.write(stream),
-            GameEvent::WinPanelShowScores(event) => event.write(stream),
-            GameEvent::TopStreamsRequestFinished(event) => event.write(stream),
-            GameEvent::CompetitiveStateChanged(event) => event.write(stream),
-            GameEvent::GlobalWarDataUpdated(event) => event.write(stream),
-            GameEvent::StopWatchChanged(event) => event.write(stream),
-            GameEvent::DsStop(event) => event.write(stream),
-            GameEvent::DsScreenshot(event) => event.write(stream),
-            GameEvent::ShowMatchSummary(event) => event.write(stream),
-            GameEvent::ExperienceChanged(event) => event.write(stream),
-            GameEvent::BeginXpLerp(event) => event.write(stream),
-            GameEvent::MatchmakerStatsUpdated(event) => event.write(stream),
-            GameEvent::RematchVotePeriodOver(event) => event.write(stream),
-            GameEvent::RematchFailedToCreate(event) => event.write(stream),
-            GameEvent::PlayerRematchChange(event) => event.write(stream),
-            GameEvent::PingUpdated(event) => event.write(stream),
-            GameEvent::MMStatsUpdated(event) => event.write(stream),
-            GameEvent::PlayerNextMapVoteChange(event) => event.write(stream),
-            GameEvent::VoteMapsChanged(event) => event.write(stream),
-            GameEvent::ProtoDefChanged(event) => event.write(stream),
-            GameEvent::PlayerDomination(event) => event.write(stream),
-            GameEvent::PlayerRocketPackPushed(event) => event.write(stream),
-            GameEvent::QuestRequest(event) => event.write(stream),
-            GameEvent::QuestResponse(event) => event.write(stream),
-            GameEvent::QuestProgress(event) => event.write(stream),
-            GameEvent::ProjectileRemoved(event) => event.write(stream),
-            GameEvent::QuestMapDataChanged(event) => event.write(stream),
-            GameEvent::GasDousedPlayerIgnited(event) => event.write(stream),
-            GameEvent::QuestTurnInState(event) => event.write(stream),
-            GameEvent::ItemsAcknowledged(event) => event.write(stream),
-            GameEvent::CapperKilled(event) => event.write(stream),
-            GameEvent::MainMenuStabilized(event) => event.write(stream),
-            GameEvent::WorldStatusChanged(event) => event.write(stream),
-            GameEvent::HLTVStatus(event) => event.write(stream),
-            GameEvent::HLTVCameraman(event) => event.write(stream),
-            GameEvent::HLTVRankCamera(event) => event.write(stream),
-            GameEvent::HLTVRankEntity(event) => event.write(stream),
-            GameEvent::HLTVFixed(event) => event.write(stream),
-            GameEvent::HLTVChase(event) => event.write(stream),
-            GameEvent::HLTVMessage(event) => event.write(stream),
-            GameEvent::HLTVTitle(event) => event.write(stream),
-            GameEvent::HLTVChat(event) => event.write(stream),
-            GameEvent::ReplayStartRecord(event) => event.write(stream),
-            GameEvent::ReplaySessionInfo(event) => event.write(stream),
-            GameEvent::ReplayEndRecord(event) => event.write(stream),
-            GameEvent::ReplayReplaysAvailable(event) => event.write(stream),
-            GameEvent::ReplayServerError(event) => event.write(stream),
-            GameEvent::Unknown(raw) => raw.write(stream),
+            GameEvent::ServerSpawn(event) => event.write(stream, definition),
+            GameEvent::ServerChangeLevelFailed(event) => event.write(stream, definition),
+            GameEvent::ServerShutdown(event) => event.write(stream, definition),
+            GameEvent::ServerCvar(event) => event.write(stream, definition),
+            GameEvent::ServerMessage(event) => event.write(stream, definition),
+            GameEvent::ServerAddBan(event) => event.write(stream, definition),
+            GameEvent::ServerRemoveBan(event) => event.write(stream, definition),
+            GameEvent::PlayerConnect(event) => event.write(stream, definition),
+            GameEvent::PlayerConnectClient(event) => event.write(stream, definition),
+            GameEvent::PlayerInfo(event) => event.write(stream, definition),
+            GameEvent::PlayerDisconnect(event) => event.write(stream, definition),
+            GameEvent::PlayerActivate(event) => event.write(stream, definition),
+            GameEvent::PlayerSay(event) => event.write(stream, definition),
+            GameEvent::ClientDisconnect(event) => event.write(stream, definition),
+            GameEvent::ClientBeginConnect(event) => event.write(stream, definition),
+            GameEvent::ClientConnected(event) => event.write(stream, definition),
+            GameEvent::ClientFullConnect(event) => event.write(stream, definition),
+            GameEvent::HostQuit(event) => event.write(stream, definition),
+            GameEvent::TeamInfo(event) => event.write(stream, definition),
+            GameEvent::TeamScore(event) => event.write(stream, definition),
+            GameEvent::TeamPlayBroadcastAudio(event) => event.write(stream, definition),
+            GameEvent::PlayerTeam(event) => event.write(stream, definition),
+            GameEvent::PlayerClass(event) => event.write(stream, definition),
+            GameEvent::PlayerDeath(event) => event.write(stream, definition),
+            GameEvent::PlayerHurt(event) => event.write(stream, definition),
+            GameEvent::PlayerChat(event) => event.write(stream, definition),
+            GameEvent::PlayerScore(event) => event.write(stream, definition),
+            GameEvent::PlayerSpawn(event) => event.write(stream, definition),
+            GameEvent::PlayerShoot(event) => event.write(stream, definition),
+            GameEvent::PlayerUse(event) => event.write(stream, definition),
+            GameEvent::PlayerChangeName(event) => event.write(stream, definition),
+            GameEvent::PlayerHintMessage(event) => event.write(stream, definition),
+            GameEvent::BasePlayerTeleported(event) => event.write(stream, definition),
+            GameEvent::GameInit(event) => event.write(stream, definition),
+            GameEvent::GameNewMap(event) => event.write(stream, definition),
+            GameEvent::GameStart(event) => event.write(stream, definition),
+            GameEvent::GameEnd(event) => event.write(stream, definition),
+            GameEvent::RoundStart(event) => event.write(stream, definition),
+            GameEvent::RoundEnd(event) => event.write(stream, definition),
+            GameEvent::GameMessage(event) => event.write(stream, definition),
+            GameEvent::BreakBreakable(event) => event.write(stream, definition),
+            GameEvent::BreakProp(event) => event.write(stream, definition),
+            GameEvent::EntityKilled(event) => event.write(stream, definition),
+            GameEvent::BonusUpdated(event) => event.write(stream, definition),
+            GameEvent::AchievementEvent(event) => event.write(stream, definition),
+            GameEvent::AchievementIncrement(event) => event.write(stream, definition),
+            GameEvent::PhysgunPickup(event) => event.write(stream, definition),
+            GameEvent::FlareIgniteNpc(event) => event.write(stream, definition),
+            GameEvent::HelicopterGrenadePuntMiss(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::UserDataDownloaded(event) => event.write(stream, definition),
+            GameEvent::RagdollDissolved(event) => event.write(stream, definition),
+            GameEvent::HLTVChangedMode(event) => event.write(stream, definition),
+            GameEvent::HLTVChangedTarget(event) => event.write(stream, definition),
+            GameEvent::VoteEnded(event) => event.write(stream, definition),
+            GameEvent::VoteStarted(event) => event.write(stream, definition),
+            GameEvent::VoteChanged(event) => event.write(stream, definition),
+            GameEvent::VotePassed(event) => event.write(stream, definition),
+            GameEvent::VoteFailed(event) => event.write(stream, definition),
+            GameEvent::VoteCast(event) => event.write(stream, definition),
+            GameEvent::VoteOptions(event) => event.write(stream, definition),
+            GameEvent::ReplaySaved(event) => event.write(stream, definition),
+            GameEvent::EnteredPerformanceMode(event) => event.write(stream, definition),
+            GameEvent::BrowseReplays(event) => event.write(stream, definition),
+            GameEvent::ReplayYoutubeStats(event) => event.write(stream, definition),
+            GameEvent::InventoryUpdated(event) => event.write(stream, definition),
+            GameEvent::CartUpdated(event) => event.write(stream, definition),
+            GameEvent::StorePriceSheetUpdated(event) => event.write(stream, definition),
+            GameEvent::EconInventoryConnected(event) => event.write(stream, definition),
+            GameEvent::ItemSchemaInitialized(event) => event.write(stream, definition),
+            GameEvent::GcNewSession(event) => event.write(stream, definition),
+            GameEvent::GcLostSession(event) => event.write(stream, definition),
+            GameEvent::IntroFinish(event) => event.write(stream, definition),
+            GameEvent::IntroNextCamera(event) => event.write(stream, definition),
+            GameEvent::PlayerChangeClass(event) => event.write(stream, definition),
+            GameEvent::TfMapTimeRemaining(event) => event.write(stream, definition),
+            GameEvent::TfGameOver(event) => event.write(stream, definition),
+            GameEvent::CtfFlagCaptured(event) => event.write(stream, definition),
+            GameEvent::ControlPointInitialized(event) => event.write(stream, definition),
+            GameEvent::ControlPointUpdateImages(event) => event.write(stream, definition),
+            GameEvent::ControlPointUpdateLayout(event) => event.write(stream, definition),
+            GameEvent::ControlPointUpdateCapping(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::ControlPointUpdateOwner(event) => event.write(stream, definition),
+            GameEvent::ControlPointStartTouch(event) => event.write(stream, definition),
+            GameEvent::ControlPointEndTouch(event) => event.write(stream, definition),
+            GameEvent::ControlPointPulseElement(event) => event.write(stream, definition),
+            GameEvent::ControlPointFakeCapture(event) => event.write(stream, definition),
+            GameEvent::ControlPointFakeCaptureMultiplier(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::TeamPlayRoundSelected(event) => event.write(stream, definition),
+            GameEvent::TeamPlayRoundStart(event) => event.write(stream, definition),
+            GameEvent::TeamPlayRoundActive(event) => event.write(stream, definition),
+            GameEvent::TeamPlayWaitingBegins(event) => event.write(stream, definition),
+            GameEvent::TeamPlayWaitingEnds(event) => event.write(stream, definition),
+            GameEvent::TeamPlayWaitingAboutToEnd(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::TeamPlayRestartRound(event) => event.write(stream, definition),
+            GameEvent::TeamPlayReadyRestart(event) => event.write(stream, definition),
+            GameEvent::TeamPlayRoundRestartSeconds(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::TeamPlayTeamReady(event) => event.write(stream, definition),
+            GameEvent::TeamPlayRoundWin(event) => event.write(stream, definition),
+            GameEvent::TeamPlayUpdateTimer(event) => event.write(stream, definition),
+            GameEvent::TeamPlayRoundStalemate(event) => event.write(stream, definition),
+            GameEvent::TeamPlayOvertimeBegin(event) => event.write(stream, definition),
+            GameEvent::TeamPlayOvertimeEnd(event) => event.write(stream, definition),
+            GameEvent::TeamPlaySuddenDeathBegin(event) => event.write(stream, definition),
+            GameEvent::TeamPlaySuddenDeathEnd(event) => event.write(stream, definition),
+            GameEvent::TeamPlayGameOver(event) => event.write(stream, definition),
+            GameEvent::TeamPlayMapTimeRemaining(event) => event.write(stream, definition),
+            GameEvent::TeamPlayTimerFlash(event) => event.write(stream, definition),
+            GameEvent::TeamPlayTimerTimeAdded(event) => event.write(stream, definition),
+            GameEvent::TeamPlayPointStartCapture(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::TeamPlayPointCaptured(event) => event.write(stream, definition),
+            GameEvent::TeamPlayPointLocked(event) => event.write(stream, definition),
+            GameEvent::TeamPlayPointUnlocked(event) => event.write(stream, definition),
+            GameEvent::TeamPlayCaptureBroken(event) => event.write(stream, definition),
+            GameEvent::TeamPlayCaptureBlocked(event) => event.write(stream, definition),
+            GameEvent::TeamPlayFlagEvent(event) => event.write(stream, definition),
+            GameEvent::TeamPlayWinPanel(event) => event.write(stream, definition),
+            GameEvent::TeamPlayTeamBalancedPlayer(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::TeamPlaySetupFinished(event) => event.write(stream, definition),
+            GameEvent::TeamPlayAlert(event) => event.write(stream, definition),
+            GameEvent::TrainingComplete(event) => event.write(stream, definition),
+            GameEvent::ShowFreezePanel(event) => event.write(stream, definition),
+            GameEvent::HideFreezePanel(event) => event.write(stream, definition),
+            GameEvent::FreezeCamStarted(event) => event.write(stream, definition),
+            GameEvent::LocalPlayerChangeTeam(event) => event.write(stream, definition),
+            GameEvent::LocalPlayerScoreChanged(event) => event.write(stream, definition),
+            GameEvent::LocalPlayerChangeClass(event) => event.write(stream, definition),
+            GameEvent::LocalPlayerRespawn(event) => event.write(stream, definition),
+            GameEvent::BuildingInfoChanged(event) => event.write(stream, definition),
+            GameEvent::LocalPlayerChangeDisguise(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::PlayerAccountChanged(event) => event.write(stream, definition),
+            GameEvent::SpyPdaReset(event) => event.write(stream, definition),
+            GameEvent::FlagStatusUpdate(event) => event.write(stream, definition),
+            GameEvent::PlayerStatsUpdated(event) => event.write(stream, definition),
+            GameEvent::PlayingCommentary(event) => event.write(stream, definition),
+            GameEvent::PlayerChargeDeployed(event) => event.write(stream, definition),
+            GameEvent::PlayerBuiltObject(event) => event.write(stream, definition),
+            GameEvent::PlayerUpgradedObject(event) => event.write(stream, definition),
+            GameEvent::PlayerCarryObject(event) => event.write(stream, definition),
+            GameEvent::PlayerDropObject(event) => event.write(stream, definition),
+            GameEvent::ObjectRemoved(event) => event.write(stream, definition),
+            GameEvent::ObjectDestroyed(event) => event.write(stream, definition),
+            GameEvent::ObjectDetonated(event) => event.write(stream, definition),
+            GameEvent::AchievementEarned(event) => event.write(stream, definition),
+            GameEvent::SpecTargetUpdated(event) => event.write(stream, definition),
+            GameEvent::TournamentStateUpdate(event) => event.write(stream, definition),
+            GameEvent::TournamentEnableCountdown(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::PlayerCalledForMedic(event) => event.write(stream, definition),
+            GameEvent::PlayerAskedForBall(event) => event.write(stream, definition),
+            GameEvent::LocalPlayerBecameObserver(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::PlayerIgnitedInv(event) => event.write(stream, definition),
+            GameEvent::PlayerIgnited(event) => event.write(stream, definition),
+            GameEvent::PlayerExtinguished(event) => event.write(stream, definition),
+            GameEvent::PlayerTeleported(event) => event.write(stream, definition),
+            GameEvent::PlayerHealedMedicCall(event) => event.write(stream, definition),
+            GameEvent::LocalPlayerChargeReady(event) => event.write(stream, definition),
+            GameEvent::LocalPlayerWindDown(event) => event.write(stream, definition),
+            GameEvent::PlayerInvulned(event) => event.write(stream, definition),
+            GameEvent::EscortSpeed(event) => event.write(stream, definition),
+            GameEvent::EscortProgress(event) => event.write(stream, definition),
+            GameEvent::EscortRecede(event) => event.write(stream, definition),
+            GameEvent::GameUIActivated(event) => event.write(stream, definition),
+            GameEvent::GameUIHidden(event) => event.write(stream, definition),
+            GameEvent::PlayerEscortScore(event) => event.write(stream, definition),
+            GameEvent::PlayerHealOnHit(event) => event.write(stream, definition),
+            GameEvent::PlayerStealSandvich(event) => event.write(stream, definition),
+            GameEvent::ShowClassLayout(event) => event.write(stream, definition),
+            GameEvent::ShowVsPanel(event) => event.write(stream, definition),
+            GameEvent::PlayerDamaged(event) => event.write(stream, definition),
+            GameEvent::ArenaPlayerNotification(event) => event.write(stream, definition),
+            GameEvent::ArenaMatchMaxStreak(event) => event.write(stream, definition),
+            GameEvent::ArenaRoundStart(event) => event.write(stream, definition),
+            GameEvent::ArenaWinPanel(event) => event.write(stream, definition),
+            GameEvent::PveWinPanel(event) => event.write(stream, definition),
+            GameEvent::AirDash(event) => event.write(stream, definition),
+            GameEvent::Landed(event) => event.write(stream, definition),
+            GameEvent::PlayerDamageDodged(event) => event.write(stream, definition),
+            GameEvent::PlayerStunned(event) => event.write(stream, definition),
+            GameEvent::ScoutGrandSlam(event) => event.write(stream, definition),
+            GameEvent::ScoutSlamdollLanded(event) => event.write(stream, definition),
+            GameEvent::ArrowImpact(event) => event.write(stream, definition),
+            GameEvent::PlayerJarated(event) => event.write(stream, definition),
+            GameEvent::PlayerJaratedFade(event) => event.write(stream, definition),
+            GameEvent::PlayerShieldBlocked(event) => event.write(stream, definition),
+            GameEvent::PlayerPinned(event) => event.write(stream, definition),
+            GameEvent::PlayerHealedByMedic(event) => event.write(stream, definition),
+            GameEvent::PlayerSappedObject(event) => event.write(stream, definition),
+            GameEvent::ItemFound(event) => event.write(stream, definition),
+            GameEvent::ShowAnnotation(event) => event.write(stream, definition),
+            GameEvent::HideAnnotation(event) => event.write(stream, definition),
+            GameEvent::PostInventoryApplication(event) => event.write(stream, definition),
+            GameEvent::ControlPointUnlockUpdated(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::DeployBuffBanner(event) => event.write(stream, definition),
+            GameEvent::PlayerBuff(event) => event.write(stream, definition),
+            GameEvent::MedicDeath(event) => event.write(stream, definition),
+            GameEvent::OvertimeNag(event) => event.write(stream, definition),
+            GameEvent::TeamsChanged(event) => event.write(stream, definition),
+            GameEvent::HalloweenPumpkinGrab(event) => event.write(stream, definition),
+            GameEvent::RocketJump(event) => event.write(stream, definition),
+            GameEvent::RocketJumpLanded(event) => event.write(stream, definition),
+            GameEvent::StickyJump(event) => event.write(stream, definition),
+            GameEvent::StickyJumpLanded(event) => event.write(stream, definition),
+            GameEvent::RocketPackLaunch(event) => event.write(stream, definition),
+            GameEvent::RocketPackLanded(event) => event.write(stream, definition),
+            GameEvent::MedicDefended(event) => event.write(stream, definition),
+            GameEvent::LocalPlayerHealed(event) => event.write(stream, definition),
+            GameEvent::PlayerDestroyedPipeBomb(event) => event.write(stream, definition),
+            GameEvent::ObjectDeflected(event) => event.write(stream, definition),
+            GameEvent::PlayerMvp(event) => event.write(stream, definition),
+            GameEvent::RaidSpawnMob(event) => event.write(stream, definition),
+            GameEvent::RaidSpawnSquad(event) => event.write(stream, definition),
+            GameEvent::NavBlocked(event) => event.write(stream, definition),
+            GameEvent::PathTrackPassed(event) => event.write(stream, definition),
+            GameEvent::NumCappersChanged(event) => event.write(stream, definition),
+            GameEvent::PlayerRegenerate(event) => event.write(stream, definition),
+            GameEvent::UpdateStatusItem(event) => event.write(stream, definition),
+            GameEvent::StatsResetRound(event) => event.write(stream, definition),
+            GameEvent::ScoreStatsAccumulatedUpdate(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::ScoreStatsAccumulatedReset(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::AchievementEarnedLocal(event) => event.write(stream, definition),
+            GameEvent::PlayerHealed(event) => event.write(stream, definition),
+            GameEvent::BuildingHealed(event) => event.write(stream, definition),
+            GameEvent::ItemPickup(event) => event.write(stream, definition),
+            GameEvent::DuelStatus(event) => event.write(stream, definition),
+            GameEvent::FishNotice(event) => event.write(stream, definition),
+            GameEvent::FishNoticeArm(event) => event.write(stream, definition),
+            GameEvent::SlapNotice(event) => event.write(stream, definition),
+            GameEvent::ThrowableHit(event) => event.write(stream, definition),
+            GameEvent::PumpkinLordSummoned(event) => event.write(stream, definition),
+            GameEvent::PumpkinLordKilled(event) => event.write(stream, definition),
+            GameEvent::MerasmusSummoned(event) => event.write(stream, definition),
+            GameEvent::MerasmusKilled(event) => event.write(stream, definition),
+            GameEvent::MerasmusEscapeWarning(event) => event.write(stream, definition),
+            GameEvent::MerasmusEscaped(event) => event.write(stream, definition),
+            GameEvent::EyeballBossSummoned(event) => event.write(stream, definition),
+            GameEvent::EyeballBossStunned(event) => event.write(stream, definition),
+            GameEvent::EyeballBossKilled(event) => event.write(stream, definition),
+            GameEvent::EyeballBossKiller(event) => event.write(stream, definition),
+            GameEvent::EyeballBossEscapeImminent(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::EyeballBossEscaped(event) => event.write(stream, definition),
+            GameEvent::NpcHurt(event) => event.write(stream, definition),
+            GameEvent::ControlPointTimerUpdated(event) => event.write(stream, definition),
+            GameEvent::PlayerHighFiveStart(event) => event.write(stream, definition),
+            GameEvent::PlayerHighFiveCancel(event) => event.write(stream, definition),
+            GameEvent::PlayerHighFiveSuccess(event) => event.write(stream, definition),
+            GameEvent::PlayerBonusPoints(event) => event.write(stream, definition),
+            GameEvent::PlayerUpgraded(event) => event.write(stream, definition),
+            GameEvent::PlayerBuyback(event) => event.write(stream, definition),
+            GameEvent::PlayerUsedPowerUpBottle(event) => event.write(stream, definition),
+            GameEvent::ChristmasGiftGrab(event) => event.write(stream, definition),
+            GameEvent::PlayerKilledAchievementZone(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::PartyUpdated(event) => event.write(stream, definition),
+            GameEvent::PartyPrefChanged(event) => event.write(stream, definition),
+            GameEvent::PartyCriteriaChanged(event) => event.write(stream, definition),
+            GameEvent::PartyInvitesChanged(event) => event.write(stream, definition),
+            GameEvent::PartyQueueStateChanged(event) => event.write(stream, definition),
+            GameEvent::PartyChat(event) => event.write(stream, definition),
+            GameEvent::PartyMemberJoin(event) => event.write(stream, definition),
+            GameEvent::PartyMemberLeave(event) => event.write(stream, definition),
+            GameEvent::MatchInvitesUpdated(event) => event.write(stream, definition),
+            GameEvent::LobbyUpdated(event) => event.write(stream, definition),
+            GameEvent::MvmMissionUpdate(event) => event.write(stream, definition),
+            GameEvent::RecalculateHolidays(event) => event.write(stream, definition),
+            GameEvent::PlayerCurrencyChanged(event) => event.write(stream, definition),
+            GameEvent::DoomsdayRocketOpen(event) => event.write(stream, definition),
+            GameEvent::RemoveNemesisRelationships(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::MvmCreditBonusWave(event) => event.write(stream, definition),
+            GameEvent::MvmCreditBonusAll(event) => event.write(stream, definition),
+            GameEvent::MvmCreditBonusAllAdvanced(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::MvmQuickSentryUpgrade(event) => event.write(stream, definition),
+            GameEvent::MvmTankDestroyedByPlayers(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::MvmKillRobotDeliveringBomb(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::MvmPickupCurrency(event) => event.write(stream, definition),
+            GameEvent::MvmBombCarrierKilled(event) => event.write(stream, definition),
+            GameEvent::MvmSentryBusterDetonate(event) => event.write(stream, definition),
+            GameEvent::MvmScoutMarkedForDeath(event) => event.write(stream, definition),
+            GameEvent::MvmMedicPowerUpShared(event) => event.write(stream, definition),
+            GameEvent::MvmBeginWave(event) => event.write(stream, definition),
+            GameEvent::MvmWaveComplete(event) => event.write(stream, definition),
+            GameEvent::MvmMissionComplete(event) => event.write(stream, definition),
+            GameEvent::MvmBombResetByPlayer(event) => event.write(stream, definition),
+            GameEvent::MvmBombAlarmTriggered(event) => event.write(stream, definition),
+            GameEvent::MvmBombDeployResetByPlayer(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::MvmWaveFailed(event) => event.write(stream, definition),
+            GameEvent::MvmResetStats(event) => event.write(stream, definition),
+            GameEvent::DamageResisted(event) => event.write(stream, definition),
+            GameEvent::RevivePlayerNotify(event) => event.write(stream, definition),
+            GameEvent::RevivePlayerStopped(event) => event.write(stream, definition),
+            GameEvent::RevivePlayerComplete(event) => event.write(stream, definition),
+            GameEvent::PlayerTurnedToGhost(event) => event.write(stream, definition),
+            GameEvent::MedigunShieldBlockedDamage(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::MvmAdvWaveCompleteNoGates(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::MvmSniperHeadshotCurrency(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::MvmMannhattanPit(event) => event.write(stream, definition),
+            GameEvent::FlagCarriedInDetectionZone(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::MvmAdvWaveKilledStunRadio(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::PlayerDirectHitStun(event) => event.write(stream, definition),
+            GameEvent::MvmSentryBusterKilled(event) => event.write(stream, definition),
+            GameEvent::UpgradesFileChanged(event) => event.write(stream, definition),
+            GameEvent::RdTeamPointsChanged(event) => event.write(stream, definition),
+            GameEvent::RdRulesStateChanged(event) => event.write(stream, definition),
+            GameEvent::RdRobotKilled(event) => event.write(stream, definition),
+            GameEvent::RdRobotImpact(event) => event.write(stream, definition),
+            GameEvent::TeamPlayPreRoundTimeLeft(event) => event.write(stream, definition),
+            GameEvent::ParachuteDeploy(event) => event.write(stream, definition),
+            GameEvent::ParachuteHolster(event) => event.write(stream, definition),
+            GameEvent::KillRefillsMeter(event) => event.write(stream, definition),
+            GameEvent::RpsTauntEvent(event) => event.write(stream, definition),
+            GameEvent::CongaKill(event) => event.write(stream, definition),
+            GameEvent::PlayerInitialSpawn(event) => event.write(stream, definition),
+            GameEvent::CompetitiveVictory(event) => event.write(stream, definition),
+            GameEvent::CompetitiveStatsUpdate(event) => event.write(stream, definition),
+            GameEvent::MiniGameWin(event) => event.write(stream, definition),
+            GameEvent::SentryOnGoActive(event) => event.write(stream, definition),
+            GameEvent::DuckXpLevelUp(event) => event.write(stream, definition),
+            GameEvent::QuestLogOpened(event) => event.write(stream, definition),
+            GameEvent::SchemaUpdated(event) => event.write(stream, definition),
+            GameEvent::LocalPlayerPickupWeapon(event) => event.write(stream, definition),
+            GameEvent::RdPlayerScorePoints(event) => event.write(stream, definition),
+            GameEvent::DemomanDetStickies(event) => event.write(stream, definition),
+            GameEvent::QuestObjectiveCompleted(event) => event.write(stream, definition),
+            GameEvent::PlayerScoreChanged(event) => event.write(stream, definition),
+            GameEvent::KilledCappingPlayer(event) => event.write(stream, definition),
+            GameEvent::EnvironmentalDeath(event) => event.write(stream, definition),
+            GameEvent::ProjectileDirectHit(event) => event.write(stream, definition),
+            GameEvent::PassGet(event) => event.write(stream, definition),
+            GameEvent::PassScore(event) => event.write(stream, definition),
+            GameEvent::PassFree(event) => event.write(stream, definition),
+            GameEvent::PassPassCaught(event) => event.write(stream, definition),
+            GameEvent::PassBallStolen(event) => event.write(stream, definition),
+            GameEvent::PassBallBlocked(event) => event.write(stream, definition),
+            GameEvent::DamagePrevented(event) => event.write(stream, definition),
+            GameEvent::HalloweenBossKilled(event) => event.write(stream, definition),
+            GameEvent::EscapedLootIsland(event) => event.write(stream, definition),
+            GameEvent::TaggedPlayerAsIt(event) => event.write(stream, definition),
+            GameEvent::MerasmusStunned(event) => event.write(stream, definition),
+            GameEvent::MerasmusPropFound(event) => event.write(stream, definition),
+            GameEvent::HalloweenSkeletonKilled(event) => event.write(stream, definition),
+            GameEvent::SkeletonKilledQuest(event) => event.write(stream, definition),
+            GameEvent::SkeletonKingKilledQuest(event) => event.write(stream, definition),
+            GameEvent::EscapeHell(event) => event.write(stream, definition),
+            GameEvent::CrossSpectralBridge(event) => event.write(stream, definition),
+            GameEvent::MiniGameWon(event) => event.write(stream, definition),
+            GameEvent::RespawnGhost(event) => event.write(stream, definition),
+            GameEvent::KillInHell(event) => event.write(stream, definition),
+            GameEvent::HalloweenDuckCollected(event) => event.write(stream, definition),
+            GameEvent::SpecialScore(event) => event.write(stream, definition),
+            GameEvent::TeamLeaderKilled(event) => event.write(stream, definition),
+            GameEvent::HalloweenSoulCollected(event) => event.write(stream, definition),
+            GameEvent::RecalculateTruce(event) => event.write(stream, definition),
+            GameEvent::DeadRingerCheatDeath(event) => event.write(stream, definition),
+            GameEvent::CrossbowHeal(event) => event.write(stream, definition),
+            GameEvent::DamageMitigated(event) => event.write(stream, definition),
+            GameEvent::PayloadPushed(event) => event.write(stream, definition),
+            GameEvent::PlayerAbandonedMatch(event) => event.write(stream, definition),
+            GameEvent::ClDrawline(event) => event.write(stream, definition),
+            GameEvent::RestartTimerTime(event) => event.write(stream, definition),
+            GameEvent::WinLimitChanged(event) => event.write(stream, definition),
+            GameEvent::WinPanelShowScores(event) => event.write(stream, definition),
+            GameEvent::TopStreamsRequestFinished(event) => {
+                event.write(stream, definition)
+            }
+            GameEvent::CompetitiveStateChanged(event) => event.write(stream, definition),
+            GameEvent::GlobalWarDataUpdated(event) => event.write(stream, definition),
+            GameEvent::StopWatchChanged(event) => event.write(stream, definition),
+            GameEvent::DsStop(event) => event.write(stream, definition),
+            GameEvent::DsScreenshot(event) => event.write(stream, definition),
+            GameEvent::ShowMatchSummary(event) => event.write(stream, definition),
+            GameEvent::ExperienceChanged(event) => event.write(stream, definition),
+            GameEvent::BeginXpLerp(event) => event.write(stream, definition),
+            GameEvent::MatchmakerStatsUpdated(event) => event.write(stream, definition),
+            GameEvent::RematchVotePeriodOver(event) => event.write(stream, definition),
+            GameEvent::RematchFailedToCreate(event) => event.write(stream, definition),
+            GameEvent::PlayerRematchChange(event) => event.write(stream, definition),
+            GameEvent::PingUpdated(event) => event.write(stream, definition),
+            GameEvent::MMStatsUpdated(event) => event.write(stream, definition),
+            GameEvent::PlayerNextMapVoteChange(event) => event.write(stream, definition),
+            GameEvent::VoteMapsChanged(event) => event.write(stream, definition),
+            GameEvent::ProtoDefChanged(event) => event.write(stream, definition),
+            GameEvent::PlayerDomination(event) => event.write(stream, definition),
+            GameEvent::PlayerRocketPackPushed(event) => event.write(stream, definition),
+            GameEvent::QuestRequest(event) => event.write(stream, definition),
+            GameEvent::QuestResponse(event) => event.write(stream, definition),
+            GameEvent::QuestProgress(event) => event.write(stream, definition),
+            GameEvent::ProjectileRemoved(event) => event.write(stream, definition),
+            GameEvent::QuestMapDataChanged(event) => event.write(stream, definition),
+            GameEvent::GasDousedPlayerIgnited(event) => event.write(stream, definition),
+            GameEvent::QuestTurnInState(event) => event.write(stream, definition),
+            GameEvent::ItemsAcknowledged(event) => event.write(stream, definition),
+            GameEvent::CapperKilled(event) => event.write(stream, definition),
+            GameEvent::MainMenuStabilized(event) => event.write(stream, definition),
+            GameEvent::WorldStatusChanged(event) => event.write(stream, definition),
+            GameEvent::HLTVStatus(event) => event.write(stream, definition),
+            GameEvent::HLTVCameraman(event) => event.write(stream, definition),
+            GameEvent::HLTVRankCamera(event) => event.write(stream, definition),
+            GameEvent::HLTVRankEntity(event) => event.write(stream, definition),
+            GameEvent::HLTVFixed(event) => event.write(stream, definition),
+            GameEvent::HLTVChase(event) => event.write(stream, definition),
+            GameEvent::HLTVMessage(event) => event.write(stream, definition),
+            GameEvent::HLTVTitle(event) => event.write(stream, definition),
+            GameEvent::HLTVChat(event) => event.write(stream, definition),
+            GameEvent::ReplayStartRecord(event) => event.write(stream, definition),
+            GameEvent::ReplaySessionInfo(event) => event.write(stream, definition),
+            GameEvent::ReplayEndRecord(event) => event.write(stream, definition),
+            GameEvent::ReplayReplaysAvailable(event) => event.write(stream, definition),
+            GameEvent::ReplayServerError(event) => event.write(stream, definition),
+            GameEvent::Unknown(raw) => Ok(raw.write(stream)?),
         }
     }
     pub fn event_type(&self) -> GameEventType {
@@ -10722,6 +22931,10 @@ impl GameEvent {
             GameEvent::MerasmusPropFound(_) => GameEventType::MerasmusPropFound,
             GameEvent::HalloweenSkeletonKilled(_) => {
                 GameEventType::HalloweenSkeletonKilled
+            }
+            GameEvent::SkeletonKilledQuest(_) => GameEventType::SkeletonKilledQuest,
+            GameEvent::SkeletonKingKilledQuest(_) => {
+                GameEventType::SkeletonKingKilledQuest
             }
             GameEvent::EscapeHell(_) => GameEventType::EscapeHell,
             GameEvent::CrossSpectralBridge(_) => GameEventType::CrossSpectralBridge,
@@ -11235,6 +23448,8 @@ pub fn get_sizes() -> fnv::FnvHashMap<&'static str, usize> {
         ("MerasmusStunned", std::mem::size_of::<MerasmusStunnedEvent>()),
         ("MerasmusPropFound", std::mem::size_of::<MerasmusPropFoundEvent>()),
         ("HalloweenSkeletonKilled", std::mem::size_of::<HalloweenSkeletonKilledEvent>()),
+        ("SkeletonKilledQuest", std::mem::size_of::<SkeletonKilledQuestEvent>()),
+        ("SkeletonKingKilledQuest", std::mem::size_of::<SkeletonKingKilledQuestEvent>()),
         ("EscapeHell", std::mem::size_of::<EscapeHellEvent>()),
         ("CrossSpectralBridge", std::mem::size_of::<CrossSpectralBridgeEvent>()),
         ("MiniGameWon", std::mem::size_of::<MiniGameWonEvent>()),

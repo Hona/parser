@@ -282,6 +282,7 @@ impl GameState {
             }
         };
 
+        #[allow(clippy::indexing_slicing)]
         &mut self.players[index]
     }
     pub fn get_or_create_building(
@@ -478,9 +479,9 @@ impl GameStateAnalyser {
             SendPropIdentifier::new("DT_TFLocalPlayerExclusive", "m_angEyeAngles[0]");
         const NON_LOCAL_PITCH_ANGLES: SendPropIdentifier =
             SendPropIdentifier::new("DT_TFNonLocalPlayerExclusive", "m_angEyeAngles[0]");
-            
+
         const SIMTIME_PROP: SendPropIdentifier =
-        SendPropIdentifier::new("DT_BaseEntity", "m_flSimulationTime");
+            SendPropIdentifier::new("DT_BaseEntity", "m_flSimulationTime");
 
         player.in_pvs = entity.in_pvs;
 

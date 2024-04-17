@@ -604,27 +604,17 @@ impl PartialEq for SendPropValue {
             (SendPropValue::VectorXY(value1), SendPropValue::Vector(value2)) => {
                 value1.x == value2.x && value1.y == value2.y && value2.z == 0.0
             }
-            (SendPropValue::Vector(value1), SendPropValue::Array(value2)) if value2.len() == 3 => {
-                SendPropValue::Float(value1.x) == value2[0]
-                    && SendPropValue::Float(value1.y) == value2[1]
-                    && SendPropValue::Float(value1.z) == value2[2]
+            (SendPropValue::Vector(value1), SendPropValue::Array(value2)) => {
+                value1 == value2.as_slice()
             }
-            (SendPropValue::Array(value1), SendPropValue::Vector(value2)) if value1.len() == 3 => {
-                SendPropValue::Float(value2.x) == value1[0]
-                    && SendPropValue::Float(value2.y) == value1[1]
-                    && SendPropValue::Float(value2.z) == value1[2]
+            (SendPropValue::Array(value1), SendPropValue::Vector(value2)) => {
+                value2 == value1.as_slice()
             }
-            (SendPropValue::VectorXY(value1), SendPropValue::Array(value2))
-                if value2.len() == 2 =>
-            {
-                SendPropValue::Float(value1.x) == value2[0]
-                    && SendPropValue::Float(value1.y) == value2[1]
+            (SendPropValue::VectorXY(value1), SendPropValue::Array(value2)) => {
+                value1 == value2.as_slice()
             }
-            (SendPropValue::Array(value1), SendPropValue::VectorXY(value2))
-                if value1.len() == 2 =>
-            {
-                SendPropValue::Float(value2.x) == value1[0]
-                    && SendPropValue::Float(value2.y) == value1[1]
+            (SendPropValue::Array(value1), SendPropValue::VectorXY(value2)) => {
+                value2 == value1.as_slice()
             }
             _ => false,
         }
@@ -1114,7 +1104,6 @@ impl<'a> TryFrom<&'a SendPropValue> for &'a [SendPropValue] {
     }
 }
 
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub struct SendPropIdentifier(u64);
 
@@ -1196,6 +1185,17 @@ impl Serialize for SendPropIdentifier {
         S: Serializer,
     {
         self.0.to_string().serialize(serializer)
+    }
+}
+
+#[cfg(feature = "schema")]
+impl schemars::JsonSchema for SendPropIdentifier {
+    fn schema_name() -> String {
+        "SendPropIdentifier".into()
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        <String as schemars::JsonSchema>::json_schema(gen)
     }
 }
 

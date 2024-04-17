@@ -1,3 +1,8 @@
+#![cfg_attr(not(test), deny(clippy::unwrap_used))]
+#![cfg_attr(not(test), deny(clippy::expect_used))]
+#![cfg_attr(not(test), deny(clippy::indexing_slicing))]
+#![cfg_attr(not(test), deny(clippy::panic))]
+
 pub use bitbuffer::Result as ReadResult;
 
 pub use crate::demo::{
@@ -9,6 +14,8 @@ pub use crate::demo::{
     Demo, Stream,
 };
 
+#[cfg(feature = "codegen")]
+pub mod codegen;
 pub(crate) mod consthash;
 pub mod demo;
 pub(crate) mod nullhasher;
