@@ -1,5 +1,5 @@
 [package]
-name = "tf-demo-parser"
+name = "tf_demo_parser"
 description = "parser for tf2 demo files"
 version = "0.5.1"
 authors = ["Robin Appelman <robin@icewind.nl>"]
@@ -13,7 +13,7 @@ rust-version = "1.70.0"
 [lib]
 name = "tf_demo_parser"
 path = "src/lib.rs"
-crate-type = ["lib", "cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [[bin]]
 name = "parse_demo"
@@ -38,6 +38,7 @@ path = "src/bin/codegen.rs"
 required-features = ["codegen"]
 
 [dependencies]
+wasm-bindgen = "0.2.92"
 bitbuffer = { version = "0.11.0", features = ["serde"] }
 num_enum = "0.7.2"
 num-traits = "0.2.18"

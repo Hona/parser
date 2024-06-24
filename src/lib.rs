@@ -3,10 +3,13 @@
 #![cfg_attr(not(test), deny(clippy::indexing_slicing))]
 #![cfg_attr(not(test), deny(clippy::panic))]
 
+extern crate wasm_bindgen;
+
 use std::ffi::{c_char, CStr, CString};
 use std::fs;
 pub use bitbuffer::Result as ReadResult;
 use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::*;
 
 pub use crate::demo::{
     message::MessageType,
@@ -98,47 +101,25 @@ pub struct JsonDemo {
     state: MatchState,
 }
 
-#[no_mangle]
-pub extern "C" fn analyze_demo(path: *const c_char) -> *mut c_char {
-    let c_str = unsafe { CStr::from_ptr(path) };
-    let str_slice = match c_str.to_str() {
-        Ok(s) => s,
-        Err(_) => return std::ptr::null_mut(),
-    };
+#[wasm_bindgen(js_namespace = Namespace, catch)]
+pub fn analyze_demo(buffer: &[u8]) -> JsValue {
+    // Create a Demo object from the buffer
+    let demo = Demo::new(buffer);
 
-    let file = match fs::read(str_slice) {
-        Ok(f) => f,
-        Err(_) => return std::ptr::null_mut(),
-    };
-
-    let demo = Demo::new(&file);
+    // Create a parser from the demo stream
     let parser = DemoParser::new(demo.get_stream());
-    let (header, state) = match parser.parse() {
-        Ok(results) => results,
-        Err(_) => return std::ptr::null_mut(),
+
+    // Parse the demo and get the header and state
+    let Ok((header, state)) = parser.parse() else {
+        return JsValue::from_str("Failed to parse the demo");
     };
 
+    // Create a JsonDemo object
     let demo_json = JsonDemo { header, state };
-    let result = match serde_json::to_string(&demo_json) {
-        Ok(json) => json,
-        Err(_) => return std::ptr::null_mut(),
-    };
 
-    // Convert the Rust string to a C string to return
-    let c_string = match CString::new(result) {
-        Ok(c_str) => c_str,
-        Err(_) => return std::ptr::null_mut(),
-    };
+    // Convert the JsonDemo object to a JSON string
+    let Ok(result) = serde_json::to_string(&demo_json) else { return JsValue::from_str("Failed to convert the demo to JSON") };
 
-    c_string.into_raw()
-}
-
-#[no_mangle]
-pub extern "C" fn free_string(s: *mut c_char) {
-    unsafe {
-        // Reclaim the CString to properly deallocate memory
-        if !s.is_null() {
-            let _ = CString::from_raw(s);
-        }
-    }
+    // Return the JSON string
+    return JsValue::from_str(&result);
 }

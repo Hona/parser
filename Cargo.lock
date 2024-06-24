@@ -1169,7 +1169,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tf-demo-parser"
+name = "tf_demo_parser"
 version = "0.5.1"
 dependencies = [
  "Inflector",
@@ -1204,6 +1204,7 @@ dependencies = [
  "test-case",
  "tracing",
  "tracing-subscriber",
+ "wasm-bindgen",
 ]
 
 [[package]]

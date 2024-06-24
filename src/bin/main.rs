@@ -14,7 +14,7 @@ static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct JsonDemo {
+pub struct JsonDemo {
     header: Header,
     #[serde(flatten)]
     state: MatchState,
