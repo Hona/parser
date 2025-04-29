@@ -2,11 +2,11 @@
   "nodes": {
     "crane": {
       "locked": {
-        "lastModified": 1733688869,
-        "narHash": "sha256-KrhxxFj1CjESDrL5+u/zsVH0K+Ik9tvoac/oFPoxSB8=",
+        "lastModified": 1742394900,
+        "narHash": "sha256-vVOAp9ahvnU+fQoKd4SEXB2JG2wbENkpqcwlkIXgUC0=",
         "owner": "ipetkov",
         "repo": "crane",
-        "rev": "604637106e420ad99907cae401e13ab6b452e7d9",
+        "rev": "70947c1908108c0c551ddfd73d4f750ff2ea67cd",
         "type": "github"
       },
       "original": {
@@ -44,17 +44,14 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1735052218,
-        "narHash": "sha256-I30wh6G8fSUO4EseexxiDXcxyUhXR6C8BvEeKn6xyfE=",
-        "owner": "icewind1991",
-        "repo": "mill-scale",
-        "rev": "7e45bb598ff63a8416ee3c26743b20644563bd93",
-        "type": "github"
+        "lastModified": 1745880182,
+        "narHash": "sha256-QEhBdGhuVArNIVUfblAbA115qXulEJWdR465gqIKF2A=",
+        "path": "/home/robin/Projects/mill-scale",
+        "type": "path"
       },
       "original": {
-        "owner": "icewind1991",
-        "repo": "mill-scale",
-        "type": "github"
+        "path": "/home/robin/Projects/mill-scale",
+        "type": "path"
       }
     },
     "nixpkgs": {
@@ -88,11 +85,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1733884434,
-        "narHash": "sha256-8GXR9kC07dyOIshAyfZhG11xfvBRSZzYghnZ2weOKJU=",
+        "lastModified": 1742697269,
+        "narHash": "sha256-Lpp0XyAtIl1oGJzNmTiTGLhTkcUjwSkEb0gOiNzYFGM=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "d0483df44ddf0fd1985f564abccbe568e020ddf2",
+        "rev": "01973c84732f9275c50c5f075dd1f54cc04b3316",
         "type": "github"
       },
       "original": {
