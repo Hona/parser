@@ -1,7 +1,7 @@
 [package]
 name = "tf-demo-parser"
 description = "parser for tf2 demo files"
-version = "0.5.1"
+version = "0.6.0"
 authors = ["Robin Appelman <robin@icewind.nl>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -44,11 +44,6 @@ path = "src/bin/strings.rs"
 name = "direct_hits"
 path = "src/bin/direct_hits.rs"
 
-[[bin]]
-name = "voice"
-path = "src/bin/voice.rs"
-required-features = ["audio"]
-
 [dependencies]
 bitbuffer = { version = "0.11.0", features = ["serde"] }
 num_enum = "0.7.2"
@@ -82,15 +77,12 @@ tempfile = { version = "3", optional = true }
 lazy_static = { version = "1", optional = true }
 prettyplease = { version = "0.2", optional = true }
 
-# audio
-opus = { version = "0.3.0", optional = true }
-hound = { version = "3.5.1", optional = true }
+log = { version = "0.4.21", features = [] }
 
 [features]
 schema = ["schemars", "bitbuffer/schemars"]
 trace = ["tracing", "tracing-subscriber"]
 codegen = ["better-panic", "quote", "syn", "Inflector", "proc-macro2", "tempfile", "lazy_static", "prettyplease"]
-audio = ["dep:opus", "dep:hound"]
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"

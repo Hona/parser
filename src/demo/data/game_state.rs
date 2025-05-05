@@ -13,6 +13,7 @@ use std::collections::{BTreeMap, HashMap};
 pub struct Handle(pub i64);
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Default)]
+#[non_exhaustive]
 pub enum PlayerState {
     #[default]
     Alive = 0,
@@ -54,6 +55,7 @@ impl Box {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[non_exhaustive]
 pub struct Player {
     pub entity: EntityId,
     pub position: Vector,
@@ -109,6 +111,7 @@ impl Player {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[non_exhaustive]
 pub struct Sentry {
     pub entity: EntityId,
     pub builder: UserId,
@@ -128,6 +131,7 @@ pub struct Sentry {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[non_exhaustive]
 pub struct Dispenser {
     pub entity: EntityId,
     pub builder: UserId,
@@ -144,6 +148,7 @@ pub struct Dispenser {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[non_exhaustive]
 pub struct Teleporter {
     pub entity: EntityId,
     pub builder: UserId,
@@ -164,6 +169,7 @@ pub struct Teleporter {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[non_exhaustive]
 pub enum Building {
     Sentry(Sentry),
     Dispenser(Dispenser),
@@ -269,6 +275,7 @@ impl Building {
     }
 }
 
+#[non_exhaustive]
 pub enum BuildingClass {
     Sentry,
     Dispenser,
@@ -276,6 +283,7 @@ pub enum BuildingClass {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Projectile {
     pub id: EntityId,
     pub team: Team,
@@ -305,6 +313,7 @@ impl Projectile {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum PipeType {
     Regular = 0,
     Sticky = 1,
@@ -376,6 +385,7 @@ impl From<u8> for ProjectileType {
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Collision {
     pub tick: DemoTick,
     pub target: EntityId,
@@ -383,12 +393,14 @@ pub struct Collision {
 }
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[non_exhaustive]
 pub struct World {
     pub boundary_min: Vector,
     pub boundary_max: Vector,
 }
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[non_exhaustive]
 pub struct Kill {
     pub attacker_id: u16,
     pub assister_id: u16,
@@ -410,6 +422,7 @@ impl Kill {
 }
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+#[non_exhaustive]
 pub struct GameState {
     pub players: Vec<Player>,
     pub buildings: BTreeMap<EntityId, Building>,
