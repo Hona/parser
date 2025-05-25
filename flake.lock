@@ -44,11 +44,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1748035164,
-        "narHash": "sha256-PMWOFLi3oU/Eb+y4a0MlHS0IcUZ+UFCoGmA1Q7DnoW4=",
+        "lastModified": 1748204267,
+        "narHash": "sha256-daZUxND4UxWe6VCqh7PUuxpySqcYrUfZH8uCATUoQq8=",
         "ref": "refs/heads/main",
-        "rev": "e6d5d797b3d2c738309152f2545518b2b117f72b",
-        "revCount": 48,
+        "rev": "5164809bd99f06ddaa08afec014fce800ec93ce3",
+        "revCount": 49,
         "type": "git",
         "url": "https://codeberg.org/icewind/mill-scale.git"
       },
