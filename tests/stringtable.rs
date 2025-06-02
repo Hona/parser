@@ -4,7 +4,7 @@ use test_case::test_case;
 use tf_demo_parser::demo::message::stringtable::{
     parse_string_table_update, write_string_table_update, StringTableMeta,
 };
-use tf_demo_parser::demo::packet::stringtable::FixedUserDataSize;
+use tf_demo_parser::demo::packet::stringtable::{FixedUserDataSize, StringTable};
 
 #[test_case("test_data/string_tables/decalprecache.bin", "test_data/string_tables/decalprecache_meta.json"; "decalprecache")]
 #[test_case("test_data/string_tables/downloadables.bin", "test_data/string_tables/downloadables_meta.json"; "downloadables")]
@@ -66,4 +66,24 @@ fn string_table_reencode(input_file: &str, meta_file: &str) {
     } else {
         pretty_assertions::assert_eq!(data, out);
     }
+}
+
+#[test_case("test_data/string_tables/ServerMapCycleLarge.bin", "test_data/string_tables/ServerMapCycleLarge_meta.json"; "ServerMapCycleLarge")]
+fn large_string_table_parsing(input_file: &str, meta_file: &str) {
+    let data = fs::read(input_file).unwrap();
+    let meta: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(meta_file).unwrap()).unwrap();
+
+    let expected_table_name = meta["name"].as_str().unwrap();
+    let expected_marker = meta["marker"].as_u64().unwrap() as u32;
+
+    let mut stream = BitReadStream::new(BitReadBuffer::new(&data, LittleEndian));
+
+    // Parse the table data
+    let table: StringTable<'_> = stream.read().unwrap();
+    pretty_assertions::assert_eq!(expected_table_name, table.name);
+
+    // Ensure the stream position is correct (previously the byte_len.saturated_mul(8) in ExtraData could overflow and would leave the BitReadStream in a bad state).
+    let marker: u32 = stream.read().unwrap();
+    pretty_assertions::assert_eq!(expected_marker, marker);
 }
