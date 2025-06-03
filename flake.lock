@@ -44,10 +44,10 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1748204267,
-        "narHash": "sha256-daZUxND4UxWe6VCqh7PUuxpySqcYrUfZH8uCATUoQq8=",
+        "lastModified": 1748205441,
+        "narHash": "sha256-W+UUBT/l1DSTZo5G43494mRNNspJ2i9jW2QELC9JuMQ=",
         "ref": "refs/heads/main",
-        "rev": "5164809bd99f06ddaa08afec014fce800ec93ce3",
+        "rev": "dac3b74a89cebbeb21cc6602e4a346604adbee8b",
         "revCount": 49,
         "type": "git",
         "url": "https://codeberg.org/icewind/mill-scale.git"
@@ -59,16 +59,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1739758141,
-        "narHash": "sha256-uq6A2L7o1/tR6VfmYhZWoVAwb3gTy7j4Jx30MIrH0rE=",
+        "lastModified": 1748302896,
+        "narHash": "sha256-ixMT0a8mM091vSswlTORZj93WQAJsRNmEvqLL+qwTFM=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "c618e28f70257593de75a7044438efc1c1fc0791",
+        "rev": "7848cd8c982f7740edf76ddb3b43d234cb80fc4d",
         "type": "github"
       },
       "original": {
         "id": "nixpkgs",
-        "ref": "nixos-24.11",
+        "ref": "nixos-25.05",
         "type": "indirect"
       }
     },
