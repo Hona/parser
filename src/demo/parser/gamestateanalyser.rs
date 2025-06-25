@@ -245,6 +245,8 @@ impl GameStateAnalyser {
             SendPropIdentifier::new("DT_TFPlayerShared", "m_nPlayerCondEx3");
         const PLAYER_COND_EX4: SendPropIdentifier =
             SendPropIdentifier::new("DT_TFPlayerShared", "m_nPlayerCondEx4");
+        const PLAYER_COND_BITS: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFPlayerConditionListExclusive", "_condition_bits");
 
         const WEAPON_0: SendPropIdentifier = SendPropIdentifier::new("m_hMyWeapons", "000");
         const WEAPON_1: SendPropIdentifier = SendPropIdentifier::new("m_hMyWeapons", "001");
@@ -296,7 +298,7 @@ impl GameStateAnalyser {
                     let handle = Handle(i64::try_from(&prop.value).unwrap_or_default());
                     player.weapons[2] = handle;
                 }
-                PLAYER_COND => {
+                PLAYER_COND | PLAYER_COND_BITS => {
                     player.conditions[0..4].copy_from_slice(
                         &i64::try_from(&prop.value).unwrap_or_default().to_le_bytes()[0..4],
                     );
