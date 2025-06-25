@@ -235,6 +235,16 @@ impl GameStateAnalyser {
             SendPropIdentifier::new("DT_BaseEntity", "m_flSimulationTime");
         const PROP_BB_MAX: SendPropIdentifier =
             SendPropIdentifier::new("DT_CollisionProperty", "m_vecMaxsPreScaled");
+        const PLAYER_COND: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFPlayerShared", "m_nPlayerCond");
+        const PLAYER_COND_EX1: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFPlayerShared", "m_nPlayerCondEx");
+        const PLAYER_COND_EX2: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFPlayerShared", "m_nPlayerCondEx2");
+        const PLAYER_COND_EX3: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFPlayerShared", "m_nPlayerCondEx3");
+        const PLAYER_COND_EX4: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFPlayerShared", "m_nPlayerCondEx4");
 
         const WEAPON_0: SendPropIdentifier = SendPropIdentifier::new("m_hMyWeapons", "000");
         const WEAPON_1: SendPropIdentifier = SendPropIdentifier::new("m_hMyWeapons", "001");
@@ -285,6 +295,31 @@ impl GameStateAnalyser {
                 WEAPON_2 => {
                     let handle = Handle(i64::try_from(&prop.value).unwrap_or_default());
                     player.weapons[2] = handle;
+                }
+                PLAYER_COND => {
+                    player.conditions[0..4].copy_from_slice(
+                        &i64::try_from(&prop.value).unwrap_or_default().to_le_bytes()[0..4],
+                    );
+                }
+                PLAYER_COND_EX1 => {
+                    player.conditions[4..8].copy_from_slice(
+                        &i64::try_from(&prop.value).unwrap_or_default().to_le_bytes()[0..4],
+                    );
+                }
+                PLAYER_COND_EX2 => {
+                    player.conditions[8..12].copy_from_slice(
+                        &i64::try_from(&prop.value).unwrap_or_default().to_le_bytes()[0..4],
+                    );
+                }
+                PLAYER_COND_EX3 => {
+                    player.conditions[12..16].copy_from_slice(
+                        &i64::try_from(&prop.value).unwrap_or_default().to_le_bytes()[0..4],
+                    );
+                }
+                PLAYER_COND_EX4 => {
+                    player.conditions[16..20].copy_from_slice(
+                        &i64::try_from(&prop.value).unwrap_or_default().to_le_bytes()[0..4],
+                    );
                 }
                 _ => {}
             }

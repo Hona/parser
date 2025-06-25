@@ -318,9 +318,10 @@ fn get_entity_for_update(
     update_type: UpdateType,
     delta: Option<ServerTick>,
 ) -> Result<PacketEntity> {
-    let class_id = *state
+    let class_id = state
         .entity_classes
         .get(&entity_index)
+        .copied()
         .ok_or(ParseError::UnknownEntity(entity_index))?;
 
     Ok(PacketEntity {
@@ -354,13 +355,14 @@ impl Parse<'_> for PacketEntitiesMessage {
 
         for _ in 0..updated_entries {
             let diff: u32 = read_bit_var(&mut data)?;
-            last_index = last_index.saturating_add(diff as i32).saturating_add(1);
-            if last_index >= 2048 {
+            let index = last_index.saturating_add(diff as i32).saturating_add(1);
+            if index >= 2048 {
                 return Err(ParseError::InvalidDemo("invalid entity index"));
             }
-            let entity_index = EntityId::from(last_index as u32);
+            let entity_index = EntityId::from(index as u32);
 
             let update_type = data.read()?;
+
             if update_type == UpdateType::Enter {
                 let mut entity =
                     Self::read_enter(&mut data, entity_index, state, base_line, delta)?;
@@ -392,6 +394,8 @@ impl Parse<'_> for PacketEntitiesMessage {
                     baseline_index: BaselineIndex::First,
                 });
             }
+
+            last_index = index;
         }
 
         if delta.is_some() {

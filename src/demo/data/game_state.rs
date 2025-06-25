@@ -1,3 +1,4 @@
+pub use super::cond::PlayerCondition;
 use crate::demo::data::DemoTick;
 use crate::demo::gameevent_gen::PlayerDeathEvent;
 use crate::demo::gamevent::GameEvent;
@@ -8,6 +9,7 @@ use crate::demo::vector::Vector;
 use parse_display::Display;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
+use std::ops::Rem;
 
 #[derive(Default, Serialize, Deserialize, Debug, Copy, Clone, Eq, PartialEq, Hash, Display)]
 pub struct Handle(pub i64);
@@ -73,6 +75,7 @@ pub struct Player {
     pub in_pvs: bool,
     pub bounds: Box,
     pub weapons: [Handle; 3],
+    pub(crate) conditions: [u8; 20],
 }
 
 pub const PLAYER_BOX_DEFAULT: Box = Box {
@@ -107,6 +110,31 @@ impl Player {
                     || self.bounds.contains(next_position - self.position)
             }
         }
+    }
+
+    pub fn conditions(&self) -> impl Iterator<Item = PlayerCondition> + '_ {
+        (1..=(PlayerCondition::MAX as u8)).filter_map(|cond_int| {
+            let byte = cond_int / 8;
+            let bit = cond_int.rem(8);
+            let cond_byte = *self.conditions.get(byte as usize)?;
+            if (cond_byte >> bit as usize) == 1 {
+                PlayerCondition::try_from(cond_byte).ok()
+            } else {
+                None
+            }
+        })
+    }
+
+    pub fn has_condition(&self, condition: PlayerCondition) -> bool {
+        let cond_int = condition as u8;
+        let byte = cond_int / 8;
+        let bit = cond_int.rem(8);
+        let cond_byte = self
+            .conditions
+            .get(byte as usize)
+            .copied()
+            .unwrap_or_default();
+        cond_byte >> bit as usize == 1
     }
 }
 
