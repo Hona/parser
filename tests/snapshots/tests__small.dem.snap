@@ -1774,5 +1774,6 @@ expression: state
     "1645192": 648,
     "1688201": 649
   },
-  "events": []
+  "events": [],
+  "objectives": {}
 }

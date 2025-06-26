@@ -1,7 +1,7 @@
 pub use crate::demo::data::game_state::{
     Building, BuildingClass, Dispenser, GameState, Kill, PlayerState, Sentry, Teleporter, World,
 };
-use crate::demo::data::game_state::{Handle, PipeType, Projectile, ProjectileType};
+use crate::demo::data::game_state::{Cart, Handle, Objective, PipeType, Projectile, ProjectileType};
 use crate::demo::data::DemoTick;
 use crate::demo::gameevent_gen::ObjectDestroyedEvent;
 use crate::demo::gamevent::GameEvent;
@@ -157,6 +157,7 @@ impl GameStateAnalyser {
             "CObjectSentrygun" => self.handle_sentry_entity(entity, parser_state),
             "CObjectDispenser" => self.handle_dispenser_entity(entity, parser_state),
             "CObjectTeleporter" => self.handle_teleporter_entity(entity, parser_state),
+            "CFuncTrackTrain" => self.handle_train_entity(entity, parser_state),
             _ if class_name.starts_with("CTFProjectile_")
                 || class_name.as_str() == "CTFGrenadePipebombProjectile" =>
             {
@@ -656,6 +657,29 @@ impl GameStateAnalyser {
                     projectile.critical = critical;
                 }
                 _ => {}
+            }
+        }
+    }
+
+    pub fn handle_train_entity(&mut self, entity: &PacketEntity, parser_state: &ParserState) {
+        const POSITION: SendPropIdentifier =
+            SendPropIdentifier::new("DT_BaseEntity", "m_vecOrigin");
+
+        let objective = self
+            .state
+            .objectives
+            .entry(entity.entity_index)
+            .or_insert_with(|| {
+                Objective::Cart(Cart::default())
+            });
+
+        #[allow(irrefutable_let_patterns)]
+        if let Objective::Cart(cart) = objective {
+            for prop in entity.props(parser_state) {
+                if prop.identifier == POSITION {
+                    let pos = Vector::try_from(&prop.value).unwrap_or_default();
+                    cart.position = pos
+                }
             }
         }
     }

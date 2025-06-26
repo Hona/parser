@@ -452,6 +452,24 @@ impl Kill {
 }
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+pub struct Cart {
+    pub position: Vector,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub enum Objective {
+    Cart(Cart),
+}
+
+impl Objective {
+    pub fn as_cart(&self) -> Option<&Cart> {
+        match self {
+            Objective::Cart(cart) => Some(cart),
+        }
+    }
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
 #[non_exhaustive]
 pub struct GameState {
     pub players: Vec<Player>,
@@ -465,6 +483,7 @@ pub struct GameState {
     pub interval_per_tick: f32,
     pub outer_map: HashMap<Handle, EntityId>,
     pub events: Vec<(DemoTick, GameEvent)>,
+    pub objectives: BTreeMap<EntityId, Objective>,
 }
 
 impl GameState {
