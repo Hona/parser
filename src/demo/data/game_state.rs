@@ -322,6 +322,7 @@ pub struct Projectile {
     pub bounds: Option<Box>,
     pub launcher: Handle,
     pub ty: ProjectileType,
+    pub critical: bool,
 }
 
 impl Projectile {
@@ -336,6 +337,7 @@ impl Projectile {
             bounds: None,
             launcher: Handle::default(),
             ty: ProjectileType::new(class_name, None),
+            critical: false,
         }
     }
 }

@@ -597,6 +597,14 @@ impl GameStateAnalyser {
             SendPropIdentifier::new("DT_TFBaseRocket", "m_angRotation");
         const GRENADE_ROTATION: SendPropIdentifier =
             SendPropIdentifier::new("DT_TFWeaponBaseGrenadeProj", "m_angRotation");
+        const CRITICAL_GRENADE: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFWeaponBaseGrenadeProj", "m_bCritical");
+        const CRITICAL_ROCKET: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFProjectile_Rocket", "m_bCritical");
+        const CRITICAL_FLARE: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFProjectile_Flare", "m_bCritical");
+        const CRITICAL_ARROW: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFProjectile_Arrow", "m_bCritical");
 
         if entity.update_type == UpdateType::Delete {
             self.state.projectile_destroy(entity.entity_index);
@@ -642,6 +650,10 @@ impl GameStateAnalyser {
                 ROCKET_ROTATION | GRENADE_ROTATION => {
                     let rotation = Vector::try_from(&prop.value).unwrap_or_default();
                     projectile.rotation = rotation;
+                }
+                CRITICAL_GRENADE | CRITICAL_ROCKET | CRITICAL_FLARE | CRITICAL_ARROW => {
+                    let critical = bool::try_from(&prop.value).unwrap_or_default();
+                    projectile.critical = critical;
                 }
                 _ => {}
             }

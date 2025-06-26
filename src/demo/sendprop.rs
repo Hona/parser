@@ -1039,6 +1039,19 @@ impl TryFrom<&SendPropValue> for i64 {
     }
 }
 
+impl TryFrom<&SendPropValue> for bool {
+    type Error = MalformedSendPropDefinitionError;
+    fn try_from(value: &SendPropValue) -> std::result::Result<Self, Self::Error> {
+        match value {
+            SendPropValue::Integer(val) => Ok(*val > 0),
+            _ => Err(MalformedSendPropDefinitionError::WrongPropType {
+                expected: "boolean",
+                value: value.clone(),
+            }),
+        }
+    }
+}
+
 impl TryFrom<&SendPropValue> for Vector {
     type Error = MalformedSendPropDefinitionError;
     fn try_from(value: &SendPropValue) -> std::result::Result<Self, Self::Error> {
