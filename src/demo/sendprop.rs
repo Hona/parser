@@ -1184,7 +1184,7 @@ impl<'de> Deserialize<'de> for SendPropIdentifier {
         #[serde(untagged)]
         enum Options<'a> {
             Num(u64),
-            Str(&'a str),
+            Str(Cow<'a, str>),
         }
 
         let raw = Options::deserialize(deserializer)?;
