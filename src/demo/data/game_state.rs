@@ -456,15 +456,23 @@ pub struct Cart {
     pub position: Vector,
 }
 
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+pub struct ControlPoint {
+    pub owner: Team,
+    pub cap_percentage: f32,
+}
+
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum Objective {
     Cart(Cart),
+    ControlPoint(ControlPoint),
 }
 
 impl Objective {
     pub fn as_cart(&self) -> Option<&Cart> {
         match self {
             Objective::Cart(cart) => Some(cart),
+            _ => None,
         }
     }
 }

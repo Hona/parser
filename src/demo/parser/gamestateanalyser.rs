@@ -684,6 +684,34 @@ impl GameStateAnalyser {
         }
     }
 
+    #[allow(dead_code, unused_variables)]
+    pub fn handle_cp_entity(&mut self, entity: &PacketEntity, parser_state: &ParserState) {
+        const OWNERS: [SendPropIdentifier; 5] = [
+            SendPropIdentifier::new("m_iOwner", "000"),
+            SendPropIdentifier::new("m_iOwner", "001"),
+            SendPropIdentifier::new("m_iOwner", "002"),
+            SendPropIdentifier::new("m_iOwner", "003"),
+            SendPropIdentifier::new("m_iOwner", "004"),
+        ];
+        const CAP_PERCENTAGE: [SendPropIdentifier; 5] = [
+            SendPropIdentifier::new("m_flLazyCapPerc", "000"),
+            SendPropIdentifier::new("m_flLazyCapPerc", "001"),
+            SendPropIdentifier::new("m_flLazyCapPerc", "002"),
+            SendPropIdentifier::new("m_flLazyCapPerc", "003"),
+            SendPropIdentifier::new("m_flLazyCapPerc", "004"),
+        ];
+
+        let objective = self
+            .state
+            .objectives
+            .entry(entity.entity_index)
+            .or_insert_with(|| {
+                Objective::Cart(Cart::default())
+            });
+
+        todo!()
+    }
+
     fn parse_user_info(
         &mut self,
         index: usize,
