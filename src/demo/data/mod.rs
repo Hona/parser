@@ -1,3 +1,4 @@
+pub mod attributes;
 mod cond;
 pub mod game_state;
 pub mod userinfo;

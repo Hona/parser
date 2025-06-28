@@ -5,7 +5,10 @@ use crate::demo::gamevent::GameEvent;
 use crate::demo::message::packetentities::EntityId;
 use crate::demo::packet::datatable::{ClassId, ServerClass, ServerClassName};
 use crate::demo::parser::analyser::{Class, Team, UserId, UserInfo};
+use crate::demo::parser::MalformedSendPropDefinitionError;
+use crate::demo::sendprop::SendPropValue;
 use crate::demo::vector::Vector;
+use num_enum::TryFromPrimitive;
 use parse_display::Display;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -13,6 +16,13 @@ use std::ops::Rem;
 
 #[derive(Default, Serialize, Deserialize, Debug, Copy, Clone, Eq, PartialEq, Hash, Display)]
 pub struct Handle(pub i64);
+
+impl TryFrom<&SendPropValue> for Handle {
+    type Error = MalformedSendPropDefinitionError;
+    fn try_from(value: &SendPropValue) -> Result<Self, Self::Error> {
+        i64::try_from(value).map(Handle)
+    }
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Default)]
 #[non_exhaustive]
@@ -69,13 +79,56 @@ pub struct Player {
     pub pitch_angle: f32,
     pub state: PlayerState,
     pub info: Option<UserInfo>,
-    pub charge: u8,
-    pub simtime: u16,
+    pub class_data: PlayerClassData,
+    pub simulation_time: u16,
     pub ping: u16,
     pub in_pvs: bool,
     pub bounds: Box,
     pub weapons: [Handle; 3],
     pub(crate) conditions: [u8; 20],
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Default, TryFromPrimitive)]
+#[serde(rename_all = "lowercase")]
+#[repr(u8)]
+pub enum MedigunType {
+    #[default]
+    Uber,
+    Kritzkrieg,
+    Quickfix,
+    Vaccinator,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub enum PlayerClassData {
+    #[default]
+    None,
+    Medic {
+        charge: u8,
+        medigun: MedigunType,
+    },
+    Spy {
+        disguise_team: Team,
+        disguise_class: Class,
+        cloak: f32,
+    },
+}
+
+impl PlayerClassData {
+    pub fn default_for_class(class: Class) -> PlayerClassData {
+        match class {
+            Class::Medic => PlayerClassData::Medic {
+                charge: 0,
+                medigun: MedigunType::Uber,
+            },
+            Class::Spy => PlayerClassData::Spy {
+                disguise_team: Team::Other,
+                disguise_class: Class::Other,
+                cloak: 0.0,
+            },
+            _ => PlayerClassData::None,
+        }
+    }
 }
 
 pub const PLAYER_BOX_DEFAULT: Box = Box {

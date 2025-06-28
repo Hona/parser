@@ -28,7 +28,7 @@ pub enum PVSCompat {
 impl From<UpdateType> for PVSCompat {
     fn from(pvs: UpdateType) -> Self {
         match pvs {
-            UpdateType::Preserve => PVSCompat::Preserve,
+            UpdateType::Delta => PVSCompat::Preserve,
             UpdateType::Leave => PVSCompat::Leave,
             UpdateType::Enter => PVSCompat::Enter,
             UpdateType::Delete => PVSCompat::Delete,

@@ -25,8 +25,8 @@ expression: state
         "steamId": "[U:1:78023051]",
         "team": "other"
       },
-      "charge": 0,
-      "simtime": 89,
+      "class_data": "None",
+      "simulation_time": 89,
       "ping": 41,
       "in_pvs": true,
       "bounds": {
@@ -90,8 +90,8 @@ expression: state
         "steamId": "[U:1:151261665]",
         "team": "other"
       },
-      "charge": 0,
-      "simtime": 85,
+      "class_data": "None",
+      "simulation_time": 85,
       "ping": 41,
       "in_pvs": false,
       "bounds": {
@@ -155,8 +155,13 @@ expression: state
         "steamId": "[U:1:105458702]",
         "team": "other"
       },
-      "charge": 0,
-      "simtime": 80,
+      "class_data": {
+        "Medic": {
+          "charge": 0,
+          "medigun": "uber"
+        }
+      },
+      "simulation_time": 80,
       "ping": 21,
       "in_pvs": false,
       "bounds": {
@@ -220,8 +225,8 @@ expression: state
         "steamId": "[U:1:81747492]",
         "team": "other"
       },
-      "charge": 0,
-      "simtime": 92,
+      "class_data": "None",
+      "simulation_time": 92,
       "ping": 60,
       "in_pvs": true,
       "bounds": {
@@ -285,8 +290,8 @@ expression: state
         "steamId": "[U:1:50363269]",
         "team": "other"
       },
-      "charge": 0,
-      "simtime": 85,
+      "class_data": "None",
+      "simulation_time": 85,
       "ping": 48,
       "in_pvs": false,
       "bounds": {
@@ -350,8 +355,13 @@ expression: state
         "steamId": "[U:1:192228451]",
         "team": "other"
       },
-      "charge": 0,
-      "simtime": 87,
+      "class_data": {
+        "Medic": {
+          "charge": 0,
+          "medigun": "uber"
+        }
+      },
+      "simulation_time": 87,
       "ping": 58,
       "in_pvs": false,
       "bounds": {
@@ -415,8 +425,8 @@ expression: state
         "steamId": "[U:1:103356736]",
         "team": "other"
       },
-      "charge": 0,
-      "simtime": 83,
+      "class_data": "None",
+      "simulation_time": 83,
       "ping": 40,
       "in_pvs": false,
       "bounds": {
@@ -480,8 +490,8 @@ expression: state
         "steamId": "[U:1:85558037]",
         "team": "other"
       },
-      "charge": 0,
-      "simtime": 84,
+      "class_data": "None",
+      "simulation_time": 84,
       "ping": 41,
       "in_pvs": false,
       "bounds": {
@@ -545,8 +555,8 @@ expression: state
         "steamId": "[U:1:101328438]",
         "team": "other"
       },
-      "charge": 0,
-      "simtime": 86,
+      "class_data": "None",
+      "simulation_time": 86,
       "ping": 81,
       "in_pvs": false,
       "bounds": {
@@ -610,8 +620,8 @@ expression: state
         "steamId": "[U:1:63292929]",
         "team": "other"
       },
-      "charge": 0,
-      "simtime": 88,
+      "class_data": "None",
+      "simulation_time": 88,
       "ping": 26,
       "in_pvs": false,
       "bounds": {
@@ -675,8 +685,8 @@ expression: state
         "steamId": "[U:1:91304212]",
         "team": "other"
       },
-      "charge": 0,
-      "simtime": 81,
+      "class_data": "None",
+      "simulation_time": 81,
       "ping": 37,
       "in_pvs": false,
       "bounds": {
@@ -740,8 +750,8 @@ expression: state
         "steamId": "[U:1:82128674]",
         "team": "other"
       },
-      "charge": 0,
-      "simtime": 83,
+      "class_data": "None",
+      "simulation_time": 83,
       "ping": 16,
       "in_pvs": false,
       "bounds": {

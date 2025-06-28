@@ -1,7 +1,10 @@
+use crate::demo::data::attributes::{has_attribute, Attribute};
 pub use crate::demo::data::game_state::{
     Building, BuildingClass, Dispenser, GameState, Kill, PlayerState, Sentry, Teleporter, World,
 };
-use crate::demo::data::game_state::{Cart, Handle, Objective, PipeType, Projectile, ProjectileType};
+use crate::demo::data::game_state::{
+    Cart, Handle, MedigunType, Objective, PipeType, PlayerClassData, Projectile, ProjectileType,
+};
 use crate::demo::data::DemoTick;
 use crate::demo::gameevent_gen::ObjectDestroyedEvent;
 use crate::demo::gamevent::GameEvent;
@@ -143,10 +146,8 @@ impl GameStateAnalyser {
 
         for prop in &entity.props {
             if prop.identifier == OUTER {
-                let outer = i64::try_from(&prop.value).unwrap_or_default();
-                self.state
-                    .outer_map
-                    .insert(Handle(outer), entity.entity_index);
+                let outer = Handle::try_from(&prop.value).unwrap_or_default();
+                self.state.outer_map.insert(outer, entity.entity_index);
             }
         }
 
@@ -158,6 +159,7 @@ impl GameStateAnalyser {
             "CObjectDispenser" => self.handle_dispenser_entity(entity, parser_state),
             "CObjectTeleporter" => self.handle_teleporter_entity(entity, parser_state),
             "CFuncTrackTrain" => self.handle_train_entity(entity, parser_state),
+            "CWeaponMedigun" => self.handle_medigun_entity(entity, parser_state),
             _ if class_name.starts_with("CTFProjectile_")
                 || class_name.as_str() == "CTFGrenadePipebombProjectile" =>
             {
@@ -188,11 +190,19 @@ impl GameStateAnalyser {
                                     i64::try_from(&prop.value).unwrap_or_default() as u16
                             }
                             "m_iPlayerClass" => {
-                                player.class =
-                                    Class::new(i64::try_from(&prop.value).unwrap_or_default())
+                                let class =
+                                    Class::new(i64::try_from(&prop.value).unwrap_or_default());
+                                if player.class != class {
+                                    player.class = class;
+                                    player.class_data = PlayerClassData::default_for_class(class);
+                                }
                             }
                             "m_iChargeLevel" => {
-                                player.charge = i64::try_from(&prop.value).unwrap_or_default() as u8
+                                if let PlayerClassData::Medic { charge, .. } =
+                                    &mut player.class_data
+                                {
+                                    *charge = i64::try_from(&prop.value).unwrap_or_default() as u8
+                                }
                             }
                             "m_iPing" => {
                                 player.ping = i64::try_from(&prop.value).unwrap_or_default() as u16
@@ -253,6 +263,13 @@ impl GameStateAnalyser {
         const WEAPON_1: SendPropIdentifier = SendPropIdentifier::new("m_hMyWeapons", "001");
         const WEAPON_2: SendPropIdentifier = SendPropIdentifier::new("m_hMyWeapons", "002");
 
+        const DISGUISE_TEAM: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFPlayerSharedLocal", "m_nDesiredDisguiseTeam");
+        const DISGUISE_CLASS: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFPlayerSharedLocal", "m_nDesiredDisguiseClass");
+        const CLOAK_LEVEL: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFPlayerShared", "m_flCloakMeter");
+
         player.in_pvs = entity.in_pvs;
 
         for prop in entity.props(parser_state) {
@@ -281,22 +298,22 @@ impl GameStateAnalyser {
                     player.pitch_angle = f32::try_from(&prop.value).unwrap_or_default()
                 }
                 SIMTIME_PROP => {
-                    player.simtime = i64::try_from(&prop.value).unwrap_or_default() as u16
+                    player.simulation_time = i64::try_from(&prop.value).unwrap_or_default() as u16
                 }
                 PROP_BB_MAX => {
                     let max = Vector::try_from(&prop.value).unwrap_or_default();
                     player.bounds.max = max;
                 }
                 WEAPON_0 => {
-                    let handle = Handle(i64::try_from(&prop.value).unwrap_or_default());
+                    let handle = Handle::try_from(&prop.value).unwrap_or_default();
                     player.weapons[0] = handle;
                 }
                 WEAPON_1 => {
-                    let handle = Handle(i64::try_from(&prop.value).unwrap_or_default());
+                    let handle = Handle::try_from(&prop.value).unwrap_or_default();
                     player.weapons[1] = handle;
                 }
                 WEAPON_2 => {
-                    let handle = Handle(i64::try_from(&prop.value).unwrap_or_default());
+                    let handle = Handle::try_from(&prop.value).unwrap_or_default();
                     player.weapons[2] = handle;
                 }
                 PLAYER_COND | PLAYER_COND_BITS => {
@@ -324,7 +341,54 @@ impl GameStateAnalyser {
                         &i64::try_from(&prop.value).unwrap_or_default().to_le_bytes()[0..4],
                     );
                 }
+                DISGUISE_TEAM => {
+                    if let PlayerClassData::Spy { disguise_team, .. } = &mut player.class_data {
+                        *disguise_team = Team::new(i64::try_from(&prop.value).unwrap_or_default())
+                    }
+                }
+                DISGUISE_CLASS => {
+                    if let PlayerClassData::Spy { disguise_class, .. } = &mut player.class_data {
+                        *disguise_class =
+                            Class::new(i64::try_from(&prop.value).unwrap_or_default());
+                    }
+                }
+                CLOAK_LEVEL => {
+                    if let PlayerClassData::Spy { cloak, .. } = &mut player.class_data {
+                        *cloak = f32::try_from(&prop.value).unwrap_or_default();
+                    }
+                }
                 _ => {}
+            }
+        }
+    }
+
+    pub fn handle_medigun_entity(&mut self, entity: &PacketEntity, _parser_state: &ParserState) {
+        const OUTER: SendPropIdentifier =
+            SendPropIdentifier::new("DT_AttributeContainer", "m_hOuter");
+
+        if entity.update_type == UpdateType::Enter {
+            let mut ty = MedigunType::Uber;
+            if has_attribute(&entity.props, Attribute::MedigunChargeIsCritBoost) {
+                ty = MedigunType::Kritzkrieg;
+            }
+            if has_attribute(&entity.props, Attribute::MedigunChargeIsMegaHeal) {
+                ty = MedigunType::Quickfix;
+            }
+            if has_attribute(&entity.props, Attribute::MedigunChargeIsResists) {
+                ty = MedigunType::Vaccinator;
+            }
+
+            if let Some(handle) = entity.get_own_prop_value_by_identifier(OUTER) {
+                if let Some(player) = self
+                    .state
+                    .players
+                    .iter_mut()
+                    .find(|player| player.weapons.contains(&handle))
+                {
+                    if let PlayerClassData::Medic { medigun, .. } = &mut player.class_data {
+                        *medigun = ty;
+                    }
+                }
             }
         }
     }
@@ -669,9 +733,7 @@ impl GameStateAnalyser {
             .state
             .objectives
             .entry(entity.entity_index)
-            .or_insert_with(|| {
-                Objective::Cart(Cart::default())
-            });
+            .or_insert_with(|| Objective::Cart(Cart::default()));
 
         #[allow(irrefutable_let_patterns)]
         if let Objective::Cart(cart) = objective {
@@ -705,9 +767,7 @@ impl GameStateAnalyser {
             .state
             .objectives
             .entry(entity.entity_index)
-            .or_insert_with(|| {
-                Objective::Cart(Cart::default())
-            });
+            .or_insert_with(|| Objective::Cart(Cart::default()));
 
         todo!()
     }

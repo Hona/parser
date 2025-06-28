@@ -82,7 +82,7 @@ impl PartialOrd<u32> for EntityId {
 #[discriminant_bits = 2]
 #[repr(u8)]
 pub enum UpdateType {
-    Preserve = 0b00,
+    Delta = 0b00,
     Leave = 0b01,
     Enter = 0b10,
     Delete = 0b11,
@@ -175,6 +175,17 @@ impl PacketEntity {
     ) -> Option<SendProp> {
         self.props(parser_state)
             .find(|prop| prop.identifier == *index)
+    }
+
+    pub fn get_own_prop_value_by_identifier<T: for<'a> TryFrom<&'a SendPropValue>>(
+        &self,
+        index: SendPropIdentifier,
+    ) -> Option<T> {
+        self.props
+            .iter()
+            .find(|prop| prop.identifier == index)
+            .map(|prop| &prop.value)
+            .and_then(|value| value.try_into().ok())
     }
 
     pub fn apply_update(&mut self, props: &[SendProp]) {
@@ -370,7 +381,7 @@ impl Parse<'_> for PacketEntitiesMessage {
                 Self::read_update(&mut data, send_table, &mut entity.props, entity_index)?;
 
                 entities.push(entity);
-            } else if update_type == UpdateType::Preserve {
+            } else if update_type == UpdateType::Delta {
                 let mut entity = get_entity_for_update(state, entity_index, update_type, delta)?;
                 let send_table = get_send_table(state, entity.server_class)?;
 
@@ -445,7 +456,7 @@ impl Encode for PacketEntitiesMessage {
                         Self::write_enter(entity, stream, state)?;
                         Self::write_update(&entity.props, stream, send_table, entity.entity_index)?;
                     }
-                    UpdateType::Preserve => {
+                    UpdateType::Delta => {
                         Self::write_update(&entity.props, stream, send_table, entity.entity_index)?;
                     }
                     _ => {}
@@ -717,7 +728,7 @@ fn test_packet_entitier_message_roundtrip() {
                         },
                     ],
                     in_pvs: true,
-                    update_type: UpdateType::Preserve,
+                    update_type: UpdateType::Delta,
                     serial_number: 0,
                     delay: None,
                     delta: None,
