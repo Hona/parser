@@ -209,6 +209,7 @@ pub struct Sentry {
     pub shells: u16,
     pub rockets: u16,
     pub is_mini: bool,
+    pub construction_progress: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -226,6 +227,7 @@ pub struct Dispenser {
     pub angle: f32,
     pub healing: Vec<UserId>,
     pub metal: u16,
+    pub construction_progress: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -247,6 +249,7 @@ pub struct Teleporter {
     pub recharge_duration: f32,
     pub times_used: u16,
     pub yaw_to_exit: f32,
+    pub construction_progress: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -352,6 +355,14 @@ impl Building {
             Building::Sentry(_) => BuildingClass::Sentry,
             Building::Dispenser(_) => BuildingClass::Sentry,
             Building::Teleporter(_) => BuildingClass::Teleporter,
+        }
+    }
+
+    pub fn construction_progress(&self) -> f32 {
+        match self {
+            Building::Sentry(Sentry { construction_progress, .. })
+            | Building::Dispenser(Dispenser { construction_progress, .. })
+            | Building::Teleporter(Teleporter { construction_progress, .. }) => *construction_progress,
         }
     }
 }

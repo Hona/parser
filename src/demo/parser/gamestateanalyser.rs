@@ -578,6 +578,8 @@ impl GameStateAnalyser {
         const MAX_HEALTH: SendPropIdentifier =
             SendPropIdentifier::new("DT_BaseObject", "m_iMaxHealth");
         const HEALTH: SendPropIdentifier = SendPropIdentifier::new("DT_BaseObject", "m_iHealth");
+        const PROGRESS: SendPropIdentifier =
+            SendPropIdentifier::new("DT_BaseObject", "m_flPercentageConstructed");
 
         match building {
             Building::Sentry(Sentry {
@@ -590,6 +592,7 @@ impl GameStateAnalyser {
                 building,
                 max_health,
                 health,
+                construction_progress,
                 ..
             })
             | Building::Dispenser(Dispenser {
@@ -602,6 +605,7 @@ impl GameStateAnalyser {
                 building,
                 max_health,
                 health,
+                construction_progress,
                 ..
             })
             | Building::Teleporter(Teleporter {
@@ -614,9 +618,10 @@ impl GameStateAnalyser {
                 building,
                 max_health,
                 health,
+                construction_progress,
                 ..
             }) => {
-                for prop in entity.props(parser_state) {
+                for prop in &entity.props {
                     match prop.identifier {
                         LOCAL_ORIGIN => {
                             *position = Vector::try_from(&prop.value).unwrap_or_default()
@@ -634,6 +639,9 @@ impl GameStateAnalyser {
                             *max_health = i64::try_from(&prop.value).unwrap_or_default() as u16
                         }
                         HEALTH => *health = i64::try_from(&prop.value).unwrap_or_default() as u16,
+                        PROGRESS => {
+                            *construction_progress = f32::try_from(&prop.value).unwrap_or_default()
+                        }
                         _ => {}
                     }
                 }
