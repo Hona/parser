@@ -11,7 +11,7 @@ use crate::demo::vector::Vector;
 use num_enum::TryFromPrimitive;
 use parse_display::Display;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::ops::Rem;
 
 #[derive(Default, Serialize, Deserialize, Debug, Copy, Clone, Eq, PartialEq, Hash, Display)]
@@ -106,6 +106,7 @@ pub enum PlayerClassData {
     Medic {
         charge: u8,
         medigun: MedigunType,
+        target: Option<EntityId>,
     },
     Spy {
         disguise_team: Team,
@@ -120,6 +121,7 @@ impl PlayerClassData {
             Class::Medic => PlayerClassData::Medic {
                 charge: 0,
                 medigun: MedigunType::Uber,
+                target: None,
             },
             Class::Spy => PlayerClassData::Spy {
                 disguise_team: Team::Other,
@@ -360,9 +362,18 @@ impl Building {
 
     pub fn construction_progress(&self) -> f32 {
         match self {
-            Building::Sentry(Sentry { construction_progress, .. })
-            | Building::Dispenser(Dispenser { construction_progress, .. })
-            | Building::Teleporter(Teleporter { construction_progress, .. }) => *construction_progress,
+            Building::Sentry(Sentry {
+                construction_progress,
+                ..
+            })
+            | Building::Dispenser(Dispenser {
+                construction_progress,
+                ..
+            })
+            | Building::Teleporter(Teleporter {
+                construction_progress,
+                ..
+            }) => *construction_progress,
         }
     }
 }
@@ -553,7 +564,6 @@ pub struct GameState {
     pub tick: DemoTick,
     pub server_classes: Vec<ServerClass>,
     pub interval_per_tick: f32,
-    pub outer_map: HashMap<Handle, EntityId>,
     pub events: Vec<(DemoTick, GameEvent)>,
     pub objectives: BTreeMap<EntityId, Objective>,
 }

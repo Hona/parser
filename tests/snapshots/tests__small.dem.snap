@@ -1770,10 +1770,6 @@ expression: state
     }
   ],
   "interval_per_tick": 0.015,
-  "outer_map": {
-    "1645192": 648,
-    "1688201": 649
-  },
   "events": [],
   "objectives": {}
 }

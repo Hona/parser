@@ -3,7 +3,8 @@ pub use crate::demo::data::game_state::{
     Building, BuildingClass, Dispenser, GameState, Kill, PlayerState, Sentry, Teleporter, World,
 };
 use crate::demo::data::game_state::{
-    Cart, Handle, MedigunType, Objective, PipeType, PlayerClassData, Projectile, ProjectileType,
+    Cart, Handle, MedigunType, Objective, PipeType, Player, PlayerClassData, Projectile,
+    ProjectileType,
 };
 use crate::demo::data::DemoTick;
 use crate::demo::gameevent_gen::ObjectDestroyedEvent;
@@ -20,6 +21,7 @@ use crate::demo::parser::MessageHandler;
 use crate::demo::sendprop::{SendProp, SendPropIdentifier, SendPropValue};
 use crate::demo::vector::{Vector, VectorXY};
 use crate::{MessageType, ParserState, ReadResult, Stream};
+use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::str::FromStr;
 
@@ -30,6 +32,8 @@ pub struct GameStateAnalyser {
     pub state: GameState,
     tick: DemoTick,
     class_names: Vec<ServerClassName>, // indexed by ClassId
+    outer_map: HashMap<Handle, EntityId>,
+    outer_map_rev: HashMap<EntityId, Handle>,
 }
 
 impl MessageHandler for GameStateAnalyser {
@@ -139,15 +143,18 @@ impl GameStateAnalyser {
     pub fn handle_entity(&mut self, entity: &PacketEntity, parser_state: &ParserState) {
         const OUTER: SendPropIdentifier =
             SendPropIdentifier::new("DT_AttributeContainer", "m_hOuter");
+        const OUTER2: SendPropIdentifier =
+            SendPropIdentifier::new("DT_AttributeManager", "m_hOuter");
 
         let Some(class_name) = self.class_names.get(usize::from(entity.server_class)) else {
             return;
         };
 
         for prop in &entity.props {
-            if prop.identifier == OUTER {
+            if prop.identifier == OUTER || prop.identifier == OUTER2 {
                 let outer = Handle::try_from(&prop.value).unwrap_or_default();
-                self.state.outer_map.insert(outer, entity.entity_index);
+                self.outer_map.insert(outer, entity.entity_index);
+                self.outer_map_rev.insert(entity.entity_index, outer);
             }
         }
 
@@ -365,6 +372,8 @@ impl GameStateAnalyser {
     pub fn handle_medigun_entity(&mut self, entity: &PacketEntity, _parser_state: &ParserState) {
         const OUTER: SendPropIdentifier =
             SendPropIdentifier::new("DT_AttributeContainer", "m_hOuter");
+        const TARGET: SendPropIdentifier =
+            SendPropIdentifier::new("DT_WeaponMedigun", "m_hHealingTarget");
 
         if entity.update_type == UpdateType::Enter {
             let mut ty = MedigunType::Uber;
@@ -388,6 +397,23 @@ impl GameStateAnalyser {
                     if let PlayerClassData::Medic { medigun, .. } = &mut player.class_data {
                         *medigun = ty;
                     }
+                }
+            }
+        }
+
+        if let Some(target_handle) = entity.get_own_prop_value_by_identifier::<Handle>(TARGET) {
+            let target_id = self
+                .get_player_by_handle(target_handle)
+                .map(|target| target.entity);
+            let medic = self
+                .outer_map_rev
+                .get(&entity.entity_index)
+                .copied()
+                .and_then(|self_handle| self.get_player_by_weapon_handle(self_handle));
+
+            if let Some(medic) = medic {
+                if let PlayerClassData::Medic { target, .. } = &mut medic.class_data {
+                    *target = target_id;
                 }
             }
         }
@@ -558,7 +584,7 @@ impl GameStateAnalyser {
     fn handle_building(
         &mut self,
         entity: &PacketEntity,
-        parser_state: &ParserState,
+        _parser_state: &ParserState,
         class: BuildingClass,
     ) {
         let building = self
@@ -621,13 +647,21 @@ impl GameStateAnalyser {
                 construction_progress,
                 ..
             }) => {
+                // picked up
+                if entity.update_type == UpdateType::Leave {
+                    *health = 0;
+                }
                 for prop in &entity.props {
                     match prop.identifier {
                         LOCAL_ORIGIN => {
                             *position = Vector::try_from(&prop.value).unwrap_or_default()
                         }
                         TEAM => *team = Team::new(i64::try_from(&prop.value).unwrap_or_default()),
-                        ANGLE => *angle = f32::try_from(&prop.value).unwrap_or_default(),
+                        ANGLE => {
+                            *angle = Vector::try_from(&prop.value)
+                                .map(|v| v.y)
+                                .unwrap_or_default()
+                        }
                         SAPPED => *sapped = i64::try_from(&prop.value).unwrap_or_default() > 0,
                         BUILDING => *building = i64::try_from(&prop.value).unwrap_or_default() > 0,
                         LEVEL => *level = i64::try_from(&prop.value).unwrap_or_default() as u8,
@@ -794,5 +828,20 @@ impl GameStateAnalyser {
         }
 
         Ok(())
+    }
+
+    fn get_player_by_weapon_handle(&mut self, handle: Handle) -> Option<&mut Player> {
+        self.state
+            .players
+            .iter_mut()
+            .find(|player| player.weapons.contains(&handle))
+    }
+
+    fn get_player_by_handle(&mut self, handle: Handle) -> Option<&mut Player> {
+        let entity_id = self.outer_map.get(&handle)?;
+        self.state
+            .players
+            .iter_mut()
+            .find(|player| player.entity == *entity_id)
     }
 }
