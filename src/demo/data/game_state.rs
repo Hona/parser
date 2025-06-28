@@ -124,7 +124,7 @@ impl PlayerClassData {
             Class::Spy => PlayerClassData::Spy {
                 disguise_team: Team::Other,
                 disguise_class: Class::Other,
-                cloak: 0.0,
+                cloak: 100.0,
             },
             _ => PlayerClassData::None,
         }
