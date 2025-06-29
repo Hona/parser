@@ -271,9 +271,9 @@ impl GameStateAnalyser {
         const WEAPON_2: SendPropIdentifier = SendPropIdentifier::new("m_hMyWeapons", "002");
 
         const DISGUISE_TEAM: SendPropIdentifier =
-            SendPropIdentifier::new("DT_TFPlayerSharedLocal", "m_nDesiredDisguiseTeam");
+            SendPropIdentifier::new("DT_TFPlayerShared", "m_nDisguiseTeam");
         const DISGUISE_CLASS: SendPropIdentifier =
-            SendPropIdentifier::new("DT_TFPlayerSharedLocal", "m_nDesiredDisguiseClass");
+            SendPropIdentifier::new("DT_TFPlayerShared", "m_nDisguiseClass");
         const CLOAK_LEVEL: SendPropIdentifier =
             SendPropIdentifier::new("DT_TFPlayerShared", "m_flCloakMeter");
 
