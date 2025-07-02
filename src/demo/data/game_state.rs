@@ -208,10 +208,11 @@ pub struct Sentry {
     pub team: Team,
     pub angle: f32,
     pub player_controlled: bool,
-    pub auto_aim_target: UserId,
+    pub auto_aim_target: Handle,
     pub shells: u16,
     pub rockets: u16,
     pub is_mini: bool,
+    pub shield: bool,
     pub construction_progress: f32,
 }
 

@@ -1,6 +1,4 @@
-use crate::demo::data::game_state::{
-    Building, BuildingClass, Dispenser, GameState, Sentry, Teleporter,
-};
+use crate::demo::data::game_state::{Building, BuildingClass, Dispenser, GameState, Handle, Sentry, Teleporter};
 use crate::demo::message::{EntityId, PacketEntity, UpdateType};
 use crate::demo::parser::analyser::{Team, UserId};
 use crate::demo::sendprop::{SendPropIdentifier, SendPropValue};
@@ -23,6 +21,8 @@ pub fn handle_sentry_entity(
         SendPropIdentifier::new("DT_ObjectSentrygun", "m_iAmmoShells");
     const ROCKETS: SendPropIdentifier =
         SendPropIdentifier::new("DT_ObjectSentrygun", "m_iAmmoRockets");
+    const SHIELD: SendPropIdentifier =
+        SendPropIdentifier::new("DT_ObjectSentrygun", "m_nShieldLevel");
 
     if entity.update_type == UpdateType::Delete {
         state.remove_building(entity.entity_index);
@@ -41,12 +41,10 @@ pub fn handle_sentry_entity(
                 CONTROLLED => {
                     sentry.player_controlled = i64::try_from(&prop.value).unwrap_or_default() > 0
                 }
-                TARGET => {
-                    sentry.auto_aim_target =
-                        UserId::from(i64::try_from(&prop.value).unwrap_or_default() as u16)
-                }
+                TARGET => sentry.auto_aim_target = Handle::try_from(&prop.value).unwrap_or_default(),
                 SHELLS => sentry.shells = i64::try_from(&prop.value).unwrap_or_default() as u16,
                 ROCKETS => sentry.rockets = i64::try_from(&prop.value).unwrap_or_default() as u16,
+                SHIELD => sentry.shield = bool::try_from(&prop.value).unwrap_or_default(),
                 _ => {}
             }
         }
