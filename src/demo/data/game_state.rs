@@ -85,6 +85,7 @@ pub struct Player {
     pub in_pvs: bool,
     pub bounds: Box,
     pub weapons: [Handle; 3],
+    pub handle: Handle,
     pub(crate) conditions: [u8; 20],
 }
 
@@ -624,5 +625,17 @@ impl GameState {
 
     pub fn remove_building(&mut self, entity_id: EntityId) {
         self.buildings.remove(&entity_id);
+    }
+
+    pub fn get_player_by_weapon_handle(&mut self, handle: Handle) -> Option<&mut Player> {
+        self.players
+            .iter_mut()
+            .find(|player| player.weapons.contains(&handle))
+    }
+
+    pub fn get_player_by_handle(&mut self, handle: Handle) -> Option<&mut Player> {
+        self.players
+            .iter_mut()
+            .find(|player| player.handle == handle)
     }
 }
