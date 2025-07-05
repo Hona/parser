@@ -207,6 +207,7 @@ pub struct Sentry {
     pub sapped: bool,
     pub team: Team,
     pub angle: f32,
+    pub yaw: f32,
     pub player_controlled: bool,
     pub auto_aim_target: Handle,
     pub shells: u16,

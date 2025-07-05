@@ -1,4 +1,6 @@
-use crate::demo::data::game_state::{Building, BuildingClass, Dispenser, GameState, Handle, Sentry, Teleporter};
+use crate::demo::data::game_state::{
+    Building, BuildingClass, Dispenser, GameState, Handle, Sentry, Teleporter,
+};
 use crate::demo::message::{EntityId, PacketEntity, UpdateType};
 use crate::demo::parser::analyser::{Team, UserId};
 use crate::demo::sendprop::{SendPropIdentifier, SendPropValue};
@@ -10,6 +12,8 @@ pub fn handle_sentry_entity(
     entity: &PacketEntity,
     parser_state: &ParserState,
 ) {
+    const ROTATION: SendPropIdentifier =
+        SendPropIdentifier::new("DT_BaseEntity", "m_angRotation");
     const ANGLE: SendPropIdentifier =
         SendPropIdentifier::new("DT_TFNonLocalPlayerExclusive", "m_angEyeAngles[1]");
     const MINI: SendPropIdentifier = SendPropIdentifier::new("DT_BaseObject", "m_bMiniBuilding");
@@ -23,6 +27,9 @@ pub fn handle_sentry_entity(
         SendPropIdentifier::new("DT_ObjectSentrygun", "m_iAmmoRockets");
     const SHIELD: SendPropIdentifier =
         SendPropIdentifier::new("DT_ObjectSentrygun", "m_nShieldLevel");
+    #[allow(dead_code)]
+    const POSE_PARAMETER_PITCH: SendPropIdentifier = SendPropIdentifier::new("m_flPoseParameter", "000");
+    const POSE_PARAMETER_YAW: SendPropIdentifier = SendPropIdentifier::new("m_flPoseParameter", "001");
 
     if entity.update_type == UpdateType::Delete {
         state.remove_building(entity.entity_index);
@@ -36,15 +43,19 @@ pub fn handle_sentry_entity(
     if let Building::Sentry(sentry) = building {
         for prop in entity.props(parser_state) {
             match prop.identifier {
+                ROTATION => sentry.angle = Vector::try_from(&prop.value).unwrap_or_default().y,
                 ANGLE => sentry.angle = f32::try_from(&prop.value).unwrap_or_default(),
                 MINI => sentry.is_mini = i64::try_from(&prop.value).unwrap_or_default() > 0,
                 CONTROLLED => {
                     sentry.player_controlled = i64::try_from(&prop.value).unwrap_or_default() > 0
                 }
-                TARGET => sentry.auto_aim_target = Handle::try_from(&prop.value).unwrap_or_default(),
+                TARGET => {
+                    sentry.auto_aim_target = Handle::try_from(&prop.value).unwrap_or_default()
+                }
                 SHELLS => sentry.shells = i64::try_from(&prop.value).unwrap_or_default() as u16,
                 ROCKETS => sentry.rockets = i64::try_from(&prop.value).unwrap_or_default() as u16,
                 SHIELD => sentry.shield = bool::try_from(&prop.value).unwrap_or_default(),
+                POSE_PARAMETER_YAW => sentry.yaw = f32::try_from(&prop.value).unwrap_or_default(),
                 _ => {}
             }
         }
