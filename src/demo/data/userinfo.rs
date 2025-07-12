@@ -16,9 +16,9 @@ struct RawPlayerInfo {
     pub is_fake_player: u8,
     pub is_hl_tv: u8,
     pub is_replay: u8,
+    pub more_extra: u8,
     pub custom_file: [u32; 4],
     pub files_downloaded: u32,
-    pub more_extra: u8,
 }
 
 #[derive(BitWrite, Debug, Clone, Default)]
@@ -34,9 +34,9 @@ pub struct PlayerInfo {
     pub is_fake_player: u8,
     pub is_hl_tv: u8,
     pub is_replay: u8,
+    pub more_extra: u8,
     pub custom_file: [u32; 4],
     pub files_downloaded: u32,
-    pub more_extra: u8,
 }
 
 impl From<RawPlayerInfo> for PlayerInfo {
@@ -53,9 +53,9 @@ impl From<RawPlayerInfo> for PlayerInfo {
             is_fake_player: raw.is_fake_player,
             is_hl_tv: raw.is_hl_tv,
             is_replay: raw.is_replay,
+            more_extra: raw.more_extra,
             custom_file: raw.custom_file,
             files_downloaded: raw.files_downloaded,
-            more_extra: raw.more_extra,
         }
     }
 }
