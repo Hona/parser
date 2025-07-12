@@ -46,6 +46,7 @@ expression: state
         268979,
         316089
       ],
+      "handle": 0,
       "conditions": [
         0,
         0,
@@ -111,6 +112,7 @@ expression: state
         1182437,
         2097151
       ],
+      "handle": 0,
       "conditions": [
         0,
         0,
@@ -159,7 +161,7 @@ expression: state
         "Medic": {
           "charge": 0,
           "medigun": "uber",
-          "target": 8
+          "target": null
         }
       },
       "simulation_time": 80,
@@ -182,6 +184,7 @@ expression: state
         1958250,
         1315401
       ],
+      "handle": 0,
       "conditions": [
         0,
         0,
@@ -247,6 +250,7 @@ expression: state
         1917551,
         31344
       ],
+      "handle": 0,
       "conditions": [
         0,
         0,
@@ -312,6 +316,7 @@ expression: state
         1278549,
         1200734
       ],
+      "handle": 0,
       "conditions": [
         0,
         0,
@@ -383,6 +388,7 @@ expression: state
         14930,
         1096287
       ],
+      "handle": 0,
       "conditions": [
         0,
         0,
@@ -448,6 +454,7 @@ expression: state
         447062,
         1856087
       ],
+      "handle": 0,
       "conditions": [
         0,
         0,
@@ -513,6 +520,7 @@ expression: state
         1476987,
         330275
       ],
+      "handle": 0,
       "conditions": [
         0,
         0,
@@ -578,6 +586,7 @@ expression: state
         240229,
         1909366
       ],
+      "handle": 0,
       "conditions": [
         0,
         0,
@@ -643,6 +652,7 @@ expression: state
         1640708,
         1423621
       ],
+      "handle": 0,
       "conditions": [
         0,
         0,
@@ -708,6 +718,7 @@ expression: state
         381314,
         194959
       ],
+      "handle": 0,
       "conditions": [
         0,
         0,
@@ -773,6 +784,7 @@ expression: state
         260770,
         1403555
       ],
+      "handle": 0,
       "conditions": [
         0,
         0,
