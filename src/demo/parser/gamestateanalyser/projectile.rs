@@ -6,7 +6,12 @@ use crate::demo::sendprop::SendPropIdentifier;
 use crate::demo::vector::Vector;
 use crate::ParserState;
 
-pub fn handle_projectile_entity(state: &mut GameState, entity: &PacketEntity, parser_state: &ParserState, class_names: &[ServerClassName]) {
+pub fn handle_projectile_entity(
+    state: &mut GameState,
+    entity: &PacketEntity,
+    parser_state: &ParserState,
+    class_names: &[ServerClassName],
+) {
     let Some(class_name) = class_names.get(usize::from(entity.server_class)) else {
         return;
     };
@@ -44,9 +49,7 @@ pub fn handle_projectile_entity(state: &mut GameState, entity: &PacketEntity, pa
     let projectile = state
         .projectiles
         .entry(entity.entity_index)
-        .or_insert_with(|| {
-            Projectile::new(entity.entity_index, entity.server_class, class_name)
-        });
+        .or_insert_with(|| Projectile::new(entity.entity_index, entity.server_class, class_name));
 
     // todo: bounds for grenades
 
@@ -70,8 +73,7 @@ pub fn handle_projectile_entity(state: &mut GameState, entity: &PacketEntity, pa
             }
             PIPE_TYPE => {
                 let pipe_type = PipeType::new(i64::try_from(&prop.value).unwrap_or_default());
-                if let Some(class_name) = class_names.get(usize::from(entity.server_class))
-                {
+                if let Some(class_name) = class_names.get(usize::from(entity.server_class)) {
                     let ty = ProjectileType::new(class_name, Some(pipe_type));
                     projectile.ty = ty;
                 }

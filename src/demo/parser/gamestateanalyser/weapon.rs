@@ -1,12 +1,15 @@
-use std::collections::HashMap;
 use crate::demo::data::attributes::{has_attribute, Attribute};
 use crate::demo::data::game_state::{GameState, Handle, MedigunType, PlayerClassData};
 use crate::demo::message::{EntityId, PacketEntity, UpdateType};
 use crate::demo::sendprop::SendPropIdentifier;
+use std::collections::HashMap;
 
-pub fn handle_medigun_entity(state: &mut GameState, entity: &PacketEntity, outer_map_rev: &HashMap<EntityId, Handle>) {
-    const OUTER: SendPropIdentifier =
-        SendPropIdentifier::new("DT_AttributeContainer", "m_hOuter");
+pub fn handle_medigun_entity(
+    state: &mut GameState,
+    entity: &PacketEntity,
+    outer_map_rev: &HashMap<EntityId, Handle>,
+) {
+    const OUTER: SendPropIdentifier = SendPropIdentifier::new("DT_AttributeContainer", "m_hOuter");
     const TARGET: SendPropIdentifier =
         SendPropIdentifier::new("DT_WeaponMedigun", "m_hHealingTarget");
 

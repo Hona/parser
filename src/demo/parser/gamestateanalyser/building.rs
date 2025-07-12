@@ -12,8 +12,7 @@ pub fn handle_sentry_entity(
     entity: &PacketEntity,
     parser_state: &ParserState,
 ) {
-    const ROTATION: SendPropIdentifier =
-        SendPropIdentifier::new("DT_BaseEntity", "m_angRotation");
+    const ROTATION: SendPropIdentifier = SendPropIdentifier::new("DT_BaseEntity", "m_angRotation");
     const ANGLE: SendPropIdentifier =
         SendPropIdentifier::new("DT_TFNonLocalPlayerExclusive", "m_angEyeAngles[1]");
     const MINI: SendPropIdentifier = SendPropIdentifier::new("DT_BaseObject", "m_bMiniBuilding");
@@ -28,8 +27,10 @@ pub fn handle_sentry_entity(
     const SHIELD: SendPropIdentifier =
         SendPropIdentifier::new("DT_ObjectSentrygun", "m_nShieldLevel");
     #[allow(dead_code)]
-    const POSE_PARAMETER_PITCH: SendPropIdentifier = SendPropIdentifier::new("m_flPoseParameter", "000");
-    const POSE_PARAMETER_YAW: SendPropIdentifier = SendPropIdentifier::new("m_flPoseParameter", "001");
+    const POSE_PARAMETER_PITCH: SendPropIdentifier =
+        SendPropIdentifier::new("m_flPoseParameter", "000");
+    const POSE_PARAMETER_YAW: SendPropIdentifier =
+        SendPropIdentifier::new("m_flPoseParameter", "001");
 
     if entity.update_type == UpdateType::Delete {
         state.remove_building(entity.entity_index);

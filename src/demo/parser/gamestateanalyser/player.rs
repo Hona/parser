@@ -1,19 +1,21 @@
-use std::str::FromStr;
 use crate::demo::data::game_state::{GameState, Handle, PlayerClassData, PlayerState};
 use crate::demo::message::{EntityId, PacketEntity};
 use crate::demo::parser::analyser::{Class, Team};
 use crate::demo::sendprop::SendPropIdentifier;
 use crate::demo::vector::{Vector, VectorXY};
 use crate::ParserState;
+use std::str::FromStr;
 
-pub fn handle_player_entity(state: &mut GameState, entity: &PacketEntity, parser_state: &ParserState) {
+pub fn handle_player_entity(
+    state: &mut GameState,
+    entity: &PacketEntity,
+    parser_state: &ParserState,
+) {
     let player = state.get_or_create_player(entity.entity_index);
 
-    const OUTER: SendPropIdentifier =
-        SendPropIdentifier::new("DT_AttributeContainer", "m_hOuter");
+    const OUTER: SendPropIdentifier = SendPropIdentifier::new("DT_AttributeContainer", "m_hOuter");
 
-    const HEALTH_PROP: SendPropIdentifier =
-        SendPropIdentifier::new("DT_BasePlayer", "m_iHealth");
+    const HEALTH_PROP: SendPropIdentifier = SendPropIdentifier::new("DT_BasePlayer", "m_iHealth");
     const MAX_HEALTH_PROP: SendPropIdentifier =
         SendPropIdentifier::new("DT_BasePlayer", "m_iMaxHealth");
     const LIFE_STATE_PROP: SendPropIdentifier =
@@ -71,9 +73,7 @@ pub fn handle_player_entity(state: &mut GameState, entity: &PacketEntity, parser
             OUTER => {
                 player.handle = Handle::try_from(&prop.value).unwrap_or_default();
             }
-            HEALTH_PROP => {
-                player.health = i64::try_from(&prop.value).unwrap_or_default() as u16
-            }
+            HEALTH_PROP => player.health = i64::try_from(&prop.value).unwrap_or_default() as u16,
             MAX_HEALTH_PROP => {
                 player.max_health = i64::try_from(&prop.value).unwrap_or_default() as u16
             }
@@ -145,8 +145,7 @@ pub fn handle_player_entity(state: &mut GameState, entity: &PacketEntity, parser
             }
             DISGUISE_CLASS => {
                 if let PlayerClassData::Spy { disguise_class, .. } = &mut player.class_data {
-                    *disguise_class =
-                        Class::new(i64::try_from(&prop.value).unwrap_or_default());
+                    *disguise_class = Class::new(i64::try_from(&prop.value).unwrap_or_default());
                 }
             }
             CLOAK_LEVEL => {
@@ -159,7 +158,11 @@ pub fn handle_player_entity(state: &mut GameState, entity: &PacketEntity, parser
     }
 }
 
-pub fn handle_player_resource(state: &mut GameState, entity: &PacketEntity, parser_state: &ParserState) {
+pub fn handle_player_resource(
+    state: &mut GameState,
+    entity: &PacketEntity,
+    parser_state: &ParserState,
+) {
     for prop in entity.props(parser_state) {
         if let Some((table_name, prop_name)) = prop.identifier.names() {
             if let Ok(player_id) = u32::from_str(prop_name.as_str()) {
@@ -171,25 +174,21 @@ pub fn handle_player_resource(state: &mut GameState, entity: &PacketEntity, pars
                 {
                     match table_name.as_str() {
                         "m_iTeam" => {
-                            player.team =
-                                Team::new(i64::try_from(&prop.value).unwrap_or_default())
+                            player.team = Team::new(i64::try_from(&prop.value).unwrap_or_default())
                         }
                         "m_iMaxHealth" => {
                             player.max_health =
                                 i64::try_from(&prop.value).unwrap_or_default() as u16
                         }
                         "m_iPlayerClass" => {
-                            let class =
-                                Class::new(i64::try_from(&prop.value).unwrap_or_default());
+                            let class = Class::new(i64::try_from(&prop.value).unwrap_or_default());
                             if player.class != class {
                                 player.class = class;
                                 player.class_data = PlayerClassData::default_for_class(class);
                             }
                         }
                         "m_iChargeLevel" => {
-                            if let PlayerClassData::Medic { charge, .. } =
-                                &mut player.class_data
-                            {
+                            if let PlayerClassData::Medic { charge, .. } = &mut player.class_data {
                                 *charge = i64::try_from(&prop.value).unwrap_or_default() as u8
                             }
                         }
