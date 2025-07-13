@@ -308,7 +308,7 @@ pub fn generate_game_events(demo: Demo) -> TokenStream {
     let event_variants = events.iter().map(|event| {
         let name_str = get_event_name(event.event_type.as_str());
         let name = Ident::new(&name_str, span);
-        let struct_name = Ident::new(&format!("{}Event", name_str), span);
+        let struct_name = Ident::new(&format!("{name_str}Event"), span);
 
         if should_box_event(&name_str) {
             quote!(#name(Box<#struct_name>),)
@@ -352,7 +352,7 @@ pub fn generate_game_events(demo: Demo) -> TokenStream {
     let read_events = events.iter().map(|event| {
         let name = get_event_name(event.event_type.as_str());
         let variant_name = Ident::new(&name, span);
-        let struct_name = Ident::new(&format!("{}Event", name), span);
+        let struct_name = Ident::new(&format!("{name}Event"), span);
 
         if should_box_event(&name) {
             quote!(
@@ -380,7 +380,7 @@ pub fn generate_game_events(demo: Demo) -> TokenStream {
 
     let sizes = events.iter().map(|event| {
         let name = get_event_name(event.event_type.as_str());
-        let struct_name = Ident::new(&format!("{}Event", name), span);
+        let struct_name = Ident::new(&format!("{name}Event"), span);
 
         quote!(
             (#name, std::mem::size_of::<#struct_name>())

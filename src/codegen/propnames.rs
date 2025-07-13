@@ -104,7 +104,7 @@ impl MessageHandler for PropAnalyzer {
         }
         for (table, size) in numeric_tables {
             for num in 0..=size {
-                let prop_name = SendPropName::from(format!("{:03}", num));
+                let prop_name = SendPropName::from(format!("{num:03}"));
                 self.prop_names.insert(
                     SendPropIdentifier::new(&table, prop_name.as_str()),
                     (table.clone().into(), prop_name),

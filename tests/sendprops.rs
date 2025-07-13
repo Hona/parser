@@ -72,7 +72,7 @@ fn flatten_test(input_file: &str) {
                     .into_iter()
                     .map(|prop| {
                         let (table_name, prop_name) = &prop_names[&prop.identifier];
-                        format!("{}.{}", table_name, prop_name)
+                        format!("{table_name}.{prop_name}")
                     })
                     .collect(),
             )

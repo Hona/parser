@@ -157,7 +157,7 @@ impl fmt::Display for PacketEntity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "{}({}) {{", self.entity_index, self.server_class)?;
         for child in self.props.iter() {
-            writeln!(f, "\t{}", child)?;
+            writeln!(f, "\t{child}")?;
         }
         write!(f, "}}")
     }

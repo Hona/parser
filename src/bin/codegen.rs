@@ -25,6 +25,6 @@ fn main() -> std::result::Result<(), MainError> {
     };
     let file = parse2::<File>(tokens)?;
     let code = unparse(&file);
-    println!("{}", code);
+    println!("{code}");
     Ok(())
 }

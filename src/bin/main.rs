@@ -52,12 +52,12 @@ fn main() -> Result<(), MainError> {
         let parser = DemoParser::new_with_analyser(demo.get_stream(), PlayerSummaryAnalyzer::new());
         let (header, state) = parser.parse()?;
 
-        println!("{:?}", header);
+        println!("{header:?}");
 
         let table_header = "Player                           | Points     | Kills      | Deaths     | Assists    | Destruction | Captures   | Defenses   | Domination | Revenge    | Ubers      | Headshots  | Teleports  | Healing    | Backstabs  | Bonus      | Support    | Damage Dealt";
         let divider      = "---------------------------------|------------|------------|------------|------------|-------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|-------------";
-        println!("{}", table_header);
-        println!("{}", divider);
+        println!("{table_header}");
+        println!("{divider}");
 
         for (user_id, user_data) in state.users {
             let player_name = user_data.name;

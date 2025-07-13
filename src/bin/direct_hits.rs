@@ -55,9 +55,7 @@ fn main() -> Result<(), MainError> {
                 .iter()
                 .find(|player| {
                     player
-                        .weapons
-                        .iter()
-                        .any(|weapon| collision.projectile.launcher == *weapon)
+                        .weapons.contains(&collision.projectile.launcher)
                 })
                 .and_then(|player| player.info.as_ref());
 

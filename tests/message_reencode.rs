@@ -39,14 +39,14 @@ fn message_reencode(
     setup_packet_files: &[&str],
     setup_message_files: &[&str],
 ) {
-    let data = fs::read(format!("test_data/messages/{}", input_file)).unwrap();
+    let data = fs::read(format!("test_data/messages/{input_file}")).unwrap();
 
     let mut handler = DemoHandler::parse_all_with_analyser(NullHandler);
     for file in setup_packet_files {
-        setup_packet(&mut handler, &format!("test_data/messages/{}", file));
+        setup_packet(&mut handler, &format!("test_data/messages/{file}"));
     }
     for file in setup_message_files {
-        setup_message(&mut handler, &format!("test_data/messages/{}", file));
+        setup_message(&mut handler, &format!("test_data/messages/{file}"));
     }
 
     let state = &handler.state_handler;

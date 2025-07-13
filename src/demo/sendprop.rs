@@ -355,7 +355,7 @@ impl fmt::Display for SendPropFlags {
             .skip_while(|c| *c != '[')
             .take_while(|c| *c != ')')
             .collect();
-        write!(f, "{}", flags)
+        write!(f, "{flags}")
     }
 }
 
@@ -632,7 +632,7 @@ impl fmt::Display for SendPropValue {
             SendPropValue::Array(array) => {
                 write!(f, "[")?;
                 for child in array {
-                    write!(f, "{}", child)?;
+                    write!(f, "{child}")?;
                 }
                 write!(f, "]")
             }
@@ -1169,7 +1169,7 @@ impl From<SendPropIdentifier> for u64 {
 impl Display for SendPropIdentifier {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match get_prop_names(*self) {
-            Some((table, prop)) => write!(f, "{}.{}", table, prop),
+            Some((table, prop)) => write!(f, "{table}.{prop}"),
             None => write!(f, "Prop name {} not known", self.0),
         }
     }

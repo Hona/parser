@@ -63,7 +63,7 @@ impl EntityDump {
                 .props(state)
                 .map(|prop| {
                     let (table_name, prop_name) = &prop_names[&prop.identifier];
-                    (format!("{}.{}", table_name, prop_name), prop.value)
+                    (format!("{table_name}.{prop_name}"), prop.value)
                 })
                 .collect(),
         }
