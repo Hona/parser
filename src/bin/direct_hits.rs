@@ -53,10 +53,7 @@ fn main() -> Result<(), MainError> {
             let shooter = state
                 .players
                 .iter()
-                .find(|player| {
-                    player
-                        .weapons.contains(&collision.projectile.launcher)
-                })
+                .find(|player| player.weapons.contains(&collision.projectile.launcher))
                 .and_then(|player| player.info.as_ref());
 
             if let Some(shooter) = shooter {

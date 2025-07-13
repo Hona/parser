@@ -6,8 +6,8 @@ Parsing of tf2 demo files
 
 ## Building
 
-This project is build using rust and requires `cargo` and friends, see [the rust website](https://www.rust-lang.org/)
-for how to get started.
+This project is build using rust and requires `cargo` and friends, see
+[the rust website](https://www.rust-lang.org/) for how to get started.
 
 Once rust is setup building is as simple as
 
@@ -19,10 +19,13 @@ which will place the binary at `target/release/parse_demo`
 
 ## Usage
 
-Basic usage is as simple as `parse_demo demofile.dem` which will output a "summary" of the demo file in JSON format.
+Basic usage is as simple as `parse_demo demofile.dem` which will output a
+"summary" of the demo file in JSON format.
 
-Passing the `detailed_summary` argument to the end of `parse_demo` will output a table with scoreboard information for all players who were ever on the server while the demo
-was being recorded. The player who created the demo will be highlighted in the output.
+Passing the `detailed_summary` argument to the end of `parse_demo` will output a
+table with scoreboard information for all players who were ever on the server
+while the demo was being recorded. The player who created the demo will be
+highlighted in the output.
 
 ## Advanced usage
 
@@ -59,7 +62,8 @@ fn main() -> Result<(), MainError> {
 
 ### Handle demo data with a custom analyser
 
-Sometimes it's easier to create a custom `Analyser` to handle the demo data as it comes along.
+Sometimes it's easier to create a custom `Analyser` to handle the demo data as
+it comes along.
 
 See `src/demo/parser/analyser.rs` for an example.  
 Once you have a custom analyser you can use it with:
