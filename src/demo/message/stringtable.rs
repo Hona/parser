@@ -71,10 +71,10 @@ impl<'a> Parse<'a> for CreateStringTableMessage<'a> {
                 ));
             }
 
-            let magic = table_data.read_string(Some(4))?;
+            let magic: [u8; 4] = table_data.read()?;
 
             match magic.as_ref() {
-                "SNAP" => {
+                b"SNAP" => {
                     let compressed_data = table_data.read_bytes(compressed_size as usize - 4)?;
 
                     let mut decoder = Decoder::new();
@@ -96,7 +96,7 @@ impl<'a> Parse<'a> for CreateStringTableMessage<'a> {
                     let buffer = BitReadBuffer::new_owned(decompressed_data, LittleEndian);
                     table_data = BitReadStream::new(buffer);
                 }
-                "LZSS" => {
+                b"LZSS" => {
                     let compressed_data = table_data.read_bytes(compressed_size as usize - 4)?;
                     let mut decompressed_data = Vec::with_capacity(decompressed_size as usize);
                     decompress(&compressed_data, &mut decompressed_data);
@@ -112,7 +112,8 @@ impl<'a> Parse<'a> for CreateStringTableMessage<'a> {
                     table_data = BitReadStream::new(buffer);
                 }
                 _ => {
-                    return Err(ParseError::UnexpectedCompressionType(magic.into_owned()));
+                    let magic_str = String::from_utf8(magic.to_ascii_uppercase())?;
+                    return Err(ParseError::UnexpectedCompressionType(magic_str));
                 }
             }
         }
