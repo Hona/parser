@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://codeberg.org/demostf/parser"
 exclude = ["tests/fuzz", "test_data"]
 default-run = "parse_demo"
-rust-version = "1.74.0"
+rust-version = "1.75.0"
 
 [lib]
 name = "tf_demo_parser"
