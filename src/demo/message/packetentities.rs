@@ -1,13 +1,14 @@
-use bitbuffer::{
-    BitRead, BitReadSized, BitReadStream, BitWrite, BitWriteSized, BitWriteStream, Endianness,
-    LittleEndian,
-};
+use bitbuffer::{BitRead, BitReadSized, BitReadStream, Endianness, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteSized, BitWriteStream};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::borrow::Cow;
 
 use crate::demo::packet::datatable::{ClassId, SendTable};
-use crate::demo::parser::{Encode, ParseBitSkip};
+#[cfg(feature = "write")]
+use crate::demo::parser::Encode;
+use crate::demo::parser::ParseBitSkip;
 use crate::demo::sendprop::{SendProp, SendPropIdentifier, SendPropValue};
 use crate::{Parse, ParseError, ParserState, ReadResult, Result, Stream};
 use parse_display::{Display, FromStr};
@@ -75,9 +76,8 @@ impl PartialOrd<u32> for EntityId {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema_repr))]
-#[derive(
-    BitRead, BitWrite, Clone, Copy, Debug, PartialEq, Eq, Serialize_repr, Deserialize_repr,
-)]
+#[derive(BitRead, Clone, Copy, Debug, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 #[discriminant_bits = 2]
 #[repr(u8)]
 pub enum UpdateType {
@@ -128,6 +128,7 @@ impl<E: Endianness> BitRead<'_, E> for BaselineIndex {
     }
 }
 
+#[cfg(feature = "write")]
 impl<E: Endianness> BitWrite<E> for BaselineIndex {
     fn write(&self, stream: &mut BitWriteStream<E>) -> ReadResult<()> {
         let val = match self {
@@ -256,6 +257,7 @@ fn read_bit_var<'a, T: BitReadSized<'a, LittleEndian>>(stream: &mut Stream<'a>) 
     stream.read_sized(bits)
 }
 
+#[cfg(feature = "write")]
 fn write_bit_var(var: u32, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
     let (ty, bits): (u8, usize) = if var >= 2u32.pow(12) {
         (3, 32)
@@ -272,6 +274,7 @@ fn write_bit_var(var: u32, stream: &mut BitWriteStream<LittleEndian>) -> ReadRes
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_bit_var_roundtrip() {
     use bitbuffer::{BitReadBuffer, BitReadStream};
 
@@ -436,6 +439,7 @@ impl Parse<'_> for PacketEntitiesMessage {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for PacketEntitiesMessage {
     fn encode(&self, stream: &mut BitWriteStream<LittleEndian>, state: &ParserState) -> Result<()> {
         self.max_entries.write_sized(stream, 11)?;
@@ -520,6 +524,7 @@ impl PacketEntitiesMessage {
         })
     }
 
+    #[cfg(feature = "write")]
     fn write_enter(
         entity: &PacketEntity,
         stream: &mut BitWriteStream<LittleEndian>,
@@ -579,6 +584,7 @@ impl PacketEntitiesMessage {
         Ok(())
     }
 
+    #[cfg(feature = "write")]
     pub fn write_update<'a, Props: IntoIterator<Item = &'a SendProp>>(
         props: Props,
         stream: &mut BitWriteStream<LittleEndian>,
@@ -628,6 +634,7 @@ impl ParseBitSkip<'_> for PacketEntitiesMessage {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_packet_entity_message_roundtrip() {
     use crate::demo::packet::datatable::{SendTable, SendTableName, ServerClass, ServerClassName};
     use crate::demo::sendprop::{FloatDefinition, SendPropDefinition, SendPropParseDefinition};

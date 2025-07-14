@@ -4,19 +4,21 @@ use crate::demo::sendprop::{
     RawSendPropDefinition, SendPropDefinition, SendPropFlag, SendPropIdentifier, SendPropType,
 };
 use crate::{Parse, ParseError, ParserState, Result, Stream};
-use bitbuffer::{BitRead, BitReadStream, BitWrite, BitWriteSized, BitWriteStream, Endianness, LittleEndian};
+use bitbuffer::{BitRead, BitReadStream, Endianness};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteSized, BitWriteStream, LittleEndian};
 use parse_display::{Display, FromStr};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::cmp::min;
 use std::convert::TryFrom;
+#[cfg(feature = "write")]
 use std::iter::once;
 use std::ops::Deref;
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(
     BitRead,
-    BitWrite,
     Debug,
     Clone,
     Copy,
@@ -30,6 +32,7 @@ use std::ops::Deref;
     Serialize,
     Deserialize,
 )]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct ClassId(u16);
 
 impl From<u16> for ClassId {
@@ -57,7 +60,8 @@ impl PartialEq<u16> for ClassId {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, PartialEq, Eq, Hash, Debug, Serialize, Deserialize, Clone, Display)]
+#[derive(BitRead, PartialEq, Eq, Hash, Debug, Serialize, Deserialize, Clone, Display)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct ServerClassName(String);
 
 impl ServerClassName {
@@ -99,7 +103,8 @@ impl Deref for ServerClassName {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct ServerClass {
     pub id: ClassId,
     pub name: ServerClassName,
@@ -108,19 +113,9 @@ pub struct ServerClass {
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(
-    BitWrite,
-    PartialEq,
-    Eq,
-    Hash,
-    Debug,
-    Serialize,
-    Deserialize,
-    Clone,
-    Display,
-    PartialOrd,
-    Ord,
-    Default,
+    PartialEq, Eq, Hash, Debug, Serialize, Deserialize, Clone, Display, PartialOrd, Ord, Default,
 )]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct SendTableName(Cow<'static, str>);
 
 impl SendTableName {
@@ -210,6 +205,7 @@ impl Parse<'_> for ParseSendTable {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for ParseSendTable {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> bitbuffer::Result<()> {
         self.needs_decoder.write(stream)?;
@@ -238,6 +234,7 @@ impl BitWrite<LittleEndian> for ParseSendTable {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_parse_send_table_roundtrip() {
     use crate::demo::sendprop::SendPropFlags;
 
@@ -469,6 +466,7 @@ impl Parse<'_> for DataTablePacket {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for DataTablePacket {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> bitbuffer::Result<()> {
         self.tick.write(stream)?;
@@ -488,6 +486,7 @@ impl BitWrite<LittleEndian> for DataTablePacket {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_data_table_packet_roundtrip() {
     use crate::demo::sendprop::SendPropFlags;
 

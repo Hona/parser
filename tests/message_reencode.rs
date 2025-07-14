@@ -1,11 +1,19 @@
+#[cfg(feature = "write")]
 use bitbuffer::{BitReadBuffer, BitReadStream, BitWriteStream, LittleEndian};
+#[cfg(feature = "write")]
 use std::fs;
+#[cfg(feature = "write")]
 use test_case::test_case;
+#[cfg(feature = "write")]
 use tf_demo_parser::demo::message::Message;
+#[cfg(feature = "write")]
 use tf_demo_parser::demo::packet::Packet;
+#[cfg(feature = "write")]
 use tf_demo_parser::demo::parser::{DemoHandler, Encode, NullHandler};
+#[cfg(feature = "write")]
 use tf_demo_parser::{MessageType, Parse};
 
+#[cfg(feature = "write")]
 fn setup_packet(handler: &mut DemoHandler<NullHandler>, input: &str) {
     let data = fs::read(input).unwrap();
     let mut stream = BitReadStream::new(BitReadBuffer::new_owned(data, LittleEndian));
@@ -13,6 +21,7 @@ fn setup_packet(handler: &mut DemoHandler<NullHandler>, input: &str) {
     handler.handle_packet(packet).unwrap();
 }
 
+#[cfg(feature = "write")]
 fn setup_message(handler: &mut DemoHandler<NullHandler>, input: &str) {
     let data = fs::read(input).unwrap();
     let mut stream = BitReadStream::new(BitReadBuffer::new_owned(data, LittleEndian));
@@ -25,6 +34,7 @@ fn setup_message(handler: &mut DemoHandler<NullHandler>, input: &str) {
     handler.handle_message(message, 0.into());
 }
 
+#[cfg(feature = "write")]
 #[test_case("game_event_list.bin", MessageType::GameEventList, &[], &[]; "game_event_list")]
 #[test_case("packet_entities.bin", MessageType::PacketEntities, &["setup_data_tables.bin", "setup_string_tables.bin"], &[]; "packet_entities")]
 #[test_case("packet_entities_pov1.bin", MessageType::PacketEntities, &["setup_data_tables_pov.bin", "setup_string_tables_pov.bin"], &[]; "packet_entities_pov1")]

@@ -1,4 +1,6 @@
-use bitbuffer::{BitRead, BitWrite, BitWriteSized, BitWriteStream, LittleEndian};
+use bitbuffer::{BitRead, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteSized, BitWriteStream};
 use parse_display::Display;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -7,7 +9,9 @@ use crate::demo::gameevent_gen::GameEventType;
 use crate::demo::gamevent::{
     GameEvent, GameEventDefinition, GameEventEntry, GameEventValueType, RawGameEvent,
 };
-use crate::demo::parser::{Encode, ParseBitSkip};
+#[cfg(feature = "write")]
+use crate::demo::parser::Encode;
+use crate::demo::parser::ParseBitSkip;
 use crate::{GameEventError, Parse, ParseError, ParserState, ReadResult, Result, Stream};
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -52,6 +56,7 @@ impl Parse<'_> for GameEventMessage {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for GameEventMessage {
     fn encode(&self, stream: &mut BitWriteStream<LittleEndian>, state: &ParserState) -> Result<()> {
         let definition = state
@@ -68,6 +73,7 @@ impl Encode for GameEventMessage {
     }
 }
 
+#[cfg(feature = "write")]
 #[test]
 fn test_game_event_roundtrip() {
     use crate::demo::gameevent_gen::{GameInitEvent, ServerShutdownEvent};
@@ -125,7 +131,6 @@ impl ParseBitSkip<'_> for GameEventMessage {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(
     BitRead,
-    BitWrite,
     Debug,
     Clone,
     Copy,
@@ -138,6 +143,7 @@ impl ParseBitSkip<'_> for GameEventMessage {
     Serialize,
     Deserialize,
 )]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct GameEventTypeId(#[size = 9] u16);
 
 impl From<GameEventTypeId> for usize {
@@ -179,6 +185,7 @@ impl BitRead<'_, LittleEndian> for GameEventDefinition {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for GameEventDefinition {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         self.id.write(stream)?;
@@ -198,6 +205,7 @@ impl BitWrite<LittleEndian> for GameEventDefinition {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_event_definition_roundtrip() {
     crate::test_roundtrip_write(GameEventDefinition {
         id: GameEventTypeId(0),
@@ -220,6 +228,7 @@ impl BitRead<'_, LittleEndian> for GameEventListMessage {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for GameEventListMessage {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         (self.event_list.len() as u16).write_sized(stream, 9)?;
@@ -233,13 +242,17 @@ impl BitWrite<LittleEndian> for GameEventListMessage {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_event_list_roundtrip() {
     crate::test_roundtrip_write(GameEventListMessage { event_list: vec![] });
     crate::test_roundtrip_write(GameEventListMessage {
         event_list: vec![GameEventDefinition {
             id: GameEventTypeId(0),
             event_type: GameEventType::ServerChangeLevelFailed,
-            entries: vec![GameEventEntry::new("level_name", GameEventValueType::String)],
+            entries: vec![GameEventEntry::new(
+                "level_name",
+                GameEventValueType::String,
+            )],
         }],
     });
     crate::test_roundtrip_write(GameEventListMessage {

@@ -6,10 +6,11 @@ use crate::demo::packet::datatable::SendTableName;
 use crate::demo::parser::MalformedSendPropDefinitionError;
 use crate::demo::sendprop_gen::get_prop_names;
 use crate::{ParseError, ReadResult, Result, Stream};
-use bitbuffer::{
-    BitRead, BitReadStream, BitWrite, BitWriteSized, BitWriteStream, Endianness, LittleEndian,
-};
+use bitbuffer::{BitRead, BitReadStream, Endianness, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteSized, BitWriteStream};
 use enumflags2::{bitflags, BitFlags};
+#[cfg(feature = "write")]
 use num_traits::Signed;
 use parse_display::Display;
 use serde::de::Error;
@@ -22,9 +23,8 @@ use std::hash::Hash;
 use std::ops::{BitOr, Deref};
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(
-    BitWrite, PartialEq, Eq, Hash, Debug, Display, Clone, Serialize, Deserialize, Ord, PartialOrd,
-)]
+#[derive(PartialEq, Eq, Hash, Debug, Display, Clone, Serialize, Deserialize, Ord, PartialOrd)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct SendPropName(Cow<'static, str>);
 
 impl SendPropName {
@@ -242,6 +242,7 @@ impl RawSendPropDefinition {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for RawSendPropDefinition {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         self.prop_type.write(stream)?;
@@ -267,7 +268,8 @@ impl BitWrite<LittleEndian> for RawSendPropDefinition {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Copy, Clone, PartialEq, Debug, Display, Serialize, Deserialize)]
+#[derive(BitRead, Copy, Clone, PartialEq, Debug, Display, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 #[discriminant_bits = 5]
 pub enum SendPropType {
     Int = 0,
@@ -376,6 +378,7 @@ impl BitRead<'_, LittleEndian> for SendPropFlags {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for SendPropFlags {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         self.0.bits().write(stream)
@@ -705,6 +708,8 @@ impl SendPropValue {
             }
         }
     }
+
+    #[cfg(feature = "write")]
     pub fn encode(
         &self,
         stream: &mut BitWriteStream<LittleEndian>,
@@ -802,6 +807,7 @@ impl SendPropValue {
         }
     }
 
+    #[cfg(feature = "write")]
     fn write_float(
         val: f32,
         stream: &mut BitWriteStream<LittleEndian>,
@@ -839,6 +845,7 @@ impl SendPropValue {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_send_prop_value_roundtrip() {
     use bitbuffer::{BitReadBuffer, BitReadStream};
 
@@ -1243,6 +1250,7 @@ pub fn read_var_int(stream: &mut Stream, signed: bool) -> ReadResult<i32> {
     }
 }
 
+#[cfg(feature = "write")]
 pub fn write_var_int(
     int: i32,
     stream: &mut BitWriteStream<LittleEndian>,
@@ -1259,6 +1267,7 @@ pub fn write_var_int(
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_var_int_roundtrip() {
     use bitbuffer::{BitReadBuffer, BitReadStream};
 
@@ -1316,6 +1325,7 @@ pub fn read_bit_coord(stream: &mut Stream) -> ReadResult<f32> {
     })
 }
 
+#[cfg(feature = "write")]
 pub fn write_bit_coord(val: f32, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
     let has_int = val.abs() >= 1.0;
     has_int.write(stream)?;
@@ -1338,6 +1348,7 @@ pub fn write_bit_coord(val: f32, stream: &mut BitWriteStream<LittleEndian>) -> R
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn bit_coord_roundtrip() {
     use bitbuffer::BitReadBuffer;
 
@@ -1406,6 +1417,7 @@ pub fn read_bit_coord_mp(
     Ok(value)
 }
 
+#[cfg(feature = "write")]
 pub fn write_bit_coord_mp(
     val: f32,
     stream: &mut BitWriteStream<LittleEndian>,
@@ -1437,6 +1449,7 @@ pub fn write_bit_coord_mp(
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_bit_coord_mp_roundtrip() {
     use bitbuffer::{BitReadBuffer, BitReadStream};
 
@@ -1488,6 +1501,7 @@ pub fn read_bit_normal(stream: &mut Stream) -> ReadResult<f32> {
     }
 }
 
+#[cfg(feature = "write")]
 pub fn write_bit_normal(val: f32, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
     val.is_sign_negative().write(stream)?;
     let frac_val = (val.abs().fract() / get_frac_factor(11)) as u16;
@@ -1495,6 +1509,7 @@ pub fn write_bit_normal(val: f32, stream: &mut BitWriteStream<LittleEndian>) -> 
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_bit_normal_roundtrip() {
     use bitbuffer::{BitReadBuffer, BitReadStream};
 

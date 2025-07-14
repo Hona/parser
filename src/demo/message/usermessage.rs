@@ -1,4 +1,6 @@
-use bitbuffer::{BitError, BitRead, BitWrite, BitWriteStream, Endianness, LittleEndian};
+use bitbuffer::{BitError, BitRead, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteStream, Endianness};
 use serde::{Deserialize, Serialize};
 
 use crate::demo::data::MaybeUtf8String;
@@ -6,7 +8,8 @@ use crate::demo::message::packetentities::EntityId;
 use crate::{ReadResult, Stream};
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(BitRead, Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 #[repr(u8)]
 #[discriminant_bits = 8]
 pub enum UserMessageType {
@@ -157,6 +160,7 @@ impl<'a> BitRead<'a, LittleEndian> for UserMessage<'a> {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for UserMessage<'_> {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         self.message_type().write(stream)?;
@@ -179,6 +183,7 @@ impl BitWrite<LittleEndian> for UserMessage<'_> {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_user_message_roundtrip() {
     crate::test_roundtrip_write(UserMessage::Train(TrainMessage { data: 12 }));
     crate::test_roundtrip_write(UserMessage::SayText2(Box::new(SayText2Message {
@@ -222,6 +227,7 @@ impl BitRead<'_, LittleEndian> for ChatMessageKind {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for ChatMessageKind {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         match self {
@@ -321,6 +327,7 @@ impl BitRead<'_, LittleEndian> for SayText2Message {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for SayText2Message {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         (u32::from(self.client) as u8).write(stream)?;
@@ -340,6 +347,7 @@ impl BitWrite<LittleEndian> for SayText2Message {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_say_text2_roundtrip() {
     crate::test_roundtrip_write(SayText2Message {
         client: 3u32.into(),
@@ -351,7 +359,8 @@ fn test_say_text2_roundtrip() {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 #[discriminant_bits = 8]
 pub enum HudTextLocation {
     PrintNotify = 1,
@@ -361,7 +370,8 @@ pub enum HudTextLocation {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct TextMessage {
     pub location: HudTextLocation,
     pub text: MaybeUtf8String,
@@ -375,19 +385,22 @@ impl TextMessage {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct ResetHudMessage {
     pub data: u8,
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct TrainMessage {
     pub data: u8,
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct VoiceSubtitleMessage {
     pub client: u8,
     pub menu: u8,
@@ -395,7 +408,8 @@ pub struct VoiceSubtitleMessage {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct ShakeMessage {
     pub command: u8,
     pub amplitude: f32,
@@ -412,6 +426,7 @@ pub struct VGuiMenuMessage {
     pub data: Vec<VGuiMenuMessageData>,
 }
 
+#[cfg(feature = "write")]
 impl<E: Endianness> BitWrite<E> for VGuiMenuMessage {
     fn write(&self, stream: &mut BitWriteStream<E>) -> ReadResult<()> {
         self.name.write(stream)?;
@@ -425,14 +440,16 @@ impl<E: Endianness> BitWrite<E> for VGuiMenuMessage {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct VGuiMenuMessageData {
     pub key: MaybeUtf8String,
     pub data: MaybeUtf8String,
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct RumbleMessage {
     pub waveform_index: u8,
     pub rumble_data: u8,
@@ -440,7 +457,8 @@ pub struct RumbleMessage {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct FadeMessage {
     pub duration: u16,
     pub hold: u16,
@@ -449,7 +467,8 @@ pub struct FadeMessage {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct HapMeleeContactMessage {
     pub data: u8,
 }

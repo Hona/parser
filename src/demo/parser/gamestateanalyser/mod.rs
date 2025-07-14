@@ -185,10 +185,8 @@ impl GameStateAnalyser {
     }
 
     pub fn handle_world_entity(&mut self, entity: &PacketEntity, parser_state: &ParserState) {
-        const MINS: SendPropIdentifier =
-            SendPropIdentifier::new("DT_WORLD", "m_WorldMins");
-        const MAXS: SendPropIdentifier =
-            SendPropIdentifier::new("DT_WORLD", "m_WorldMaxs");
+        const MINS: SendPropIdentifier = SendPropIdentifier::new("DT_WORLD", "m_WorldMins");
+        const MAXS: SendPropIdentifier = SendPropIdentifier::new("DT_WORLD", "m_WorldMaxs");
 
         if let (
             Some(SendProp {

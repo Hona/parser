@@ -1,4 +1,6 @@
-use bitbuffer::{BitRead, BitWrite, BitWriteSized, BitWriteStream, LittleEndian};
+use bitbuffer::{BitRead, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteSized, BitWriteStream};
 use serde::{Deserialize, Serialize};
 
 use crate::{ReadResult, Stream};
@@ -35,6 +37,7 @@ impl BitRead<'_, LittleEndian> for VoiceInitMessage {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for VoiceInitMessage {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         self.codec.write(stream)?;
@@ -49,6 +52,7 @@ impl BitWrite<LittleEndian> for VoiceInitMessage {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_voice_init_roundtrip() {
     crate::test_roundtrip_write(VoiceInitMessage {
         codec: "foo".into(),
@@ -63,7 +67,8 @@ fn test_voice_init_roundtrip() {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 #[endianness = "LittleEndian"]
 #[serde(bound(deserialize = "'a: 'static"))]
 pub struct VoiceDataMessage<'a> {
@@ -104,6 +109,7 @@ impl<'a> BitRead<'a, LittleEndian> for ParseSoundsMessage<'a> {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for ParseSoundsMessage<'_> {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         self.reliable.write(stream)?;
@@ -124,6 +130,7 @@ impl BitWrite<LittleEndian> for ParseSoundsMessage<'_> {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_parse_sounds_roundtrip() {
     use bitbuffer::BitReadBuffer;
     let inner = BitReadBuffer::new(&[1, 2, 3, 4, 5, 6], LittleEndian);

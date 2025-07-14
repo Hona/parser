@@ -1,10 +1,13 @@
-use bitbuffer::{BitRead, BitReadStream, BitWrite, BitWriteStream, Endianness};
+use bitbuffer::{BitRead, BitReadStream, Endianness};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteStream};
 use serde::{Deserialize, Serialize};
 
 use crate::ReadResult;
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitWrite, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct ConVar {
     pub key: String,
     pub value: String,
@@ -30,6 +33,7 @@ pub struct SetConVarMessage {
     pub vars: Vec<ConVar>,
 }
 
+#[cfg(feature = "write")]
 impl<E: Endianness> BitWrite<E> for SetConVarMessage {
     fn write(&self, stream: &mut BitWriteStream<E>) -> ReadResult<()> {
         self.length.write(stream)?;
@@ -37,6 +41,7 @@ impl<E: Endianness> BitWrite<E> for SetConVarMessage {
     }
 }
 #[test]
+#[cfg(feature = "write")]
 fn test_set_con_var_roundtrip() {
     crate::test_roundtrip_write(SetConVarMessage {
         length: 0,

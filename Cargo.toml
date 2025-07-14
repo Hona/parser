@@ -21,6 +21,7 @@ path = "src/bin/main.rs"
 [[bin]]
 name = "reencode_demo"
 path = "src/bin/reencode.rs"
+required-features = ["write"]
 
 [[bin]]
 name = "gamestate"
@@ -84,6 +85,7 @@ log = { version = "0.4.21", features = [] }
 schema = ["schemars", "bitbuffer/schemars"]
 trace = ["tracing", "tracing-subscriber"]
 codegen = ["better-panic", "quote", "syn", "Inflector", "proc-macro2", "tempfile", "lazy_static", "prettyplease"]
+write = []
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"

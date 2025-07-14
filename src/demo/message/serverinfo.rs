@@ -1,6 +1,10 @@
-use crate::demo::parser::{Encode, ParseBitSkip};
+#[cfg(feature = "write")]
+use crate::demo::parser::Encode;
+use crate::demo::parser::ParseBitSkip;
 use crate::{Parse, ParserState, Result, Stream};
-use bitbuffer::{BitRead, BitWrite, BitWriteStream, LittleEndian};
+use bitbuffer::{BitRead, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteStream};
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -78,6 +82,7 @@ impl<'a> ParseBitSkip<'a> for ServerInfoMessage {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for ServerInfoMessage {
     fn encode(&self, stream: &mut BitWriteStream<LittleEndian>, state: &ParserState) -> Result<()> {
         let part1 = ServerInfoMessagePart1 {
@@ -118,7 +123,8 @@ impl Encode for ServerInfoMessage {
     }
 }
 
-#[derive(BitRead, BitWrite)]
+#[derive(BitRead)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct ServerInfoMessagePart1 {
     pub version: u16,
     pub server_count: u32,
@@ -128,7 +134,8 @@ pub struct ServerInfoMessagePart1 {
     pub max_classes: u16,
 }
 
-#[derive(BitRead, BitWrite)]
+#[derive(BitRead)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct ServerInfoMessagePart2 {
     pub player_slot: u8,
     pub max_player_count: u8,

@@ -11,9 +11,13 @@ pub use crate::demo::message::stringtable::*;
 pub use crate::demo::message::tempentities::*;
 pub use crate::demo::message::usermessage::*;
 pub use crate::demo::message::voice::*;
-use crate::demo::parser::{Encode, ParseBitSkip};
+#[cfg(feature = "write")]
+use crate::demo::parser::Encode;
+use crate::demo::parser::ParseBitSkip;
 use crate::{Parse, ParserState, Result, Stream};
-use bitbuffer::{BitRead, BitWrite, BitWriteStream, LittleEndian};
+use bitbuffer::BitRead;
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteStream, LittleEndian};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
@@ -31,9 +35,8 @@ pub mod usermessage;
 pub mod voice;
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema_repr))]
-#[derive(
-    BitRead, BitWrite, Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr,
-)]
+#[derive(BitRead, Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 #[repr(u8)]
 #[discriminant_bits = 6]
 pub enum MessageType {
@@ -240,6 +243,7 @@ impl<'a> Message<'a> {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for Message<'_> {
     fn encode(&self, stream: &mut BitWriteStream<LittleEndian>, state: &ParserState) -> Result<()> {
         match self {

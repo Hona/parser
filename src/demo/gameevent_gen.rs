@@ -6,6 +6,7 @@ use crate::demo::Stream;
 use crate::{ParseError, Result};
 use bitbuffer::{BitRead, BitWrite, BitWriteStream, LittleEndian};
 use serde::{Deserialize, Serialize};
+use std::mem::size_of;
 fn read_value<'a, T: EventValue + BitRead<'a, LittleEndian> + Default>(
     stream: &mut Stream<'a>,
     entry: Option<&GameEventEntry>,
@@ -46,49 +47,69 @@ impl ServerSpawnEvent {
         Ok(ServerSpawnEvent {
             hostname: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("hostname"),
+                definition.get_entry(7992289610851289516u64),
                 "hostname",
             )?,
             address: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("address"),
+                definition.get_entry(1673076945917317811u64),
                 "address",
             )?,
-            ip: read_value::<u32>(stream, definition.get_entry("ip"), "ip")?,
-            port: read_value::<u16>(stream, definition.get_entry("port"), "port")?,
-            game: read_value::<MaybeUtf8String>(stream, definition.get_entry("game"), "game")?,
+            ip: read_value::<u32>(stream, definition.get_entry(628043273916406972u64), "ip")?,
+            port: read_value::<u16>(
+                stream,
+                definition.get_entry(10100688915994460070u64),
+                "port",
+            )?,
+            game: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(10005491431272162599u64),
+                "game",
+            )?,
             map_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("mapname"),
+                definition.get_entry(18037678950216614794u64),
                 "map_name",
             )?,
             max_players: read_value::<u32>(
                 stream,
-                definition.get_entry("maxplayers"),
+                definition.get_entry(6820574247554962453u64),
                 "max_players",
             )?,
-            os: read_value::<MaybeUtf8String>(stream, definition.get_entry("os"), "os")?,
-            dedicated: read_value::<bool>(stream, definition.get_entry("dedicated"), "dedicated")?,
-            password: read_value::<bool>(stream, definition.get_entry("password"), "password")?,
+            os: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(626093839799967319u64),
+                "os",
+            )?,
+            dedicated: read_value::<bool>(
+                stream,
+                definition.get_entry(17181338330120084322u64),
+                "dedicated",
+            )?,
+            password: read_value::<bool>(
+                stream,
+                definition.get_entry(5411718394350379800u64),
+                "password",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "hostname" => Ok(self.hostname.clone().into()),
-            "address" => Ok(self.address.clone().into()),
-            "ip" => Ok(self.ip.clone().into()),
-            "port" => Ok(self.port.clone().into()),
-            "game" => Ok(self.game.clone().into()),
-            "mapname" => Ok(self.map_name.clone().into()),
-            "maxplayers" => Ok(self.max_players.clone().into()),
-            "os" => Ok(self.os.clone().into()),
-            "dedicated" => Ok(self.dedicated.clone().into()),
-            "password" => Ok(self.password.clone().into()),
+        match field.hash {
+            7992289610851289516u64 => Ok(self.hostname.clone().into()),
+            1673076945917317811u64 => Ok(self.address.clone().into()),
+            628043273916406972u64 => Ok(self.ip.clone().into()),
+            10100688915994460070u64 => Ok(self.port.clone().into()),
+            10005491431272162599u64 => Ok(self.game.clone().into()),
+            18037678950216614794u64 => Ok(self.map_name.clone().into()),
+            6820574247554962453u64 => Ok(self.max_players.clone().into()),
+            626093839799967319u64 => Ok(self.os.clone().into()),
+            17181338330120084322u64 => Ok(self.dedicated.clone().into()),
+            5411718394350379800u64 => Ok(self.password.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ServerSpawn",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -100,7 +121,7 @@ impl ServerSpawnEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -118,19 +139,19 @@ impl ServerChangeLevelFailedEvent {
         Ok(ServerChangeLevelFailedEvent {
             level_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("levelname"),
+                definition.get_entry(8103714013497669086u64),
                 "level_name",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "levelname" => Ok(self.level_name.clone().into()),
+        match field.hash {
+            8103714013497669086u64 => Ok(self.level_name.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ServerChangeLevelFailed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -142,7 +163,7 @@ impl ServerChangeLevelFailedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -160,19 +181,19 @@ impl ServerShutdownEvent {
         Ok(ServerShutdownEvent {
             reason: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("reason"),
+                definition.get_entry(7343356632300987961u64),
                 "reason",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "reason" => Ok(self.reason.clone().into()),
+        match field.hash {
+            7343356632300987961u64 => Ok(self.reason.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ServerShutdown",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -184,7 +205,7 @@ impl ServerShutdownEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -203,25 +224,25 @@ impl ServerCvarEvent {
         Ok(ServerCvarEvent {
             cvar_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("cvarname"),
+                definition.get_entry(8822721269188576188u64),
                 "cvar_name",
             )?,
             cvar_value: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("cvarvalue"),
+                definition.get_entry(9254320334284503348u64),
                 "cvar_value",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "cvarname" => Ok(self.cvar_name.clone().into()),
-            "cvarvalue" => Ok(self.cvar_value.clone().into()),
+        match field.hash {
+            8822721269188576188u64 => Ok(self.cvar_name.clone().into()),
+            9254320334284503348u64 => Ok(self.cvar_value.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ServerCvar",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -233,7 +254,7 @@ impl ServerCvarEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -249,17 +270,21 @@ impl ServerMessageEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ServerMessageEvent {
-            text: read_value::<MaybeUtf8String>(stream, definition.get_entry("text"), "text")?,
+            text: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(18015793717152399486u64),
+                "text",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "text" => Ok(self.text.clone().into()),
+        match field.hash {
+            18015793717152399486u64 => Ok(self.text.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ServerMessage",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -271,7 +296,7 @@ impl ServerMessageEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -293,37 +318,57 @@ impl ServerAddBanEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ServerAddBanEvent {
-            name: read_value::<MaybeUtf8String>(stream, definition.get_entry("name"), "name")?,
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            name: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(14176396743819860870u64),
+                "name",
+            )?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             network_id: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("networkid"),
+                definition.get_entry(2293149186490744864u64),
                 "network_id",
             )?,
-            ip: read_value::<MaybeUtf8String>(stream, definition.get_entry("ip"), "ip")?,
+            ip: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(628043273916406972u64),
+                "ip",
+            )?,
             duration: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("duration"),
+                definition.get_entry(10012068961515151501u64),
                 "duration",
             )?,
-            by: read_value::<MaybeUtf8String>(stream, definition.get_entry("by"), "by")?,
-            kicked: read_value::<bool>(stream, definition.get_entry("kicked"), "kicked")?,
+            by: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(623268094916032724u64),
+                "by",
+            )?,
+            kicked: read_value::<bool>(
+                stream,
+                definition.get_entry(11906843383782741950u64),
+                "kicked",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "name" => Ok(self.name.clone().into()),
-            "userid" => Ok(self.user_id.clone().into()),
-            "networkid" => Ok(self.network_id.clone().into()),
-            "ip" => Ok(self.ip.clone().into()),
-            "duration" => Ok(self.duration.clone().into()),
-            "by" => Ok(self.by.clone().into()),
-            "kicked" => Ok(self.kicked.clone().into()),
+        match field.hash {
+            14176396743819860870u64 => Ok(self.name.clone().into()),
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            2293149186490744864u64 => Ok(self.network_id.clone().into()),
+            628043273916406972u64 => Ok(self.ip.clone().into()),
+            10012068961515151501u64 => Ok(self.duration.clone().into()),
+            623268094916032724u64 => Ok(self.by.clone().into()),
+            11906843383782741950u64 => Ok(self.kicked.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ServerAddBan",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -335,7 +380,7 @@ impl ServerAddBanEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -355,23 +400,31 @@ impl ServerRemoveBanEvent {
         Ok(ServerRemoveBanEvent {
             network_id: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("networkid"),
+                definition.get_entry(2293149186490744864u64),
                 "network_id",
             )?,
-            ip: read_value::<MaybeUtf8String>(stream, definition.get_entry("ip"), "ip")?,
-            by: read_value::<MaybeUtf8String>(stream, definition.get_entry("by"), "by")?,
+            ip: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(628043273916406972u64),
+                "ip",
+            )?,
+            by: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(623268094916032724u64),
+                "by",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "networkid" => Ok(self.network_id.clone().into()),
-            "ip" => Ok(self.ip.clone().into()),
-            "by" => Ok(self.by.clone().into()),
+        match field.hash {
+            2293149186490744864u64 => Ok(self.network_id.clone().into()),
+            628043273916406972u64 => Ok(self.ip.clone().into()),
+            623268094916032724u64 => Ok(self.by.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ServerRemoveBan",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -383,7 +436,7 @@ impl ServerRemoveBanEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -404,35 +457,47 @@ impl PlayerConnectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerConnectEvent {
-            name: read_value::<MaybeUtf8String>(stream, definition.get_entry("name"), "name")?,
-            index: read_value::<u8>(stream, definition.get_entry("index"), "index")?,
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            name: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(14176396743819860870u64),
+                "name",
+            )?,
+            index: read_value::<u8>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             network_id: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("networkid"),
+                definition.get_entry(2293149186490744864u64),
                 "network_id",
             )?,
             address: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("address"),
+                definition.get_entry(1673076945917317811u64),
                 "address",
             )?,
-            bot: read_value::<u16>(stream, definition.get_entry("bot"), "bot")?,
+            bot: read_value::<u16>(stream, definition.get_entry(21728656485903294u64), "bot")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "name" => Ok(self.name.clone().into()),
-            "index" => Ok(self.index.clone().into()),
-            "userid" => Ok(self.user_id.clone().into()),
-            "networkid" => Ok(self.network_id.clone().into()),
-            "address" => Ok(self.address.clone().into()),
-            "bot" => Ok(self.bot.clone().into()),
+        match field.hash {
+            14176396743819860870u64 => Ok(self.name.clone().into()),
+            9497966886403524235u64 => Ok(self.index.clone().into()),
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            2293149186490744864u64 => Ok(self.network_id.clone().into()),
+            1673076945917317811u64 => Ok(self.address.clone().into()),
+            21728656485903294u64 => Ok(self.bot.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerConnect",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -444,7 +509,7 @@ impl PlayerConnectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -464,29 +529,41 @@ impl PlayerConnectClientEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerConnectClientEvent {
-            name: read_value::<MaybeUtf8String>(stream, definition.get_entry("name"), "name")?,
-            index: read_value::<u8>(stream, definition.get_entry("index"), "index")?,
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            name: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(14176396743819860870u64),
+                "name",
+            )?,
+            index: read_value::<u8>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             network_id: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("networkid"),
+                definition.get_entry(2293149186490744864u64),
                 "network_id",
             )?,
-            bot: read_value::<u16>(stream, definition.get_entry("bot"), "bot")?,
+            bot: read_value::<u16>(stream, definition.get_entry(21728656485903294u64), "bot")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "name" => Ok(self.name.clone().into()),
-            "index" => Ok(self.index.clone().into()),
-            "userid" => Ok(self.user_id.clone().into()),
-            "networkid" => Ok(self.network_id.clone().into()),
-            "bot" => Ok(self.bot.clone().into()),
+        match field.hash {
+            14176396743819860870u64 => Ok(self.name.clone().into()),
+            9497966886403524235u64 => Ok(self.index.clone().into()),
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            2293149186490744864u64 => Ok(self.network_id.clone().into()),
+            21728656485903294u64 => Ok(self.bot.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerConnectClient",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -498,7 +575,7 @@ impl PlayerConnectClientEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -518,29 +595,41 @@ impl PlayerInfoEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerInfoEvent {
-            name: read_value::<MaybeUtf8String>(stream, definition.get_entry("name"), "name")?,
-            index: read_value::<u8>(stream, definition.get_entry("index"), "index")?,
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            name: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(14176396743819860870u64),
+                "name",
+            )?,
+            index: read_value::<u8>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             network_id: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("networkid"),
+                definition.get_entry(2293149186490744864u64),
                 "network_id",
             )?,
-            bot: read_value::<bool>(stream, definition.get_entry("bot"), "bot")?,
+            bot: read_value::<bool>(stream, definition.get_entry(21728656485903294u64), "bot")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "name" => Ok(self.name.clone().into()),
-            "index" => Ok(self.index.clone().into()),
-            "userid" => Ok(self.user_id.clone().into()),
-            "networkid" => Ok(self.network_id.clone().into()),
-            "bot" => Ok(self.bot.clone().into()),
+        match field.hash {
+            14176396743819860870u64 => Ok(self.name.clone().into()),
+            9497966886403524235u64 => Ok(self.index.clone().into()),
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            2293149186490744864u64 => Ok(self.network_id.clone().into()),
+            21728656485903294u64 => Ok(self.bot.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerInfo",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -552,7 +641,7 @@ impl PlayerInfoEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -572,33 +661,41 @@ impl PlayerDisconnectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerDisconnectEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             reason: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("reason"),
+                definition.get_entry(7343356632300987961u64),
                 "reason",
             )?,
-            name: read_value::<MaybeUtf8String>(stream, definition.get_entry("name"), "name")?,
+            name: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(14176396743819860870u64),
+                "name",
+            )?,
             network_id: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("networkid"),
+                definition.get_entry(2293149186490744864u64),
                 "network_id",
             )?,
-            bot: read_value::<u16>(stream, definition.get_entry("bot"), "bot")?,
+            bot: read_value::<u16>(stream, definition.get_entry(21728656485903294u64), "bot")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "reason" => Ok(self.reason.clone().into()),
-            "name" => Ok(self.name.clone().into()),
-            "networkid" => Ok(self.network_id.clone().into()),
-            "bot" => Ok(self.bot.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            7343356632300987961u64 => Ok(self.reason.clone().into()),
+            14176396743819860870u64 => Ok(self.name.clone().into()),
+            2293149186490744864u64 => Ok(self.network_id.clone().into()),
+            21728656485903294u64 => Ok(self.bot.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerDisconnect",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -610,7 +707,7 @@ impl PlayerDisconnectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -626,17 +723,21 @@ impl PlayerActivateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerActivateEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerActivate",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -648,7 +749,7 @@ impl PlayerActivateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -665,19 +766,27 @@ impl PlayerSayEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerSayEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            text: read_value::<MaybeUtf8String>(stream, definition.get_entry("text"), "text")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            text: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(18015793717152399486u64),
+                "text",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "text" => Ok(self.text.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            18015793717152399486u64 => Ok(self.text.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerSay",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -689,7 +798,7 @@ impl PlayerSayEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -707,19 +816,19 @@ impl ClientDisconnectEvent {
         Ok(ClientDisconnectEvent {
             message: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("message"),
+                definition.get_entry(6080987277291999908u64),
                 "message",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "message" => Ok(self.message.clone().into()),
+        match field.hash {
+            6080987277291999908u64 => Ok(self.message.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ClientDisconnect",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -731,7 +840,7 @@ impl ClientDisconnectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -752,29 +861,33 @@ impl ClientBeginConnectEvent {
         Ok(ClientBeginConnectEvent {
             address: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("address"),
+                definition.get_entry(1673076945917317811u64),
                 "address",
             )?,
-            ip: read_value::<u32>(stream, definition.get_entry("ip"), "ip")?,
-            port: read_value::<u16>(stream, definition.get_entry("port"), "port")?,
+            ip: read_value::<u32>(stream, definition.get_entry(628043273916406972u64), "ip")?,
+            port: read_value::<u16>(
+                stream,
+                definition.get_entry(10100688915994460070u64),
+                "port",
+            )?,
             source: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("source"),
+                definition.get_entry(8564681157369146808u64),
                 "source",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "address" => Ok(self.address.clone().into()),
-            "ip" => Ok(self.ip.clone().into()),
-            "port" => Ok(self.port.clone().into()),
-            "source" => Ok(self.source.clone().into()),
+        match field.hash {
+            1673076945917317811u64 => Ok(self.address.clone().into()),
+            628043273916406972u64 => Ok(self.ip.clone().into()),
+            10100688915994460070u64 => Ok(self.port.clone().into()),
+            8564681157369146808u64 => Ok(self.source.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ClientBeginConnect",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -786,7 +899,7 @@ impl ClientBeginConnectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -806,23 +919,27 @@ impl ClientConnectedEvent {
         Ok(ClientConnectedEvent {
             address: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("address"),
+                definition.get_entry(1673076945917317811u64),
                 "address",
             )?,
-            ip: read_value::<u32>(stream, definition.get_entry("ip"), "ip")?,
-            port: read_value::<u16>(stream, definition.get_entry("port"), "port")?,
+            ip: read_value::<u32>(stream, definition.get_entry(628043273916406972u64), "ip")?,
+            port: read_value::<u16>(
+                stream,
+                definition.get_entry(10100688915994460070u64),
+                "port",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "address" => Ok(self.address.clone().into()),
-            "ip" => Ok(self.ip.clone().into()),
-            "port" => Ok(self.port.clone().into()),
+        match field.hash {
+            1673076945917317811u64 => Ok(self.address.clone().into()),
+            628043273916406972u64 => Ok(self.ip.clone().into()),
+            10100688915994460070u64 => Ok(self.port.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ClientConnected",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -834,7 +951,7 @@ impl ClientConnectedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -854,23 +971,27 @@ impl ClientFullConnectEvent {
         Ok(ClientFullConnectEvent {
             address: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("address"),
+                definition.get_entry(1673076945917317811u64),
                 "address",
             )?,
-            ip: read_value::<u32>(stream, definition.get_entry("ip"), "ip")?,
-            port: read_value::<u16>(stream, definition.get_entry("port"), "port")?,
+            ip: read_value::<u32>(stream, definition.get_entry(628043273916406972u64), "ip")?,
+            port: read_value::<u16>(
+                stream,
+                definition.get_entry(10100688915994460070u64),
+                "port",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "address" => Ok(self.address.clone().into()),
-            "ip" => Ok(self.ip.clone().into()),
-            "port" => Ok(self.port.clone().into()),
+        match field.hash {
+            1673076945917317811u64 => Ok(self.address.clone().into()),
+            628043273916406972u64 => Ok(self.ip.clone().into()),
+            10100688915994460070u64 => Ok(self.port.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ClientFullConnect",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -882,7 +1003,7 @@ impl ClientFullConnectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -898,12 +1019,12 @@ impl HostQuitEvent {
         Ok(HostQuitEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HostQuit",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -915,7 +1036,7 @@ impl HostQuitEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -932,23 +1053,27 @@ impl TeamInfoEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamInfoEvent {
-            team_id: read_value::<u8>(stream, definition.get_entry("teamid"), "team_id")?,
+            team_id: read_value::<u8>(
+                stream,
+                definition.get_entry(16102541790268531873u64),
+                "team_id",
+            )?,
             team_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("teamname"),
+                definition.get_entry(2516817673391228199u64),
                 "team_name",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "teamid" => Ok(self.team_id.clone().into()),
-            "teamname" => Ok(self.team_name.clone().into()),
+        match field.hash {
+            16102541790268531873u64 => Ok(self.team_id.clone().into()),
+            2516817673391228199u64 => Ok(self.team_name.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamInfo",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -960,7 +1085,7 @@ impl TeamInfoEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -977,19 +1102,27 @@ impl TeamScoreEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamScoreEvent {
-            team_id: read_value::<u8>(stream, definition.get_entry("teamid"), "team_id")?,
-            score: read_value::<u16>(stream, definition.get_entry("score"), "score")?,
+            team_id: read_value::<u8>(
+                stream,
+                definition.get_entry(16102541790268531873u64),
+                "team_id",
+            )?,
+            score: read_value::<u16>(
+                stream,
+                definition.get_entry(13911166232573650165u64),
+                "score",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "teamid" => Ok(self.team_id.clone().into()),
-            "score" => Ok(self.score.clone().into()),
+        match field.hash {
+            16102541790268531873u64 => Ok(self.team_id.clone().into()),
+            13911166232573650165u64 => Ok(self.score.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamScore",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1001,7 +1134,7 @@ impl TeamScoreEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1020,27 +1153,39 @@ impl TeamPlayBroadcastAudioEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayBroadcastAudioEvent {
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
-            sound: read_value::<MaybeUtf8String>(stream, definition.get_entry("sound"), "sound")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            sound: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(7337464818993397268u64),
+                "sound",
+            )?,
             additional_flags: read_value::<u16>(
                 stream,
-                definition.get_entry("additional_flags"),
+                definition.get_entry(10653216584182196624u64),
                 "additional_flags",
             )?,
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "team" => Ok(self.team.clone().into()),
-            "sound" => Ok(self.sound.clone().into()),
-            "additional_flags" => Ok(self.additional_flags.clone().into()),
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            7337464818993397268u64 => Ok(self.sound.clone().into()),
+            10653216584182196624u64 => Ok(self.additional_flags.clone().into()),
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayBroadcastAudio",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1052,7 +1197,7 @@ impl TeamPlayBroadcastAudioEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1074,33 +1219,57 @@ impl PlayerTeamEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerTeamEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
-            old_team: read_value::<u8>(stream, definition.get_entry("oldteam"), "old_team")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            old_team: read_value::<u8>(
+                stream,
+                definition.get_entry(11079076405359550719u64),
+                "old_team",
+            )?,
             disconnect: read_value::<bool>(
                 stream,
-                definition.get_entry("disconnect"),
+                definition.get_entry(6424045679635350635u64),
                 "disconnect",
             )?,
-            auto_team: read_value::<bool>(stream, definition.get_entry("autoteam"), "auto_team")?,
-            silent: read_value::<bool>(stream, definition.get_entry("silent"), "silent")?,
-            name: read_value::<MaybeUtf8String>(stream, definition.get_entry("name"), "name")?,
+            auto_team: read_value::<bool>(
+                stream,
+                definition.get_entry(9165371035831628223u64),
+                "auto_team",
+            )?,
+            silent: read_value::<bool>(
+                stream,
+                definition.get_entry(6452236368899434340u64),
+                "silent",
+            )?,
+            name: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(14176396743819860870u64),
+                "name",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "team" => Ok(self.team.clone().into()),
-            "oldteam" => Ok(self.old_team.clone().into()),
-            "disconnect" => Ok(self.disconnect.clone().into()),
-            "autoteam" => Ok(self.auto_team.clone().into()),
-            "silent" => Ok(self.silent.clone().into()),
-            "name" => Ok(self.name.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            11079076405359550719u64 => Ok(self.old_team.clone().into()),
+            6424045679635350635u64 => Ok(self.disconnect.clone().into()),
+            9165371035831628223u64 => Ok(self.auto_team.clone().into()),
+            6452236368899434340u64 => Ok(self.silent.clone().into()),
+            14176396743819860870u64 => Ok(self.name.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerTeam",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1112,7 +1281,7 @@ impl PlayerTeamEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1129,19 +1298,27 @@ impl PlayerClassEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerClassEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            class: read_value::<MaybeUtf8String>(stream, definition.get_entry("class"), "class")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            class: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(15066323702654938015u64),
+                "class",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "class" => Ok(self.class.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            15066323702654938015u64 => Ok(self.class.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerClass",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1153,7 +1330,7 @@ impl PlayerClassEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1194,151 +1371,171 @@ impl PlayerDeathEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerDeathEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             victim_ent_index: read_value::<u32>(
                 stream,
-                definition.get_entry("victim_entindex"),
+                definition.get_entry(7608903543976233025u64),
                 "victim_ent_index",
             )?,
             inflictor_ent_index: read_value::<u32>(
                 stream,
-                definition.get_entry("inflictor_entindex"),
+                definition.get_entry(7862267791693534473u64),
                 "inflictor_ent_index",
             )?,
-            attacker: read_value::<u16>(stream, definition.get_entry("attacker"), "attacker")?,
+            attacker: read_value::<u16>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
             weapon: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("weapon"),
+                definition.get_entry(11580461223051554305u64),
                 "weapon",
             )?,
-            weapon_id: read_value::<u16>(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            weapon_id: read_value::<u16>(
+                stream,
+                definition.get_entry(5542695206485500884u64),
+                "weapon_id",
+            )?,
             damage_bits: read_value::<u32>(
                 stream,
-                definition.get_entry("damagebits"),
+                definition.get_entry(2104626753992558984u64),
                 "damage_bits",
             )?,
             custom_kill: read_value::<u16>(
                 stream,
-                definition.get_entry("customkill"),
+                definition.get_entry(9002408094759571186u64),
                 "custom_kill",
             )?,
-            assister: read_value::<u16>(stream, definition.get_entry("assister"), "assister")?,
+            assister: read_value::<u16>(
+                stream,
+                definition.get_entry(17978308754419261977u64),
+                "assister",
+            )?,
             weapon_log_class_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("weapon_logclassname"),
+                definition.get_entry(8214628514117900939u64),
                 "weapon_log_class_name",
             )?,
             stun_flags: read_value::<u16>(
                 stream,
-                definition.get_entry("stun_flags"),
+                definition.get_entry(16746745151415897845u64),
                 "stun_flags",
             )?,
             death_flags: read_value::<u16>(
                 stream,
-                definition.get_entry("death_flags"),
+                definition.get_entry(210841622282264177u64),
                 "death_flags",
             )?,
             silent_kill: read_value::<bool>(
                 stream,
-                definition.get_entry("silent_kill"),
+                definition.get_entry(5449831253309542421u64),
                 "silent_kill",
             )?,
             player_penetrate_count: read_value::<u16>(
                 stream,
-                definition.get_entry("playerpenetratecount"),
+                definition.get_entry(6165847213797285919u64),
                 "player_penetrate_count",
             )?,
             assister_fallback: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("assister_fallback"),
+                definition.get_entry(2624120833319605424u64),
                 "assister_fallback",
             )?,
             kill_streak_total: read_value::<u16>(
                 stream,
-                definition.get_entry("kill_streak_total"),
+                definition.get_entry(10219443329572148957u64),
                 "kill_streak_total",
             )?,
             kill_streak_wep: read_value::<u16>(
                 stream,
-                definition.get_entry("kill_streak_wep"),
+                definition.get_entry(14151704064294986651u64),
                 "kill_streak_wep",
             )?,
             kill_streak_assist: read_value::<u16>(
                 stream,
-                definition.get_entry("kill_streak_assist"),
+                definition.get_entry(3408761288007698574u64),
                 "kill_streak_assist",
             )?,
             kill_streak_victim: read_value::<u16>(
                 stream,
-                definition.get_entry("kill_streak_victim"),
+                definition.get_entry(14613767699666342005u64),
                 "kill_streak_victim",
             )?,
             ducks_streaked: read_value::<u16>(
                 stream,
-                definition.get_entry("ducks_streaked"),
+                definition.get_entry(8814124002674372577u64),
                 "ducks_streaked",
             )?,
             duck_streak_total: read_value::<u16>(
                 stream,
-                definition.get_entry("duck_streak_total"),
+                definition.get_entry(2758270581670703974u64),
                 "duck_streak_total",
             )?,
             duck_streak_assist: read_value::<u16>(
                 stream,
-                definition.get_entry("duck_streak_assist"),
+                definition.get_entry(10967369523768500963u64),
                 "duck_streak_assist",
             )?,
             duck_streak_victim: read_value::<u16>(
                 stream,
-                definition.get_entry("duck_streak_victim"),
+                definition.get_entry(620103205137188524u64),
                 "duck_streak_victim",
             )?,
             rocket_jump: read_value::<bool>(
                 stream,
-                definition.get_entry("rocket_jump"),
+                definition.get_entry(16207427969859362406u64),
                 "rocket_jump",
             )?,
             weapon_def_index: read_value::<u32>(
                 stream,
-                definition.get_entry("weapon_def_index"),
+                definition.get_entry(4132306594868589054u64),
                 "weapon_def_index",
             )?,
-            crit_type: read_value::<u16>(stream, definition.get_entry("crit_type"), "crit_type")?,
+            crit_type: read_value::<u16>(
+                stream,
+                definition.get_entry(7263029362109349446u64),
+                "crit_type",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
-            "inflictor_entindex" => Ok(self.inflictor_ent_index.clone().into()),
-            "attacker" => Ok(self.attacker.clone().into()),
-            "weapon" => Ok(self.weapon.clone().into()),
-            "weaponid" => Ok(self.weapon_id.clone().into()),
-            "damagebits" => Ok(self.damage_bits.clone().into()),
-            "customkill" => Ok(self.custom_kill.clone().into()),
-            "assister" => Ok(self.assister.clone().into()),
-            "weapon_logclassname" => Ok(self.weapon_log_class_name.clone().into()),
-            "stun_flags" => Ok(self.stun_flags.clone().into()),
-            "death_flags" => Ok(self.death_flags.clone().into()),
-            "silent_kill" => Ok(self.silent_kill.clone().into()),
-            "playerpenetratecount" => Ok(self.player_penetrate_count.clone().into()),
-            "assister_fallback" => Ok(self.assister_fallback.clone().into()),
-            "kill_streak_total" => Ok(self.kill_streak_total.clone().into()),
-            "kill_streak_wep" => Ok(self.kill_streak_wep.clone().into()),
-            "kill_streak_assist" => Ok(self.kill_streak_assist.clone().into()),
-            "kill_streak_victim" => Ok(self.kill_streak_victim.clone().into()),
-            "ducks_streaked" => Ok(self.ducks_streaked.clone().into()),
-            "duck_streak_total" => Ok(self.duck_streak_total.clone().into()),
-            "duck_streak_assist" => Ok(self.duck_streak_assist.clone().into()),
-            "duck_streak_victim" => Ok(self.duck_streak_victim.clone().into()),
-            "rocket_jump" => Ok(self.rocket_jump.clone().into()),
-            "weapon_def_index" => Ok(self.weapon_def_index.clone().into()),
-            "crit_type" => Ok(self.crit_type.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            7608903543976233025u64 => Ok(self.victim_ent_index.clone().into()),
+            7862267791693534473u64 => Ok(self.inflictor_ent_index.clone().into()),
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
+            11580461223051554305u64 => Ok(self.weapon.clone().into()),
+            5542695206485500884u64 => Ok(self.weapon_id.clone().into()),
+            2104626753992558984u64 => Ok(self.damage_bits.clone().into()),
+            9002408094759571186u64 => Ok(self.custom_kill.clone().into()),
+            17978308754419261977u64 => Ok(self.assister.clone().into()),
+            8214628514117900939u64 => Ok(self.weapon_log_class_name.clone().into()),
+            16746745151415897845u64 => Ok(self.stun_flags.clone().into()),
+            210841622282264177u64 => Ok(self.death_flags.clone().into()),
+            5449831253309542421u64 => Ok(self.silent_kill.clone().into()),
+            6165847213797285919u64 => Ok(self.player_penetrate_count.clone().into()),
+            2624120833319605424u64 => Ok(self.assister_fallback.clone().into()),
+            10219443329572148957u64 => Ok(self.kill_streak_total.clone().into()),
+            14151704064294986651u64 => Ok(self.kill_streak_wep.clone().into()),
+            3408761288007698574u64 => Ok(self.kill_streak_assist.clone().into()),
+            14613767699666342005u64 => Ok(self.kill_streak_victim.clone().into()),
+            8814124002674372577u64 => Ok(self.ducks_streaked.clone().into()),
+            2758270581670703974u64 => Ok(self.duck_streak_total.clone().into()),
+            10967369523768500963u64 => Ok(self.duck_streak_assist.clone().into()),
+            620103205137188524u64 => Ok(self.duck_streak_victim.clone().into()),
+            16207427969859362406u64 => Ok(self.rocket_jump.clone().into()),
+            4132306594868589054u64 => Ok(self.weapon_def_index.clone().into()),
+            7263029362109349446u64 => Ok(self.crit_type.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerDeath",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1350,7 +1547,7 @@ impl PlayerDeathEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1376,53 +1573,77 @@ impl PlayerHurtEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerHurtEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            health: read_value::<u16>(stream, definition.get_entry("health"), "health")?,
-            attacker: read_value::<u16>(stream, definition.get_entry("attacker"), "attacker")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            health: read_value::<u16>(
+                stream,
+                definition.get_entry(9181103189905877455u64),
+                "health",
+            )?,
+            attacker: read_value::<u16>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
             damage_amount: read_value::<u16>(
                 stream,
-                definition.get_entry("damageamount"),
+                definition.get_entry(7439038394412279612u64),
                 "damage_amount",
             )?,
-            custom: read_value::<u16>(stream, definition.get_entry("custom"), "custom")?,
+            custom: read_value::<u16>(
+                stream,
+                definition.get_entry(604290716149806926u64),
+                "custom",
+            )?,
             show_disguised_crit: read_value::<bool>(
                 stream,
-                definition.get_entry("showdisguisedcrit"),
+                definition.get_entry(14301803044080296297u64),
                 "show_disguised_crit",
             )?,
-            crit: read_value::<bool>(stream, definition.get_entry("crit"), "crit")?,
-            mini_crit: read_value::<bool>(stream, definition.get_entry("minicrit"), "mini_crit")?,
+            crit: read_value::<bool>(stream, definition.get_entry(1324453635955533101u64), "crit")?,
+            mini_crit: read_value::<bool>(
+                stream,
+                definition.get_entry(18286698110279670006u64),
+                "mini_crit",
+            )?,
             all_see_crit: read_value::<bool>(
                 stream,
-                definition.get_entry("allseecrit"),
+                definition.get_entry(3290419718563846047u64),
                 "all_see_crit",
             )?,
-            weapon_id: read_value::<u16>(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            weapon_id: read_value::<u16>(
+                stream,
+                definition.get_entry(5542695206485500884u64),
+                "weapon_id",
+            )?,
             bonus_effect: read_value::<u8>(
                 stream,
-                definition.get_entry("bonuseffect"),
+                definition.get_entry(4613275483771643085u64),
                 "bonus_effect",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "health" => Ok(self.health.clone().into()),
-            "attacker" => Ok(self.attacker.clone().into()),
-            "damageamount" => Ok(self.damage_amount.clone().into()),
-            "custom" => Ok(self.custom.clone().into()),
-            "showdisguisedcrit" => Ok(self.show_disguised_crit.clone().into()),
-            "crit" => Ok(self.crit.clone().into()),
-            "minicrit" => Ok(self.mini_crit.clone().into()),
-            "allseecrit" => Ok(self.all_see_crit.clone().into()),
-            "weaponid" => Ok(self.weapon_id.clone().into()),
-            "bonuseffect" => Ok(self.bonus_effect.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            9181103189905877455u64 => Ok(self.health.clone().into()),
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
+            7439038394412279612u64 => Ok(self.damage_amount.clone().into()),
+            604290716149806926u64 => Ok(self.custom.clone().into()),
+            14301803044080296297u64 => Ok(self.show_disguised_crit.clone().into()),
+            1324453635955533101u64 => Ok(self.crit.clone().into()),
+            18286698110279670006u64 => Ok(self.mini_crit.clone().into()),
+            3290419718563846047u64 => Ok(self.all_see_crit.clone().into()),
+            5542695206485500884u64 => Ok(self.weapon_id.clone().into()),
+            4613275483771643085u64 => Ok(self.bonus_effect.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerHurt",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1434,7 +1655,7 @@ impl PlayerHurtEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1452,21 +1673,33 @@ impl PlayerChatEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerChatEvent {
-            team_only: read_value::<bool>(stream, definition.get_entry("teamonly"), "team_only")?,
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            text: read_value::<MaybeUtf8String>(stream, definition.get_entry("text"), "text")?,
+            team_only: read_value::<bool>(
+                stream,
+                definition.get_entry(8997360128490965478u64),
+                "team_only",
+            )?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            text: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(18015793717152399486u64),
+                "text",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "teamonly" => Ok(self.team_only.clone().into()),
-            "userid" => Ok(self.user_id.clone().into()),
-            "text" => Ok(self.text.clone().into()),
+        match field.hash {
+            8997360128490965478u64 => Ok(self.team_only.clone().into()),
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            18015793717152399486u64 => Ok(self.text.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerChat",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1478,7 +1711,7 @@ impl PlayerChatEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1497,23 +1730,39 @@ impl PlayerScoreEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerScoreEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            kills: read_value::<u16>(stream, definition.get_entry("kills"), "kills")?,
-            deaths: read_value::<u16>(stream, definition.get_entry("deaths"), "deaths")?,
-            score: read_value::<u16>(stream, definition.get_entry("score"), "score")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            kills: read_value::<u16>(
+                stream,
+                definition.get_entry(8934927864608526494u64),
+                "kills",
+            )?,
+            deaths: read_value::<u16>(
+                stream,
+                definition.get_entry(15487195249286514682u64),
+                "deaths",
+            )?,
+            score: read_value::<u16>(
+                stream,
+                definition.get_entry(13911166232573650165u64),
+                "score",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "kills" => Ok(self.kills.clone().into()),
-            "deaths" => Ok(self.deaths.clone().into()),
-            "score" => Ok(self.score.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            8934927864608526494u64 => Ok(self.kills.clone().into()),
+            15487195249286514682u64 => Ok(self.deaths.clone().into()),
+            13911166232573650165u64 => Ok(self.score.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerScore",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1525,7 +1774,7 @@ impl PlayerScoreEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1543,21 +1792,33 @@ impl PlayerSpawnEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerSpawnEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            team: read_value::<u16>(stream, definition.get_entry("team"), "team")?,
-            class: read_value::<u16>(stream, definition.get_entry("class"), "class")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            team: read_value::<u16>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            class: read_value::<u16>(
+                stream,
+                definition.get_entry(15066323702654938015u64),
+                "class",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "team" => Ok(self.team.clone().into()),
-            "class" => Ok(self.class.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            15066323702654938015u64 => Ok(self.class.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerSpawn",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1569,7 +1830,7 @@ impl PlayerSpawnEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1587,21 +1848,29 @@ impl PlayerShootEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerShootEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            weapon: read_value::<u8>(stream, definition.get_entry("weapon"), "weapon")?,
-            mode: read_value::<u8>(stream, definition.get_entry("mode"), "mode")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            weapon: read_value::<u8>(
+                stream,
+                definition.get_entry(11580461223051554305u64),
+                "weapon",
+            )?,
+            mode: read_value::<u8>(stream, definition.get_entry(954177780379921842u64), "mode")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "weapon" => Ok(self.weapon.clone().into()),
-            "mode" => Ok(self.mode.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            11580461223051554305u64 => Ok(self.weapon.clone().into()),
+            954177780379921842u64 => Ok(self.mode.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerShoot",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1613,7 +1882,7 @@ impl PlayerShootEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1630,19 +1899,27 @@ impl PlayerUseEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerUseEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            entity: read_value::<u16>(stream, definition.get_entry("entity"), "entity")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            entity: read_value::<u16>(
+                stream,
+                definition.get_entry(10409922166629367034u64),
+                "entity",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "entity" => Ok(self.entity.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            10409922166629367034u64 => Ok(self.entity.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerUse",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1654,7 +1931,7 @@ impl PlayerUseEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1672,29 +1949,33 @@ impl PlayerChangeNameEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerChangeNameEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             old_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("oldname"),
+                definition.get_entry(11919108480345551253u64),
                 "old_name",
             )?,
             new_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("newname"),
+                definition.get_entry(8904377156710117674u64),
                 "new_name",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "oldname" => Ok(self.old_name.clone().into()),
-            "newname" => Ok(self.new_name.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            11919108480345551253u64 => Ok(self.old_name.clone().into()),
+            8904377156710117674u64 => Ok(self.new_name.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerChangeName",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1706,7 +1987,7 @@ impl PlayerChangeNameEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1724,19 +2005,19 @@ impl PlayerHintMessageEvent {
         Ok(PlayerHintMessageEvent {
             hint_message: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("hintmessage"),
+                definition.get_entry(13996716249204415567u64),
                 "hint_message",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "hintmessage" => Ok(self.hint_message.clone().into()),
+        match field.hash {
+            13996716249204415567u64 => Ok(self.hint_message.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerHintMessage",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1748,7 +2029,7 @@ impl PlayerHintMessageEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1764,17 +2045,21 @@ impl BasePlayerTeleportedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(BasePlayerTeleportedEvent {
-            ent_index: read_value::<u16>(stream, definition.get_entry("entindex"), "ent_index")?,
+            ent_index: read_value::<u16>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "BasePlayerTeleported",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1786,7 +2071,7 @@ impl BasePlayerTeleportedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1802,12 +2087,12 @@ impl GameInitEvent {
         Ok(GameInitEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "GameInit",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1819,7 +2104,7 @@ impl GameInitEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1837,19 +2122,19 @@ impl GameNewMapEvent {
         Ok(GameNewMapEvent {
             map_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("mapname"),
+                definition.get_entry(18037678950216614794u64),
                 "map_name",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "mapname" => Ok(self.map_name.clone().into()),
+        match field.hash {
+            18037678950216614794u64 => Ok(self.map_name.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "GameNewMap",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1861,7 +2146,7 @@ impl GameNewMapEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1882,29 +2167,37 @@ impl GameStartEvent {
         Ok(GameStartEvent {
             rounds_limit: read_value::<u32>(
                 stream,
-                definition.get_entry("roundslimit"),
+                definition.get_entry(6594118856211890507u64),
                 "rounds_limit",
             )?,
-            time_limit: read_value::<u32>(stream, definition.get_entry("timelimit"), "time_limit")?,
-            frag_limit: read_value::<u32>(stream, definition.get_entry("fraglimit"), "frag_limit")?,
+            time_limit: read_value::<u32>(
+                stream,
+                definition.get_entry(8925605756456439511u64),
+                "time_limit",
+            )?,
+            frag_limit: read_value::<u32>(
+                stream,
+                definition.get_entry(9937264313491586980u64),
+                "frag_limit",
+            )?,
             objective: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("objective"),
+                definition.get_entry(8095747183904291896u64),
                 "objective",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "roundslimit" => Ok(self.rounds_limit.clone().into()),
-            "timelimit" => Ok(self.time_limit.clone().into()),
-            "fraglimit" => Ok(self.frag_limit.clone().into()),
-            "objective" => Ok(self.objective.clone().into()),
+        match field.hash {
+            6594118856211890507u64 => Ok(self.rounds_limit.clone().into()),
+            8925605756456439511u64 => Ok(self.time_limit.clone().into()),
+            9937264313491586980u64 => Ok(self.frag_limit.clone().into()),
+            8095747183904291896u64 => Ok(self.objective.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "GameStart",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1916,7 +2209,7 @@ impl GameStartEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1932,17 +2225,21 @@ impl GameEndEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(GameEndEvent {
-            winner: read_value::<u8>(stream, definition.get_entry("winner"), "winner")?,
+            winner: read_value::<u8>(
+                stream,
+                definition.get_entry(4337804175666422150u64),
+                "winner",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "winner" => Ok(self.winner.clone().into()),
+        match field.hash {
+            4337804175666422150u64 => Ok(self.winner.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "GameEnd",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -1954,7 +2251,7 @@ impl GameEndEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1972,25 +2269,33 @@ impl RoundStartEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RoundStartEvent {
-            time_limit: read_value::<u32>(stream, definition.get_entry("timelimit"), "time_limit")?,
-            frag_limit: read_value::<u32>(stream, definition.get_entry("fraglimit"), "frag_limit")?,
+            time_limit: read_value::<u32>(
+                stream,
+                definition.get_entry(8925605756456439511u64),
+                "time_limit",
+            )?,
+            frag_limit: read_value::<u32>(
+                stream,
+                definition.get_entry(9937264313491586980u64),
+                "frag_limit",
+            )?,
             objective: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("objective"),
+                definition.get_entry(8095747183904291896u64),
                 "objective",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "timelimit" => Ok(self.time_limit.clone().into()),
-            "fraglimit" => Ok(self.frag_limit.clone().into()),
-            "objective" => Ok(self.objective.clone().into()),
+        match field.hash {
+            8925605756456439511u64 => Ok(self.time_limit.clone().into()),
+            9937264313491586980u64 => Ok(self.frag_limit.clone().into()),
+            8095747183904291896u64 => Ok(self.objective.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RoundStart",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2002,7 +2307,7 @@ impl RoundStartEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2020,25 +2325,33 @@ impl RoundEndEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RoundEndEvent {
-            winner: read_value::<u8>(stream, definition.get_entry("winner"), "winner")?,
-            reason: read_value::<u8>(stream, definition.get_entry("reason"), "reason")?,
+            winner: read_value::<u8>(
+                stream,
+                definition.get_entry(4337804175666422150u64),
+                "winner",
+            )?,
+            reason: read_value::<u8>(
+                stream,
+                definition.get_entry(7343356632300987961u64),
+                "reason",
+            )?,
             message: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("message"),
+                definition.get_entry(6080987277291999908u64),
                 "message",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "winner" => Ok(self.winner.clone().into()),
-            "reason" => Ok(self.reason.clone().into()),
-            "message" => Ok(self.message.clone().into()),
+        match field.hash {
+            4337804175666422150u64 => Ok(self.winner.clone().into()),
+            7343356632300987961u64 => Ok(self.reason.clone().into()),
+            6080987277291999908u64 => Ok(self.message.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RoundEnd",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2050,7 +2363,7 @@ impl RoundEndEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2067,19 +2380,27 @@ impl GameMessageEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(GameMessageEvent {
-            target: read_value::<u8>(stream, definition.get_entry("target"), "target")?,
-            text: read_value::<MaybeUtf8String>(stream, definition.get_entry("text"), "text")?,
+            target: read_value::<u8>(
+                stream,
+                definition.get_entry(1653916590517707752u64),
+                "target",
+            )?,
+            text: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(18015793717152399486u64),
+                "text",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "target" => Ok(self.target.clone().into()),
-            "text" => Ok(self.text.clone().into()),
+        match field.hash {
+            1653916590517707752u64 => Ok(self.target.clone().into()),
+            18015793717152399486u64 => Ok(self.text.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "GameMessage",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2091,7 +2412,7 @@ impl GameMessageEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2109,21 +2430,33 @@ impl BreakBreakableEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(BreakBreakableEvent {
-            ent_index: read_value::<u32>(stream, definition.get_entry("entindex"), "ent_index")?,
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            material: read_value::<u8>(stream, definition.get_entry("material"), "material")?,
+            ent_index: read_value::<u32>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            material: read_value::<u8>(
+                stream,
+                definition.get_entry(175488002581160416u64),
+                "material",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
-            "userid" => Ok(self.user_id.clone().into()),
-            "material" => Ok(self.material.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            175488002581160416u64 => Ok(self.material.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "BreakBreakable",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2135,7 +2468,7 @@ impl BreakBreakableEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2152,19 +2485,27 @@ impl BreakPropEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(BreakPropEvent {
-            ent_index: read_value::<u32>(stream, definition.get_entry("entindex"), "ent_index")?,
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            ent_index: read_value::<u32>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
-            "userid" => Ok(self.user_id.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "BreakProp",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2176,7 +2517,7 @@ impl BreakPropEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2197,37 +2538,37 @@ impl EntityKilledEvent {
         Ok(EntityKilledEvent {
             ent_index_killed: read_value::<u32>(
                 stream,
-                definition.get_entry("entindex_killed"),
+                definition.get_entry(9772342216534838146u64),
                 "ent_index_killed",
             )?,
             ent_index_attacker: read_value::<u32>(
                 stream,
-                definition.get_entry("entindex_attacker"),
+                definition.get_entry(15130955426090253880u64),
                 "ent_index_attacker",
             )?,
             ent_index_inflictor: read_value::<u32>(
                 stream,
-                definition.get_entry("entindex_inflictor"),
+                definition.get_entry(12707416538007474931u64),
                 "ent_index_inflictor",
             )?,
             damage_bits: read_value::<u32>(
                 stream,
-                definition.get_entry("damagebits"),
+                definition.get_entry(2104626753992558984u64),
                 "damage_bits",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex_killed" => Ok(self.ent_index_killed.clone().into()),
-            "entindex_attacker" => Ok(self.ent_index_attacker.clone().into()),
-            "entindex_inflictor" => Ok(self.ent_index_inflictor.clone().into()),
-            "damagebits" => Ok(self.damage_bits.clone().into()),
+        match field.hash {
+            9772342216534838146u64 => Ok(self.ent_index_killed.clone().into()),
+            15130955426090253880u64 => Ok(self.ent_index_attacker.clone().into()),
+            12707416538007474931u64 => Ok(self.ent_index_inflictor.clone().into()),
+            2104626753992558984u64 => Ok(self.damage_bits.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EntityKilled",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2239,7 +2580,7 @@ impl EntityKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2260,25 +2601,37 @@ impl BonusUpdatedEvent {
         Ok(BonusUpdatedEvent {
             num_advanced: read_value::<u16>(
                 stream,
-                definition.get_entry("numadvanced"),
+                definition.get_entry(18281866615588036317u64),
                 "num_advanced",
             )?,
-            num_bronze: read_value::<u16>(stream, definition.get_entry("numbronze"), "num_bronze")?,
-            num_silver: read_value::<u16>(stream, definition.get_entry("numsilver"), "num_silver")?,
-            num_gold: read_value::<u16>(stream, definition.get_entry("numgold"), "num_gold")?,
+            num_bronze: read_value::<u16>(
+                stream,
+                definition.get_entry(17784477894966475211u64),
+                "num_bronze",
+            )?,
+            num_silver: read_value::<u16>(
+                stream,
+                definition.get_entry(654857209225446882u64),
+                "num_silver",
+            )?,
+            num_gold: read_value::<u16>(
+                stream,
+                definition.get_entry(4800941608394754913u64),
+                "num_gold",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "numadvanced" => Ok(self.num_advanced.clone().into()),
-            "numbronze" => Ok(self.num_bronze.clone().into()),
-            "numsilver" => Ok(self.num_silver.clone().into()),
-            "numgold" => Ok(self.num_gold.clone().into()),
+        match field.hash {
+            18281866615588036317u64 => Ok(self.num_advanced.clone().into()),
+            17784477894966475211u64 => Ok(self.num_bronze.clone().into()),
+            654857209225446882u64 => Ok(self.num_silver.clone().into()),
+            4800941608394754913u64 => Ok(self.num_gold.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "BonusUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2290,7 +2643,7 @@ impl BonusUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2310,23 +2663,31 @@ impl AchievementEventEvent {
         Ok(AchievementEventEvent {
             achievement_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("achievement_name"),
+                definition.get_entry(15691172238087995014u64),
                 "achievement_name",
             )?,
-            cur_val: read_value::<u16>(stream, definition.get_entry("cur_val"), "cur_val")?,
-            max_val: read_value::<u16>(stream, definition.get_entry("max_val"), "max_val")?,
+            cur_val: read_value::<u16>(
+                stream,
+                definition.get_entry(5486189633889604213u64),
+                "cur_val",
+            )?,
+            max_val: read_value::<u16>(
+                stream,
+                definition.get_entry(15860362688261047681u64),
+                "max_val",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "achievement_name" => Ok(self.achievement_name.clone().into()),
-            "cur_val" => Ok(self.cur_val.clone().into()),
-            "max_val" => Ok(self.max_val.clone().into()),
+        match field.hash {
+            15691172238087995014u64 => Ok(self.achievement_name.clone().into()),
+            5486189633889604213u64 => Ok(self.cur_val.clone().into()),
+            15860362688261047681u64 => Ok(self.max_val.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "AchievementEvent",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2338,7 +2699,7 @@ impl AchievementEventEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2358,23 +2719,31 @@ impl AchievementIncrementEvent {
         Ok(AchievementIncrementEvent {
             achievement_id: read_value::<u32>(
                 stream,
-                definition.get_entry("achievement_id"),
+                definition.get_entry(17475110908491474368u64),
                 "achievement_id",
             )?,
-            cur_val: read_value::<u16>(stream, definition.get_entry("cur_val"), "cur_val")?,
-            max_val: read_value::<u16>(stream, definition.get_entry("max_val"), "max_val")?,
+            cur_val: read_value::<u16>(
+                stream,
+                definition.get_entry(5486189633889604213u64),
+                "cur_val",
+            )?,
+            max_val: read_value::<u16>(
+                stream,
+                definition.get_entry(15860362688261047681u64),
+                "max_val",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "achievement_id" => Ok(self.achievement_id.clone().into()),
-            "cur_val" => Ok(self.cur_val.clone().into()),
-            "max_val" => Ok(self.max_val.clone().into()),
+        match field.hash {
+            17475110908491474368u64 => Ok(self.achievement_id.clone().into()),
+            5486189633889604213u64 => Ok(self.cur_val.clone().into()),
+            15860362688261047681u64 => Ok(self.max_val.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "AchievementIncrement",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2386,7 +2755,7 @@ impl AchievementIncrementEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2402,17 +2771,21 @@ impl PhysgunPickupEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PhysgunPickupEvent {
-            ent_index: read_value::<u32>(stream, definition.get_entry("entindex"), "ent_index")?,
+            ent_index: read_value::<u32>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PhysgunPickup",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2424,7 +2797,7 @@ impl PhysgunPickupEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2440,17 +2813,21 @@ impl FlareIgniteNpcEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(FlareIgniteNpcEvent {
-            ent_index: read_value::<u32>(stream, definition.get_entry("entindex"), "ent_index")?,
+            ent_index: read_value::<u32>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "FlareIgniteNpc",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2462,7 +2839,7 @@ impl FlareIgniteNpcEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2478,12 +2855,12 @@ impl HelicopterGrenadePuntMissEvent {
         Ok(HelicopterGrenadePuntMissEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HelicopterGrenadePuntMiss",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2495,7 +2872,7 @@ impl HelicopterGrenadePuntMissEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2511,12 +2888,12 @@ impl UserDataDownloadedEvent {
         Ok(UserDataDownloadedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "UserDataDownloaded",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2528,7 +2905,7 @@ impl UserDataDownloadedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2544,17 +2921,21 @@ impl RagdollDissolvedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RagdollDissolvedEvent {
-            ent_index: read_value::<u32>(stream, definition.get_entry("entindex"), "ent_index")?,
+            ent_index: read_value::<u32>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RagdollDissolved",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2566,7 +2947,7 @@ impl RagdollDissolvedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2584,25 +2965,33 @@ impl HLTVChangedModeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HLTVChangedModeEvent {
-            old_mode: read_value::<u16>(stream, definition.get_entry("oldmode"), "old_mode")?,
-            new_mode: read_value::<u16>(stream, definition.get_entry("newmode"), "new_mode")?,
+            old_mode: read_value::<u16>(
+                stream,
+                definition.get_entry(13993189934714533949u64),
+                "old_mode",
+            )?,
+            new_mode: read_value::<u16>(
+                stream,
+                definition.get_entry(874641438558876942u64),
+                "new_mode",
+            )?,
             obs_target: read_value::<u16>(
                 stream,
-                definition.get_entry("obs_target"),
+                definition.get_entry(14360750886734159999u64),
                 "obs_target",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "oldmode" => Ok(self.old_mode.clone().into()),
-            "newmode" => Ok(self.new_mode.clone().into()),
-            "obs_target" => Ok(self.obs_target.clone().into()),
+        match field.hash {
+            13993189934714533949u64 => Ok(self.old_mode.clone().into()),
+            874641438558876942u64 => Ok(self.new_mode.clone().into()),
+            14360750886734159999u64 => Ok(self.obs_target.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HLTVChangedMode",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2614,7 +3003,7 @@ impl HLTVChangedModeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2632,29 +3021,29 @@ impl HLTVChangedTargetEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HLTVChangedTargetEvent {
-            mode: read_value::<u16>(stream, definition.get_entry("mode"), "mode")?,
+            mode: read_value::<u16>(stream, definition.get_entry(954177780379921842u64), "mode")?,
             old_target: read_value::<u16>(
                 stream,
-                definition.get_entry("old_target"),
+                definition.get_entry(16423341895021030510u64),
                 "old_target",
             )?,
             obs_target: read_value::<u16>(
                 stream,
-                definition.get_entry("obs_target"),
+                definition.get_entry(14360750886734159999u64),
                 "obs_target",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "mode" => Ok(self.mode.clone().into()),
-            "old_target" => Ok(self.old_target.clone().into()),
-            "obs_target" => Ok(self.obs_target.clone().into()),
+        match field.hash {
+            954177780379921842u64 => Ok(self.mode.clone().into()),
+            16423341895021030510u64 => Ok(self.old_target.clone().into()),
+            14360750886734159999u64 => Ok(self.obs_target.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HLTVChangedTarget",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2666,7 +3055,7 @@ impl HLTVChangedTargetEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2682,12 +3071,12 @@ impl VoteEndedEvent {
         Ok(VoteEndedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "VoteEnded",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2699,7 +3088,7 @@ impl VoteEndedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2719,29 +3108,45 @@ impl VoteStartedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(VoteStartedEvent {
-            issue: read_value::<MaybeUtf8String>(stream, definition.get_entry("issue"), "issue")?,
+            issue: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(2041490703516169504u64),
+                "issue",
+            )?,
             param_1: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("param1"),
+                definition.get_entry(4990490691588242105u64),
                 "param_1",
             )?,
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
-            initiator: read_value::<u32>(stream, definition.get_entry("initiator"), "initiator")?,
-            voteidx: read_value::<u32>(stream, definition.get_entry("voteidx"), "voteidx")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            initiator: read_value::<u32>(
+                stream,
+                definition.get_entry(7196121162372295066u64),
+                "initiator",
+            )?,
+            voteidx: read_value::<u32>(
+                stream,
+                definition.get_entry(5777630607239142584u64),
+                "voteidx",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "issue" => Ok(self.issue.clone().into()),
-            "param1" => Ok(self.param_1.clone().into()),
-            "team" => Ok(self.team.clone().into()),
-            "initiator" => Ok(self.initiator.clone().into()),
-            "voteidx" => Ok(self.voteidx.clone().into()),
+        match field.hash {
+            2041490703516169504u64 => Ok(self.issue.clone().into()),
+            4990490691588242105u64 => Ok(self.param_1.clone().into()),
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            7196121162372295066u64 => Ok(self.initiator.clone().into()),
+            5777630607239142584u64 => Ok(self.voteidx.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "VoteStarted",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2753,7 +3158,7 @@ impl VoteStartedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2777,51 +3182,55 @@ impl VoteChangedEvent {
         Ok(VoteChangedEvent {
             vote_option_1: read_value::<u8>(
                 stream,
-                definition.get_entry("vote_option1"),
+                definition.get_entry(8259566198638570134u64),
                 "vote_option_1",
             )?,
             vote_option_2: read_value::<u8>(
                 stream,
-                definition.get_entry("vote_option2"),
+                definition.get_entry(8259565099126941923u64),
                 "vote_option_2",
             )?,
             vote_option_3: read_value::<u8>(
                 stream,
-                definition.get_entry("vote_option3"),
+                definition.get_entry(8259563999615313712u64),
                 "vote_option_3",
             )?,
             vote_option_4: read_value::<u8>(
                 stream,
-                definition.get_entry("vote_option4"),
+                definition.get_entry(8259571696196711189u64),
                 "vote_option_4",
             )?,
             vote_option_5: read_value::<u8>(
                 stream,
-                definition.get_entry("vote_option5"),
+                definition.get_entry(8259570596685082978u64),
                 "vote_option_5",
             )?,
             potential_votes: read_value::<u8>(
                 stream,
-                definition.get_entry("potentialVotes"),
+                definition.get_entry(18034020270891649474u64),
                 "potential_votes",
             )?,
-            voteidx: read_value::<u32>(stream, definition.get_entry("voteidx"), "voteidx")?,
+            voteidx: read_value::<u32>(
+                stream,
+                definition.get_entry(5777630607239142584u64),
+                "voteidx",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "vote_option1" => Ok(self.vote_option_1.clone().into()),
-            "vote_option2" => Ok(self.vote_option_2.clone().into()),
-            "vote_option3" => Ok(self.vote_option_3.clone().into()),
-            "vote_option4" => Ok(self.vote_option_4.clone().into()),
-            "vote_option5" => Ok(self.vote_option_5.clone().into()),
-            "potentialVotes" => Ok(self.potential_votes.clone().into()),
-            "voteidx" => Ok(self.voteidx.clone().into()),
+        match field.hash {
+            8259566198638570134u64 => Ok(self.vote_option_1.clone().into()),
+            8259565099126941923u64 => Ok(self.vote_option_2.clone().into()),
+            8259563999615313712u64 => Ok(self.vote_option_3.clone().into()),
+            8259571696196711189u64 => Ok(self.vote_option_4.clone().into()),
+            8259570596685082978u64 => Ok(self.vote_option_5.clone().into()),
+            18034020270891649474u64 => Ok(self.potential_votes.clone().into()),
+            5777630607239142584u64 => Ok(self.voteidx.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "VoteChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2833,7 +3242,7 @@ impl VoteChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2854,29 +3263,37 @@ impl VotePassedEvent {
         Ok(VotePassedEvent {
             details: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("details"),
+                definition.get_entry(13353550034922503269u64),
                 "details",
             )?,
             param_1: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("param1"),
+                definition.get_entry(4990490691588242105u64),
                 "param_1",
             )?,
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
-            voteidx: read_value::<u32>(stream, definition.get_entry("voteidx"), "voteidx")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            voteidx: read_value::<u32>(
+                stream,
+                definition.get_entry(5777630607239142584u64),
+                "voteidx",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "details" => Ok(self.details.clone().into()),
-            "param1" => Ok(self.param_1.clone().into()),
-            "team" => Ok(self.team.clone().into()),
-            "voteidx" => Ok(self.voteidx.clone().into()),
+        match field.hash {
+            13353550034922503269u64 => Ok(self.details.clone().into()),
+            4990490691588242105u64 => Ok(self.param_1.clone().into()),
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            5777630607239142584u64 => Ok(self.voteidx.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "VotePassed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2888,7 +3305,7 @@ impl VotePassedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2905,19 +3322,27 @@ impl VoteFailedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(VoteFailedEvent {
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
-            voteidx: read_value::<u32>(stream, definition.get_entry("voteidx"), "voteidx")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            voteidx: read_value::<u32>(
+                stream,
+                definition.get_entry(5777630607239142584u64),
+                "voteidx",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "team" => Ok(self.team.clone().into()),
-            "voteidx" => Ok(self.voteidx.clone().into()),
+        match field.hash {
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            5777630607239142584u64 => Ok(self.voteidx.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "VoteFailed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2929,7 +3354,7 @@ impl VoteFailedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2950,25 +3375,37 @@ impl VoteCastEvent {
         Ok(VoteCastEvent {
             vote_option: read_value::<u8>(
                 stream,
-                definition.get_entry("vote_option"),
+                definition.get_entry(17670279370117350435u64),
                 "vote_option",
             )?,
-            team: read_value::<u16>(stream, definition.get_entry("team"), "team")?,
-            entity_id: read_value::<u32>(stream, definition.get_entry("entityid"), "entity_id")?,
-            voteidx: read_value::<u32>(stream, definition.get_entry("voteidx"), "voteidx")?,
+            team: read_value::<u16>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            entity_id: read_value::<u32>(
+                stream,
+                definition.get_entry(2085882069322833143u64),
+                "entity_id",
+            )?,
+            voteidx: read_value::<u32>(
+                stream,
+                definition.get_entry(5777630607239142584u64),
+                "voteidx",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "vote_option" => Ok(self.vote_option.clone().into()),
-            "team" => Ok(self.team.clone().into()),
-            "entityid" => Ok(self.entity_id.clone().into()),
-            "voteidx" => Ok(self.voteidx.clone().into()),
+        match field.hash {
+            17670279370117350435u64 => Ok(self.vote_option.clone().into()),
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            2085882069322833143u64 => Ok(self.entity_id.clone().into()),
+            5777630607239142584u64 => Ok(self.voteidx.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "VoteCast",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -2980,7 +3417,7 @@ impl VoteCastEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3002,49 +3439,57 @@ impl VoteOptionsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(VoteOptionsEvent {
-            count: read_value::<u8>(stream, definition.get_entry("count"), "count")?,
+            count: read_value::<u8>(
+                stream,
+                definition.get_entry(12818901015042040436u64),
+                "count",
+            )?,
             option_1: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("option1"),
+                definition.get_entry(14575392658851491999u64),
                 "option_1",
             )?,
             option_2: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("option2"),
+                definition.get_entry(14575393758363120210u64),
                 "option_2",
             )?,
             option_3: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("option3"),
+                definition.get_entry(14575394857874748421u64),
                 "option_3",
             )?,
             option_4: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("option4"),
+                definition.get_entry(14575387161293350944u64),
                 "option_4",
             )?,
             option_5: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("option5"),
+                definition.get_entry(14575388260804979155u64),
                 "option_5",
             )?,
-            voteidx: read_value::<u32>(stream, definition.get_entry("voteidx"), "voteidx")?,
+            voteidx: read_value::<u32>(
+                stream,
+                definition.get_entry(5777630607239142584u64),
+                "voteidx",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "count" => Ok(self.count.clone().into()),
-            "option1" => Ok(self.option_1.clone().into()),
-            "option2" => Ok(self.option_2.clone().into()),
-            "option3" => Ok(self.option_3.clone().into()),
-            "option4" => Ok(self.option_4.clone().into()),
-            "option5" => Ok(self.option_5.clone().into()),
-            "voteidx" => Ok(self.voteidx.clone().into()),
+        match field.hash {
+            12818901015042040436u64 => Ok(self.count.clone().into()),
+            14575392658851491999u64 => Ok(self.option_1.clone().into()),
+            14575393758363120210u64 => Ok(self.option_2.clone().into()),
+            14575394857874748421u64 => Ok(self.option_3.clone().into()),
+            14575387161293350944u64 => Ok(self.option_4.clone().into()),
+            14575388260804979155u64 => Ok(self.option_5.clone().into()),
+            5777630607239142584u64 => Ok(self.voteidx.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "VoteOptions",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3056,7 +3501,7 @@ impl VoteOptionsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3072,12 +3517,12 @@ impl ReplaySavedEvent {
         Ok(ReplaySavedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ReplaySaved",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3089,7 +3534,7 @@ impl ReplaySavedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3105,12 +3550,12 @@ impl EnteredPerformanceModeEvent {
         Ok(EnteredPerformanceModeEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EnteredPerformanceMode",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3122,7 +3567,7 @@ impl EnteredPerformanceModeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3138,12 +3583,12 @@ impl BrowseReplaysEvent {
         Ok(BrowseReplaysEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "BrowseReplays",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3155,7 +3600,7 @@ impl BrowseReplaysEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3173,21 +3618,33 @@ impl ReplayYoutubeStatsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ReplayYoutubeStatsEvent {
-            views: read_value::<u32>(stream, definition.get_entry("views"), "views")?,
-            likes: read_value::<u32>(stream, definition.get_entry("likes"), "likes")?,
-            favorited: read_value::<u32>(stream, definition.get_entry("favorited"), "favorited")?,
+            views: read_value::<u32>(
+                stream,
+                definition.get_entry(14625097093024684817u64),
+                "views",
+            )?,
+            likes: read_value::<u32>(
+                stream,
+                definition.get_entry(9804554822404214111u64),
+                "likes",
+            )?,
+            favorited: read_value::<u32>(
+                stream,
+                definition.get_entry(2653817720246189003u64),
+                "favorited",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "views" => Ok(self.views.clone().into()),
-            "likes" => Ok(self.likes.clone().into()),
-            "favorited" => Ok(self.favorited.clone().into()),
+        match field.hash {
+            14625097093024684817u64 => Ok(self.views.clone().into()),
+            9804554822404214111u64 => Ok(self.likes.clone().into()),
+            2653817720246189003u64 => Ok(self.favorited.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ReplayYoutubeStats",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3199,7 +3656,7 @@ impl ReplayYoutubeStatsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3215,12 +3672,12 @@ impl InventoryUpdatedEvent {
         Ok(InventoryUpdatedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "InventoryUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3232,7 +3689,7 @@ impl InventoryUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3248,12 +3705,12 @@ impl CartUpdatedEvent {
         Ok(CartUpdatedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "CartUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3265,7 +3722,7 @@ impl CartUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3281,12 +3738,12 @@ impl StorePriceSheetUpdatedEvent {
         Ok(StorePriceSheetUpdatedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "StorePriceSheetUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3298,7 +3755,7 @@ impl StorePriceSheetUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3314,12 +3771,12 @@ impl EconInventoryConnectedEvent {
         Ok(EconInventoryConnectedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EconInventoryConnected",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3331,7 +3788,7 @@ impl EconInventoryConnectedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3347,12 +3804,12 @@ impl ItemSchemaInitializedEvent {
         Ok(ItemSchemaInitializedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ItemSchemaInitialized",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3364,7 +3821,7 @@ impl ItemSchemaInitializedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3380,12 +3837,12 @@ impl GcNewSessionEvent {
         Ok(GcNewSessionEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "GcNewSession",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3397,7 +3854,7 @@ impl GcNewSessionEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3413,12 +3870,12 @@ impl GcLostSessionEvent {
         Ok(GcLostSessionEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "GcLostSession",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3430,7 +3887,7 @@ impl GcLostSessionEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3446,17 +3903,21 @@ impl IntroFinishEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(IntroFinishEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "IntroFinish",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3468,7 +3929,7 @@ impl IntroFinishEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3484,17 +3945,21 @@ impl IntroNextCameraEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(IntroNextCameraEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "IntroNextCamera",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3506,7 +3971,7 @@ impl IntroNextCameraEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3523,19 +3988,27 @@ impl PlayerChangeClassEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerChangeClassEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            class: read_value::<u16>(stream, definition.get_entry("class"), "class")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            class: read_value::<u16>(
+                stream,
+                definition.get_entry(15066323702654938015u64),
+                "class",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "class" => Ok(self.class.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            15066323702654938015u64 => Ok(self.class.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerChangeClass",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3547,7 +4020,7 @@ impl PlayerChangeClassEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3563,17 +4036,21 @@ impl TfMapTimeRemainingEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TfMapTimeRemainingEvent {
-            seconds: read_value::<u32>(stream, definition.get_entry("seconds"), "seconds")?,
+            seconds: read_value::<u32>(
+                stream,
+                definition.get_entry(11456985514702388746u64),
+                "seconds",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "seconds" => Ok(self.seconds.clone().into()),
+        match field.hash {
+            11456985514702388746u64 => Ok(self.seconds.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TfMapTimeRemaining",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3585,7 +4062,7 @@ impl TfMapTimeRemainingEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3603,19 +4080,19 @@ impl TfGameOverEvent {
         Ok(TfGameOverEvent {
             reason: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("reason"),
+                definition.get_entry(7343356632300987961u64),
                 "reason",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "reason" => Ok(self.reason.clone().into()),
+        match field.hash {
+            7343356632300987961u64 => Ok(self.reason.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TfGameOver",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3627,7 +4104,7 @@ impl TfGameOverEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3646,25 +4123,25 @@ impl CtfFlagCapturedEvent {
         Ok(CtfFlagCapturedEvent {
             capping_team: read_value::<u16>(
                 stream,
-                definition.get_entry("capping_team"),
+                definition.get_entry(14568126206963925545u64),
                 "capping_team",
             )?,
             capping_team_score: read_value::<u16>(
                 stream,
-                definition.get_entry("capping_team_score"),
+                definition.get_entry(4559517251391003144u64),
                 "capping_team_score",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "capping_team" => Ok(self.capping_team.clone().into()),
-            "capping_team_score" => Ok(self.capping_team_score.clone().into()),
+        match field.hash {
+            14568126206963925545u64 => Ok(self.capping_team.clone().into()),
+            4559517251391003144u64 => Ok(self.capping_team_score.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "CtfFlagCaptured",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3676,7 +4153,7 @@ impl CtfFlagCapturedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3692,12 +4169,12 @@ impl ControlPointInitializedEvent {
         Ok(ControlPointInitializedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ControlPointInitialized",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3709,7 +4186,7 @@ impl ControlPointInitializedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3725,17 +4202,21 @@ impl ControlPointUpdateImagesEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ControlPointUpdateImagesEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ControlPointUpdateImages",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3747,7 +4228,7 @@ impl ControlPointUpdateImagesEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3763,17 +4244,21 @@ impl ControlPointUpdateLayoutEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ControlPointUpdateLayoutEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ControlPointUpdateLayout",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3785,7 +4270,7 @@ impl ControlPointUpdateLayoutEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3801,17 +4286,21 @@ impl ControlPointUpdateCappingEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ControlPointUpdateCappingEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ControlPointUpdateCapping",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3823,7 +4312,7 @@ impl ControlPointUpdateCappingEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3839,17 +4328,21 @@ impl ControlPointUpdateOwnerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ControlPointUpdateOwnerEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ControlPointUpdateOwner",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3861,7 +4354,7 @@ impl ControlPointUpdateOwnerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3878,19 +4371,23 @@ impl ControlPointStartTouchEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ControlPointStartTouchEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
-            area: read_value::<u16>(stream, definition.get_entry("area"), "area")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            area: read_value::<u16>(stream, definition.get_entry(9894459526856489156u64), "area")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "area" => Ok(self.area.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            9894459526856489156u64 => Ok(self.area.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ControlPointStartTouch",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3902,7 +4399,7 @@ impl ControlPointStartTouchEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3919,19 +4416,23 @@ impl ControlPointEndTouchEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ControlPointEndTouchEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
-            area: read_value::<u16>(stream, definition.get_entry("area"), "area")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            area: read_value::<u16>(stream, definition.get_entry(9894459526856489156u64), "area")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "area" => Ok(self.area.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            9894459526856489156u64 => Ok(self.area.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ControlPointEndTouch",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3943,7 +4444,7 @@ impl ControlPointEndTouchEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3959,17 +4460,21 @@ impl ControlPointPulseElementEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ControlPointPulseElementEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ControlPointPulseElement",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -3981,7 +4486,7 @@ impl ControlPointPulseElementEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3998,19 +4503,27 @@ impl ControlPointFakeCaptureEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ControlPointFakeCaptureEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
-            int_data: read_value::<u16>(stream, definition.get_entry("int_data"), "int_data")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            int_data: read_value::<u16>(
+                stream,
+                definition.get_entry(17655270944800390939u64),
+                "int_data",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "int_data" => Ok(self.int_data.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            17655270944800390939u64 => Ok(self.int_data.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ControlPointFakeCapture",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4022,7 +4535,7 @@ impl ControlPointFakeCaptureEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4039,19 +4552,27 @@ impl ControlPointFakeCaptureMultiplierEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ControlPointFakeCaptureMultiplierEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
-            int_data: read_value::<u16>(stream, definition.get_entry("int_data"), "int_data")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            int_data: read_value::<u16>(
+                stream,
+                definition.get_entry(17655270944800390939u64),
+                "int_data",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "int_data" => Ok(self.int_data.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            17655270944800390939u64 => Ok(self.int_data.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ControlPointFakeCaptureMultiplier",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4063,7 +4584,7 @@ impl ControlPointFakeCaptureMultiplierEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4079,17 +4600,21 @@ impl TeamPlayRoundSelectedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayRoundSelectedEvent {
-            round: read_value::<MaybeUtf8String>(stream, definition.get_entry("round"), "round")?,
+            round: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(3536478298987656219u64),
+                "round",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "round" => Ok(self.round.clone().into()),
+        match field.hash {
+            3536478298987656219u64 => Ok(self.round.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayRoundSelected",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4101,7 +4626,7 @@ impl TeamPlayRoundSelectedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4119,19 +4644,19 @@ impl TeamPlayRoundStartEvent {
         Ok(TeamPlayRoundStartEvent {
             full_reset: read_value::<bool>(
                 stream,
-                definition.get_entry("full_reset"),
+                definition.get_entry(5520647792095461940u64),
                 "full_reset",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "full_reset" => Ok(self.full_reset.clone().into()),
+        match field.hash {
+            5520647792095461940u64 => Ok(self.full_reset.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayRoundStart",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4143,7 +4668,7 @@ impl TeamPlayRoundStartEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4159,12 +4684,12 @@ impl TeamPlayRoundActiveEvent {
         Ok(TeamPlayRoundActiveEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayRoundActive",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4176,7 +4701,7 @@ impl TeamPlayRoundActiveEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4192,12 +4717,12 @@ impl TeamPlayWaitingBeginsEvent {
         Ok(TeamPlayWaitingBeginsEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayWaitingBegins",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4209,7 +4734,7 @@ impl TeamPlayWaitingBeginsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4225,12 +4750,12 @@ impl TeamPlayWaitingEndsEvent {
         Ok(TeamPlayWaitingEndsEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayWaitingEnds",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4242,7 +4767,7 @@ impl TeamPlayWaitingEndsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4258,12 +4783,12 @@ impl TeamPlayWaitingAboutToEndEvent {
         Ok(TeamPlayWaitingAboutToEndEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayWaitingAboutToEnd",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4275,7 +4800,7 @@ impl TeamPlayWaitingAboutToEndEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4291,12 +4816,12 @@ impl TeamPlayRestartRoundEvent {
         Ok(TeamPlayRestartRoundEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayRestartRound",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4308,7 +4833,7 @@ impl TeamPlayRestartRoundEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4324,12 +4849,12 @@ impl TeamPlayReadyRestartEvent {
         Ok(TeamPlayReadyRestartEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayReadyRestart",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4341,7 +4866,7 @@ impl TeamPlayReadyRestartEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4357,17 +4882,21 @@ impl TeamPlayRoundRestartSecondsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayRoundRestartSecondsEvent {
-            seconds: read_value::<u16>(stream, definition.get_entry("seconds"), "seconds")?,
+            seconds: read_value::<u16>(
+                stream,
+                definition.get_entry(11456985514702388746u64),
+                "seconds",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "seconds" => Ok(self.seconds.clone().into()),
+        match field.hash {
+            11456985514702388746u64 => Ok(self.seconds.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayRoundRestartSeconds",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4379,7 +4908,7 @@ impl TeamPlayRoundRestartSecondsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4395,17 +4924,21 @@ impl TeamPlayTeamReadyEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayTeamReadyEvent {
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "team" => Ok(self.team.clone().into()),
+        match field.hash {
+            18024489754618217260u64 => Ok(self.team.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayTeamReady",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4417,7 +4950,7 @@ impl TeamPlayTeamReadyEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4439,49 +4972,57 @@ impl TeamPlayRoundWinEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayRoundWinEvent {
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
-            win_reason: read_value::<u8>(stream, definition.get_entry("winreason"), "win_reason")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            win_reason: read_value::<u8>(
+                stream,
+                definition.get_entry(3803421146477351589u64),
+                "win_reason",
+            )?,
             flag_cap_limit: read_value::<u16>(
                 stream,
-                definition.get_entry("flagcaplimit"),
+                definition.get_entry(8774624256288798788u64),
                 "flag_cap_limit",
             )?,
             full_round: read_value::<u16>(
                 stream,
-                definition.get_entry("full_round"),
+                definition.get_entry(11360866888973275703u64),
                 "full_round",
             )?,
             round_time: read_value::<f32>(
                 stream,
-                definition.get_entry("round_time"),
+                definition.get_entry(17889722153966279533u64),
                 "round_time",
             )?,
             losing_team_num_caps: read_value::<u16>(
                 stream,
-                definition.get_entry("losing_team_num_caps"),
+                definition.get_entry(1136537408317314454u64),
                 "losing_team_num_caps",
             )?,
             was_sudden_death: read_value::<u8>(
                 stream,
-                definition.get_entry("was_sudden_death"),
+                definition.get_entry(16618607837222165313u64),
                 "was_sudden_death",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "team" => Ok(self.team.clone().into()),
-            "winreason" => Ok(self.win_reason.clone().into()),
-            "flagcaplimit" => Ok(self.flag_cap_limit.clone().into()),
-            "full_round" => Ok(self.full_round.clone().into()),
-            "round_time" => Ok(self.round_time.clone().into()),
-            "losing_team_num_caps" => Ok(self.losing_team_num_caps.clone().into()),
-            "was_sudden_death" => Ok(self.was_sudden_death.clone().into()),
+        match field.hash {
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            3803421146477351589u64 => Ok(self.win_reason.clone().into()),
+            8774624256288798788u64 => Ok(self.flag_cap_limit.clone().into()),
+            11360866888973275703u64 => Ok(self.full_round.clone().into()),
+            17889722153966279533u64 => Ok(self.round_time.clone().into()),
+            1136537408317314454u64 => Ok(self.losing_team_num_caps.clone().into()),
+            16618607837222165313u64 => Ok(self.was_sudden_death.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayRoundWin",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4493,7 +5034,7 @@ impl TeamPlayRoundWinEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4509,12 +5050,12 @@ impl TeamPlayUpdateTimerEvent {
         Ok(TeamPlayUpdateTimerEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayUpdateTimer",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4526,7 +5067,7 @@ impl TeamPlayUpdateTimerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4542,17 +5083,21 @@ impl TeamPlayRoundStalemateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayRoundStalemateEvent {
-            reason: read_value::<u8>(stream, definition.get_entry("reason"), "reason")?,
+            reason: read_value::<u8>(
+                stream,
+                definition.get_entry(7343356632300987961u64),
+                "reason",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "reason" => Ok(self.reason.clone().into()),
+        match field.hash {
+            7343356632300987961u64 => Ok(self.reason.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayRoundStalemate",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4564,7 +5109,7 @@ impl TeamPlayRoundStalemateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4580,12 +5125,12 @@ impl TeamPlayOvertimeBeginEvent {
         Ok(TeamPlayOvertimeBeginEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayOvertimeBegin",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4597,7 +5142,7 @@ impl TeamPlayOvertimeBeginEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4613,12 +5158,12 @@ impl TeamPlayOvertimeEndEvent {
         Ok(TeamPlayOvertimeEndEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayOvertimeEnd",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4630,7 +5175,7 @@ impl TeamPlayOvertimeEndEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4646,12 +5191,12 @@ impl TeamPlaySuddenDeathBeginEvent {
         Ok(TeamPlaySuddenDeathBeginEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlaySuddenDeathBegin",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4663,7 +5208,7 @@ impl TeamPlaySuddenDeathBeginEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4679,12 +5224,12 @@ impl TeamPlaySuddenDeathEndEvent {
         Ok(TeamPlaySuddenDeathEndEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlaySuddenDeathEnd",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4696,7 +5241,7 @@ impl TeamPlaySuddenDeathEndEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4714,19 +5259,19 @@ impl TeamPlayGameOverEvent {
         Ok(TeamPlayGameOverEvent {
             reason: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("reason"),
+                definition.get_entry(7343356632300987961u64),
                 "reason",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "reason" => Ok(self.reason.clone().into()),
+        match field.hash {
+            7343356632300987961u64 => Ok(self.reason.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayGameOver",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4738,7 +5283,7 @@ impl TeamPlayGameOverEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4754,17 +5299,21 @@ impl TeamPlayMapTimeRemainingEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayMapTimeRemainingEvent {
-            seconds: read_value::<u16>(stream, definition.get_entry("seconds"), "seconds")?,
+            seconds: read_value::<u16>(
+                stream,
+                definition.get_entry(11456985514702388746u64),
+                "seconds",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "seconds" => Ok(self.seconds.clone().into()),
+        match field.hash {
+            11456985514702388746u64 => Ok(self.seconds.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayMapTimeRemaining",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4776,7 +5325,7 @@ impl TeamPlayMapTimeRemainingEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4794,19 +5343,19 @@ impl TeamPlayTimerFlashEvent {
         Ok(TeamPlayTimerFlashEvent {
             time_remaining: read_value::<u16>(
                 stream,
-                definition.get_entry("time_remaining"),
+                definition.get_entry(4322130481848759231u64),
                 "time_remaining",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "time_remaining" => Ok(self.time_remaining.clone().into()),
+        match field.hash {
+            4322130481848759231u64 => Ok(self.time_remaining.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayTimerFlash",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4818,7 +5367,7 @@ impl TeamPlayTimerFlashEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4835,23 +5384,27 @@ impl TeamPlayTimerTimeAddedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayTimerTimeAddedEvent {
-            timer: read_value::<u16>(stream, definition.get_entry("timer"), "timer")?,
+            timer: read_value::<u16>(
+                stream,
+                definition.get_entry(2968869876298967810u64),
+                "timer",
+            )?,
             seconds_added: read_value::<u16>(
                 stream,
-                definition.get_entry("seconds_added"),
+                definition.get_entry(5796598285704248091u64),
                 "seconds_added",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "timer" => Ok(self.timer.clone().into()),
-            "seconds_added" => Ok(self.seconds_added.clone().into()),
+        match field.hash {
+            2968869876298967810u64 => Ok(self.timer.clone().into()),
+            5796598285704248091u64 => Ok(self.seconds_added.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayTimerTimeAdded",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4863,7 +5416,7 @@ impl TeamPlayTimerTimeAddedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4884,35 +5437,47 @@ impl TeamPlayPointStartCaptureEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayPointStartCaptureEvent {
-            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
+            cp: read_value::<u8>(stream, definition.get_entry(622127901357767142u64), "cp")?,
             cp_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("cpname"),
+                definition.get_entry(5054899044858273797u64),
                 "cp_name",
             )?,
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
-            cap_team: read_value::<u8>(stream, definition.get_entry("capteam"), "cap_team")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            cap_team: read_value::<u8>(
+                stream,
+                definition.get_entry(9316766665943420626u64),
+                "cap_team",
+            )?,
             cappers: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("cappers"),
+                definition.get_entry(11245576010855792123u64),
                 "cappers",
             )?,
-            cap_time: read_value::<f32>(stream, definition.get_entry("captime"), "cap_time")?,
+            cap_time: read_value::<f32>(
+                stream,
+                definition.get_entry(6747273962184890386u64),
+                "cap_time",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "cp" => Ok(self.cp.clone().into()),
-            "cpname" => Ok(self.cp_name.clone().into()),
-            "team" => Ok(self.team.clone().into()),
-            "capteam" => Ok(self.cap_team.clone().into()),
-            "cappers" => Ok(self.cappers.clone().into()),
-            "captime" => Ok(self.cap_time.clone().into()),
+        match field.hash {
+            622127901357767142u64 => Ok(self.cp.clone().into()),
+            5054899044858273797u64 => Ok(self.cp_name.clone().into()),
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            9316766665943420626u64 => Ok(self.cap_team.clone().into()),
+            11245576010855792123u64 => Ok(self.cappers.clone().into()),
+            6747273962184890386u64 => Ok(self.cap_time.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayPointStartCapture",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4924,7 +5489,7 @@ impl TeamPlayPointStartCaptureEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4943,31 +5508,35 @@ impl TeamPlayPointCapturedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayPointCapturedEvent {
-            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
+            cp: read_value::<u8>(stream, definition.get_entry(622127901357767142u64), "cp")?,
             cp_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("cpname"),
+                definition.get_entry(5054899044858273797u64),
                 "cp_name",
             )?,
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
             cappers: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("cappers"),
+                definition.get_entry(11245576010855792123u64),
                 "cappers",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "cp" => Ok(self.cp.clone().into()),
-            "cpname" => Ok(self.cp_name.clone().into()),
-            "team" => Ok(self.team.clone().into()),
-            "cappers" => Ok(self.cappers.clone().into()),
+        match field.hash {
+            622127901357767142u64 => Ok(self.cp.clone().into()),
+            5054899044858273797u64 => Ok(self.cp_name.clone().into()),
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            11245576010855792123u64 => Ok(self.cappers.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayPointCaptured",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -4979,7 +5548,7 @@ impl TeamPlayPointCapturedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4997,25 +5566,29 @@ impl TeamPlayPointLockedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayPointLockedEvent {
-            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
+            cp: read_value::<u8>(stream, definition.get_entry(622127901357767142u64), "cp")?,
             cp_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("cpname"),
+                definition.get_entry(5054899044858273797u64),
                 "cp_name",
             )?,
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "cp" => Ok(self.cp.clone().into()),
-            "cpname" => Ok(self.cp_name.clone().into()),
-            "team" => Ok(self.team.clone().into()),
+        match field.hash {
+            622127901357767142u64 => Ok(self.cp.clone().into()),
+            5054899044858273797u64 => Ok(self.cp_name.clone().into()),
+            18024489754618217260u64 => Ok(self.team.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayPointLocked",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5027,7 +5600,7 @@ impl TeamPlayPointLockedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5045,25 +5618,29 @@ impl TeamPlayPointUnlockedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayPointUnlockedEvent {
-            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
+            cp: read_value::<u8>(stream, definition.get_entry(622127901357767142u64), "cp")?,
             cp_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("cpname"),
+                definition.get_entry(5054899044858273797u64),
                 "cp_name",
             )?,
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "cp" => Ok(self.cp.clone().into()),
-            "cpname" => Ok(self.cp_name.clone().into()),
-            "team" => Ok(self.team.clone().into()),
+        match field.hash {
+            622127901357767142u64 => Ok(self.cp.clone().into()),
+            5054899044858273797u64 => Ok(self.cp_name.clone().into()),
+            18024489754618217260u64 => Ok(self.team.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayPointUnlocked",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5075,7 +5652,7 @@ impl TeamPlayPointUnlockedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5093,29 +5670,29 @@ impl TeamPlayCaptureBrokenEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayCaptureBrokenEvent {
-            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
+            cp: read_value::<u8>(stream, definition.get_entry(622127901357767142u64), "cp")?,
             cp_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("cpname"),
+                definition.get_entry(5054899044858273797u64),
                 "cp_name",
             )?,
             time_remaining: read_value::<f32>(
                 stream,
-                definition.get_entry("time_remaining"),
+                definition.get_entry(4322130481848759231u64),
                 "time_remaining",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "cp" => Ok(self.cp.clone().into()),
-            "cpname" => Ok(self.cp_name.clone().into()),
-            "time_remaining" => Ok(self.time_remaining.clone().into()),
+        match field.hash {
+            622127901357767142u64 => Ok(self.cp.clone().into()),
+            5054899044858273797u64 => Ok(self.cp_name.clone().into()),
+            4322130481848759231u64 => Ok(self.time_remaining.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayCaptureBroken",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5127,7 +5704,7 @@ impl TeamPlayCaptureBrokenEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5146,27 +5723,35 @@ impl TeamPlayCaptureBlockedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayCaptureBlockedEvent {
-            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
+            cp: read_value::<u8>(stream, definition.get_entry(622127901357767142u64), "cp")?,
             cp_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("cpname"),
+                definition.get_entry(5054899044858273797u64),
                 "cp_name",
             )?,
-            blocker: read_value::<u8>(stream, definition.get_entry("blocker"), "blocker")?,
-            victim: read_value::<u8>(stream, definition.get_entry("victim"), "victim")?,
+            blocker: read_value::<u8>(
+                stream,
+                definition.get_entry(9150196623075249301u64),
+                "blocker",
+            )?,
+            victim: read_value::<u8>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "cp" => Ok(self.cp.clone().into()),
-            "cpname" => Ok(self.cp_name.clone().into()),
-            "blocker" => Ok(self.blocker.clone().into()),
-            "victim" => Ok(self.victim.clone().into()),
+        match field.hash {
+            622127901357767142u64 => Ok(self.cp.clone().into()),
+            5054899044858273797u64 => Ok(self.cp_name.clone().into()),
+            9150196623075249301u64 => Ok(self.blocker.clone().into()),
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayCaptureBlocked",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5178,7 +5763,7 @@ impl TeamPlayCaptureBlockedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5198,25 +5783,41 @@ impl TeamPlayFlagEventEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayFlagEventEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
-            carrier: read_value::<u16>(stream, definition.get_entry("carrier"), "carrier")?,
-            event_type: read_value::<u16>(stream, definition.get_entry("eventtype"), "event_type")?,
-            home: read_value::<u8>(stream, definition.get_entry("home"), "home")?,
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            carrier: read_value::<u16>(
+                stream,
+                definition.get_entry(6986802915220291447u64),
+                "carrier",
+            )?,
+            event_type: read_value::<u16>(
+                stream,
+                definition.get_entry(5234087001556401511u64),
+                "event_type",
+            )?,
+            home: read_value::<u8>(stream, definition.get_entry(4624382957487889774u64), "home")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "carrier" => Ok(self.carrier.clone().into()),
-            "eventtype" => Ok(self.event_type.clone().into()),
-            "home" => Ok(self.home.clone().into()),
-            "team" => Ok(self.team.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            6986802915220291447u64 => Ok(self.carrier.clone().into()),
+            5234087001556401511u64 => Ok(self.event_type.clone().into()),
+            4624382957487889774u64 => Ok(self.home.clone().into()),
+            18024489754618217260u64 => Ok(self.team.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayFlagEvent",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5228,7 +5829,7 @@ impl TeamPlayFlagEventEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5265,109 +5866,133 @@ impl TeamPlayWinPanelEvent {
         Ok(TeamPlayWinPanelEvent {
             panel_style: read_value::<u8>(
                 stream,
-                definition.get_entry("panel_style"),
+                definition.get_entry(3076948889484157827u64),
                 "panel_style",
             )?,
             winning_team: read_value::<u8>(
                 stream,
-                definition.get_entry("winning_team"),
+                definition.get_entry(12760025138952247085u64),
                 "winning_team",
             )?,
-            win_reason: read_value::<u8>(stream, definition.get_entry("winreason"), "win_reason")?,
+            win_reason: read_value::<u8>(
+                stream,
+                definition.get_entry(3803421146477351589u64),
+                "win_reason",
+            )?,
             cappers: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("cappers"),
+                definition.get_entry(11245576010855792123u64),
                 "cappers",
             )?,
             flag_cap_limit: read_value::<u16>(
                 stream,
-                definition.get_entry("flagcaplimit"),
+                definition.get_entry(8774624256288798788u64),
                 "flag_cap_limit",
             )?,
             blue_score: read_value::<u16>(
                 stream,
-                definition.get_entry("blue_score"),
+                definition.get_entry(12881173953286901124u64),
                 "blue_score",
             )?,
-            red_score: read_value::<u16>(stream, definition.get_entry("red_score"), "red_score")?,
+            red_score: read_value::<u16>(
+                stream,
+                definition.get_entry(1115892277897790273u64),
+                "red_score",
+            )?,
             blue_score_prev: read_value::<u16>(
                 stream,
-                definition.get_entry("blue_score_prev"),
+                definition.get_entry(12382344057664863052u64),
                 "blue_score_prev",
             )?,
             red_score_prev: read_value::<u16>(
                 stream,
-                definition.get_entry("red_score_prev"),
+                definition.get_entry(9684982604781518527u64),
                 "red_score_prev",
             )?,
             round_complete: read_value::<u16>(
                 stream,
-                definition.get_entry("round_complete"),
+                definition.get_entry(12165785943437780003u64),
                 "round_complete",
             )?,
             rounds_remaining: read_value::<u16>(
                 stream,
-                definition.get_entry("rounds_remaining"),
+                definition.get_entry(10434023640517397027u64),
                 "rounds_remaining",
             )?,
-            player_1: read_value::<u16>(stream, definition.get_entry("player_1"), "player_1")?,
+            player_1: read_value::<u16>(
+                stream,
+                definition.get_entry(2316304829487618708u64),
+                "player_1",
+            )?,
             player_1_points: read_value::<u16>(
                 stream,
-                definition.get_entry("player_1_points"),
+                definition.get_entry(5201979123115161946u64),
                 "player_1_points",
             )?,
-            player_2: read_value::<u16>(stream, definition.get_entry("player_2"), "player_2")?,
+            player_2: read_value::<u16>(
+                stream,
+                definition.get_entry(2316308128022503341u64),
+                "player_2",
+            )?,
             player_2_points: read_value::<u16>(
                 stream,
-                definition.get_entry("player_2_points"),
+                definition.get_entry(17826909355416759905u64),
                 "player_2_points",
             )?,
-            player_3: read_value::<u16>(stream, definition.get_entry("player_3"), "player_3")?,
+            player_3: read_value::<u16>(
+                stream,
+                definition.get_entry(2316307028510875130u64),
+                "player_3",
+            )?,
             player_3_points: read_value::<u16>(
                 stream,
-                definition.get_entry("player_3_points"),
+                definition.get_entry(3496125461192453068u64),
                 "player_3_points",
             )?,
             kill_stream_player_1: read_value::<u16>(
                 stream,
-                definition.get_entry("killstreak_player_1"),
+                definition.get_entry(5168633764732789397u64),
                 "kill_stream_player_1",
             )?,
             kill_stream_player_1_count: read_value::<u16>(
                 stream,
-                definition.get_entry("killstreak_player_1_count"),
+                definition.get_entry(15596392604614003293u64),
                 "kill_stream_player_1_count",
             )?,
-            game_over: read_value::<u8>(stream, definition.get_entry("game_over"), "game_over")?,
+            game_over: read_value::<u8>(
+                stream,
+                definition.get_entry(17040732377939006530u64),
+                "game_over",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "panel_style" => Ok(self.panel_style.clone().into()),
-            "winning_team" => Ok(self.winning_team.clone().into()),
-            "winreason" => Ok(self.win_reason.clone().into()),
-            "cappers" => Ok(self.cappers.clone().into()),
-            "flagcaplimit" => Ok(self.flag_cap_limit.clone().into()),
-            "blue_score" => Ok(self.blue_score.clone().into()),
-            "red_score" => Ok(self.red_score.clone().into()),
-            "blue_score_prev" => Ok(self.blue_score_prev.clone().into()),
-            "red_score_prev" => Ok(self.red_score_prev.clone().into()),
-            "round_complete" => Ok(self.round_complete.clone().into()),
-            "rounds_remaining" => Ok(self.rounds_remaining.clone().into()),
-            "player_1" => Ok(self.player_1.clone().into()),
-            "player_1_points" => Ok(self.player_1_points.clone().into()),
-            "player_2" => Ok(self.player_2.clone().into()),
-            "player_2_points" => Ok(self.player_2_points.clone().into()),
-            "player_3" => Ok(self.player_3.clone().into()),
-            "player_3_points" => Ok(self.player_3_points.clone().into()),
-            "killstreak_player_1" => Ok(self.kill_stream_player_1.clone().into()),
-            "killstreak_player_1_count" => Ok(self.kill_stream_player_1_count.clone().into()),
-            "game_over" => Ok(self.game_over.clone().into()),
+        match field.hash {
+            3076948889484157827u64 => Ok(self.panel_style.clone().into()),
+            12760025138952247085u64 => Ok(self.winning_team.clone().into()),
+            3803421146477351589u64 => Ok(self.win_reason.clone().into()),
+            11245576010855792123u64 => Ok(self.cappers.clone().into()),
+            8774624256288798788u64 => Ok(self.flag_cap_limit.clone().into()),
+            12881173953286901124u64 => Ok(self.blue_score.clone().into()),
+            1115892277897790273u64 => Ok(self.red_score.clone().into()),
+            12382344057664863052u64 => Ok(self.blue_score_prev.clone().into()),
+            9684982604781518527u64 => Ok(self.red_score_prev.clone().into()),
+            12165785943437780003u64 => Ok(self.round_complete.clone().into()),
+            10434023640517397027u64 => Ok(self.rounds_remaining.clone().into()),
+            2316304829487618708u64 => Ok(self.player_1.clone().into()),
+            5201979123115161946u64 => Ok(self.player_1_points.clone().into()),
+            2316308128022503341u64 => Ok(self.player_2.clone().into()),
+            17826909355416759905u64 => Ok(self.player_2_points.clone().into()),
+            2316307028510875130u64 => Ok(self.player_3.clone().into()),
+            3496125461192453068u64 => Ok(self.player_3_points.clone().into()),
+            5168633764732789397u64 => Ok(self.kill_stream_player_1.clone().into()),
+            15596392604614003293u64 => Ok(self.kill_stream_player_1_count.clone().into()),
+            17040732377939006530u64 => Ok(self.game_over.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayWinPanel",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5379,7 +6004,7 @@ impl TeamPlayWinPanelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5396,19 +6021,27 @@ impl TeamPlayTeamBalancedPlayerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayTeamBalancedPlayerEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "team" => Ok(self.team.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            18024489754618217260u64 => Ok(self.team.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayTeamBalancedPlayer",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5420,7 +6053,7 @@ impl TeamPlayTeamBalancedPlayerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5436,12 +6069,12 @@ impl TeamPlaySetupFinishedEvent {
         Ok(TeamPlaySetupFinishedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlaySetupFinished",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5453,7 +6086,7 @@ impl TeamPlaySetupFinishedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5471,19 +6104,19 @@ impl TeamPlayAlertEvent {
         Ok(TeamPlayAlertEvent {
             alert_type: read_value::<u16>(
                 stream,
-                definition.get_entry("alert_type"),
+                definition.get_entry(5455556148004663490u64),
                 "alert_type",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "alert_type" => Ok(self.alert_type.clone().into()),
+        match field.hash {
+            5455556148004663490u64 => Ok(self.alert_type.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayAlert",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5495,7 +6128,7 @@ impl TeamPlayAlertEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5515,23 +6148,31 @@ impl TrainingCompleteEvent {
         Ok(TrainingCompleteEvent {
             next_map: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("next_map"),
+                definition.get_entry(13669032538247983969u64),
                 "next_map",
             )?,
-            map: read_value::<MaybeUtf8String>(stream, definition.get_entry("map"), "map")?,
-            text: read_value::<MaybeUtf8String>(stream, definition.get_entry("text"), "text")?,
+            map: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(580780841256168849u64),
+                "map",
+            )?,
+            text: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(18015793717152399486u64),
+                "text",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "next_map" => Ok(self.next_map.clone().into()),
-            "map" => Ok(self.map.clone().into()),
-            "text" => Ok(self.text.clone().into()),
+        match field.hash {
+            13669032538247983969u64 => Ok(self.next_map.clone().into()),
+            580780841256168849u64 => Ok(self.map.clone().into()),
+            18015793717152399486u64 => Ok(self.text.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TrainingComplete",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5543,7 +6184,7 @@ impl TrainingCompleteEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5559,17 +6200,21 @@ impl ShowFreezePanelEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ShowFreezePanelEvent {
-            killer: read_value::<u16>(stream, definition.get_entry("killer"), "killer")?,
+            killer: read_value::<u16>(
+                stream,
+                definition.get_entry(7927307102854403058u64),
+                "killer",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "killer" => Ok(self.killer.clone().into()),
+        match field.hash {
+            7927307102854403058u64 => Ok(self.killer.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ShowFreezePanel",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5581,7 +6226,7 @@ impl ShowFreezePanelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5597,12 +6242,12 @@ impl HideFreezePanelEvent {
         Ok(HideFreezePanelEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HideFreezePanel",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5614,7 +6259,7 @@ impl HideFreezePanelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5630,12 +6275,12 @@ impl FreezeCamStartedEvent {
         Ok(FreezeCamStartedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "FreezeCamStarted",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5647,7 +6292,7 @@ impl FreezeCamStartedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5663,12 +6308,12 @@ impl LocalPlayerChangeTeamEvent {
         Ok(LocalPlayerChangeTeamEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "LocalPlayerChangeTeam",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5680,7 +6325,7 @@ impl LocalPlayerChangeTeamEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5696,17 +6341,21 @@ impl LocalPlayerScoreChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(LocalPlayerScoreChangedEvent {
-            score: read_value::<u16>(stream, definition.get_entry("score"), "score")?,
+            score: read_value::<u16>(
+                stream,
+                definition.get_entry(13911166232573650165u64),
+                "score",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "score" => Ok(self.score.clone().into()),
+        match field.hash {
+            13911166232573650165u64 => Ok(self.score.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "LocalPlayerScoreChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5718,7 +6367,7 @@ impl LocalPlayerScoreChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5734,12 +6383,12 @@ impl LocalPlayerChangeClassEvent {
         Ok(LocalPlayerChangeClassEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "LocalPlayerChangeClass",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5751,7 +6400,7 @@ impl LocalPlayerChangeClassEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5767,12 +6416,12 @@ impl LocalPlayerRespawnEvent {
         Ok(LocalPlayerRespawnEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "LocalPlayerRespawn",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5784,7 +6433,7 @@ impl LocalPlayerRespawnEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5804,27 +6453,31 @@ impl BuildingInfoChangedEvent {
         Ok(BuildingInfoChangedEvent {
             building_type: read_value::<u8>(
                 stream,
-                definition.get_entry("building_type"),
+                definition.get_entry(11928805672381350942u64),
                 "building_type",
             )?,
             object_mode: read_value::<u8>(
                 stream,
-                definition.get_entry("object_mode"),
+                definition.get_entry(10575483099853176920u64),
                 "object_mode",
             )?,
-            remove: read_value::<u8>(stream, definition.get_entry("remove"), "remove")?,
+            remove: read_value::<u8>(
+                stream,
+                definition.get_entry(18444559702367749501u64),
+                "remove",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "building_type" => Ok(self.building_type.clone().into()),
-            "object_mode" => Ok(self.object_mode.clone().into()),
-            "remove" => Ok(self.remove.clone().into()),
+        match field.hash {
+            11928805672381350942u64 => Ok(self.building_type.clone().into()),
+            10575483099853176920u64 => Ok(self.object_mode.clone().into()),
+            18444559702367749501u64 => Ok(self.remove.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "BuildingInfoChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5836,7 +6489,7 @@ impl BuildingInfoChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5852,17 +6505,21 @@ impl LocalPlayerChangeDisguiseEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(LocalPlayerChangeDisguiseEvent {
-            disguised: read_value::<bool>(stream, definition.get_entry("disguised"), "disguised")?,
+            disguised: read_value::<bool>(
+                stream,
+                definition.get_entry(12536453236572645170u64),
+                "disguised",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "disguised" => Ok(self.disguised.clone().into()),
+        match field.hash {
+            12536453236572645170u64 => Ok(self.disguised.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "LocalPlayerChangeDisguise",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5874,7 +6531,7 @@ impl LocalPlayerChangeDisguiseEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5891,19 +6548,27 @@ impl PlayerAccountChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerAccountChangedEvent {
-            old_value: read_value::<u16>(stream, definition.get_entry("old_value"), "old_value")?,
-            new_value: read_value::<u16>(stream, definition.get_entry("new_value"), "new_value")?,
+            old_value: read_value::<u16>(
+                stream,
+                definition.get_entry(12791125728741340200u64),
+                "old_value",
+            )?,
+            new_value: read_value::<u16>(
+                stream,
+                definition.get_entry(4557144879184858675u64),
+                "new_value",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "old_value" => Ok(self.old_value.clone().into()),
-            "new_value" => Ok(self.new_value.clone().into()),
+        match field.hash {
+            12791125728741340200u64 => Ok(self.old_value.clone().into()),
+            4557144879184858675u64 => Ok(self.new_value.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerAccountChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5915,7 +6580,7 @@ impl PlayerAccountChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5931,12 +6596,12 @@ impl SpyPdaResetEvent {
         Ok(SpyPdaResetEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "SpyPdaReset",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5948,7 +6613,7 @@ impl SpyPdaResetEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5965,19 +6630,27 @@ impl FlagStatusUpdateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(FlagStatusUpdateEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            ent_index: read_value::<u32>(stream, definition.get_entry("entindex"), "ent_index")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            ent_index: read_value::<u32>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "entindex" => Ok(self.ent_index.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "FlagStatusUpdate",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -5989,7 +6662,7 @@ impl FlagStatusUpdateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6007,19 +6680,19 @@ impl PlayerStatsUpdatedEvent {
         Ok(PlayerStatsUpdatedEvent {
             force_upload: read_value::<bool>(
                 stream,
-                definition.get_entry("forceupload"),
+                definition.get_entry(9059172244575932677u64),
                 "force_upload",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "forceupload" => Ok(self.force_upload.clone().into()),
+        match field.hash {
+            9059172244575932677u64 => Ok(self.force_upload.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerStatsUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6031,7 +6704,7 @@ impl PlayerStatsUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6047,12 +6720,12 @@ impl PlayingCommentaryEvent {
         Ok(PlayingCommentaryEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayingCommentary",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6064,7 +6737,7 @@ impl PlayingCommentaryEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6081,19 +6754,27 @@ impl PlayerChargeDeployedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerChargeDeployedEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            target_id: read_value::<u16>(stream, definition.get_entry("targetid"), "target_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            target_id: read_value::<u16>(
+                stream,
+                definition.get_entry(10554794794880602069u64),
+                "target_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "targetid" => Ok(self.target_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            10554794794880602069u64 => Ok(self.target_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerChargeDeployed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6105,7 +6786,7 @@ impl PlayerChargeDeployedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6123,21 +6804,33 @@ impl PlayerBuiltObjectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerBuiltObjectEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            object: read_value::<u16>(stream, definition.get_entry("object"), "object")?,
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            object: read_value::<u16>(
+                stream,
+                definition.get_entry(10231808476453998586u64),
+                "object",
+            )?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "object" => Ok(self.object.clone().into()),
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            10231808476453998586u64 => Ok(self.object.clone().into()),
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerBuiltObject",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6149,7 +6842,7 @@ impl PlayerBuiltObjectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6168,27 +6861,39 @@ impl PlayerUpgradedObjectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerUpgradedObjectEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            object: read_value::<u16>(stream, definition.get_entry("object"), "object")?,
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            object: read_value::<u16>(
+                stream,
+                definition.get_entry(10231808476453998586u64),
+                "object",
+            )?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
             is_builder: read_value::<bool>(
                 stream,
-                definition.get_entry("isbuilder"),
+                definition.get_entry(16922823115528993136u64),
                 "is_builder",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "object" => Ok(self.object.clone().into()),
-            "index" => Ok(self.index.clone().into()),
-            "isbuilder" => Ok(self.is_builder.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            10231808476453998586u64 => Ok(self.object.clone().into()),
+            9497966886403524235u64 => Ok(self.index.clone().into()),
+            16922823115528993136u64 => Ok(self.is_builder.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerUpgradedObject",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6200,7 +6905,7 @@ impl PlayerUpgradedObjectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6218,21 +6923,33 @@ impl PlayerCarryObjectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerCarryObjectEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            object: read_value::<u16>(stream, definition.get_entry("object"), "object")?,
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            object: read_value::<u16>(
+                stream,
+                definition.get_entry(10231808476453998586u64),
+                "object",
+            )?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "object" => Ok(self.object.clone().into()),
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            10231808476453998586u64 => Ok(self.object.clone().into()),
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerCarryObject",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6244,7 +6961,7 @@ impl PlayerCarryObjectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6262,21 +6979,33 @@ impl PlayerDropObjectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerDropObjectEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            object: read_value::<u16>(stream, definition.get_entry("object"), "object")?,
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            object: read_value::<u16>(
+                stream,
+                definition.get_entry(10231808476453998586u64),
+                "object",
+            )?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "object" => Ok(self.object.clone().into()),
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            10231808476453998586u64 => Ok(self.object.clone().into()),
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerDropObject",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6288,7 +7017,7 @@ impl PlayerDropObjectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6306,25 +7035,33 @@ impl ObjectRemovedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ObjectRemovedEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             object_type: read_value::<u16>(
                 stream,
-                definition.get_entry("objecttype"),
+                definition.get_entry(6025769100165056826u64),
                 "object_type",
             )?,
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "objecttype" => Ok(self.object_type.clone().into()),
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            6025769100165056826u64 => Ok(self.object_type.clone().into()),
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ObjectRemoved",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6336,7 +7073,7 @@ impl ObjectRemovedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6359,43 +7096,63 @@ impl ObjectDestroyedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ObjectDestroyedEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            attacker: read_value::<u16>(stream, definition.get_entry("attacker"), "attacker")?,
-            assister: read_value::<u16>(stream, definition.get_entry("assister"), "assister")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            attacker: read_value::<u16>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
+            assister: read_value::<u16>(
+                stream,
+                definition.get_entry(17978308754419261977u64),
+                "assister",
+            )?,
             weapon: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("weapon"),
+                definition.get_entry(11580461223051554305u64),
                 "weapon",
             )?,
-            weapon_id: read_value::<u16>(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            weapon_id: read_value::<u16>(
+                stream,
+                definition.get_entry(5542695206485500884u64),
+                "weapon_id",
+            )?,
             object_type: read_value::<u16>(
                 stream,
-                definition.get_entry("objecttype"),
+                definition.get_entry(6025769100165056826u64),
                 "object_type",
             )?,
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
             was_building: read_value::<bool>(
                 stream,
-                definition.get_entry("was_building"),
+                definition.get_entry(13090762770129151523u64),
                 "was_building",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "attacker" => Ok(self.attacker.clone().into()),
-            "assister" => Ok(self.assister.clone().into()),
-            "weapon" => Ok(self.weapon.clone().into()),
-            "weaponid" => Ok(self.weapon_id.clone().into()),
-            "objecttype" => Ok(self.object_type.clone().into()),
-            "index" => Ok(self.index.clone().into()),
-            "was_building" => Ok(self.was_building.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
+            17978308754419261977u64 => Ok(self.assister.clone().into()),
+            11580461223051554305u64 => Ok(self.weapon.clone().into()),
+            5542695206485500884u64 => Ok(self.weapon_id.clone().into()),
+            6025769100165056826u64 => Ok(self.object_type.clone().into()),
+            9497966886403524235u64 => Ok(self.index.clone().into()),
+            13090762770129151523u64 => Ok(self.was_building.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ObjectDestroyed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6407,7 +7164,7 @@ impl ObjectDestroyedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6425,25 +7182,33 @@ impl ObjectDetonatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ObjectDetonatedEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             object_type: read_value::<u16>(
                 stream,
-                definition.get_entry("objecttype"),
+                definition.get_entry(6025769100165056826u64),
                 "object_type",
             )?,
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "objecttype" => Ok(self.object_type.clone().into()),
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            6025769100165056826u64 => Ok(self.object_type.clone().into()),
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ObjectDetonated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6455,7 +7220,7 @@ impl ObjectDetonatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6472,23 +7237,27 @@ impl AchievementEarnedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(AchievementEarnedEvent {
-            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u8>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
             achievement: read_value::<u16>(
                 stream,
-                definition.get_entry("achievement"),
+                definition.get_entry(7071905471600864408u64),
                 "achievement",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "achievement" => Ok(self.achievement.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            7071905471600864408u64 => Ok(self.achievement.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "AchievementEarned",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6500,7 +7269,7 @@ impl AchievementEarnedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6516,12 +7285,12 @@ impl SpecTargetUpdatedEvent {
         Ok(SpecTargetUpdatedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "SpecTargetUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6533,7 +7302,7 @@ impl SpecTargetUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6552,35 +7321,39 @@ impl TournamentStateUpdateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TournamentStateUpdateEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             name_change: read_value::<bool>(
                 stream,
-                definition.get_entry("namechange"),
+                definition.get_entry(2507746477842667538u64),
                 "name_change",
             )?,
             ready_state: read_value::<u16>(
                 stream,
-                definition.get_entry("readystate"),
+                definition.get_entry(14125289189230288425u64),
                 "ready_state",
             )?,
             new_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("newname"),
+                definition.get_entry(8904377156710117674u64),
                 "new_name",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "namechange" => Ok(self.name_change.clone().into()),
-            "readystate" => Ok(self.ready_state.clone().into()),
-            "newname" => Ok(self.new_name.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            2507746477842667538u64 => Ok(self.name_change.clone().into()),
+            14125289189230288425u64 => Ok(self.ready_state.clone().into()),
+            8904377156710117674u64 => Ok(self.new_name.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TournamentStateUpdate",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6592,7 +7365,7 @@ impl TournamentStateUpdateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6608,12 +7381,12 @@ impl TournamentEnableCountdownEvent {
         Ok(TournamentEnableCountdownEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TournamentEnableCountdown",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6625,7 +7398,7 @@ impl TournamentEnableCountdownEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6641,17 +7414,21 @@ impl PlayerCalledForMedicEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerCalledForMedicEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerCalledForMedic",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6663,7 +7440,7 @@ impl PlayerCalledForMedicEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6679,17 +7456,21 @@ impl PlayerAskedForBallEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerAskedForBallEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerAskedForBall",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6701,7 +7482,7 @@ impl PlayerAskedForBallEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6717,12 +7498,12 @@ impl LocalPlayerBecameObserverEvent {
         Ok(LocalPlayerBecameObserverEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "LocalPlayerBecameObserver",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6734,7 +7515,7 @@ impl LocalPlayerBecameObserverEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6754,31 +7535,31 @@ impl PlayerIgnitedInvEvent {
         Ok(PlayerIgnitedInvEvent {
             pyro_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("pyro_entindex"),
+                definition.get_entry(2481028106190820025u64),
                 "pyro_ent_index",
             )?,
             victim_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("victim_entindex"),
+                definition.get_entry(7608903543976233025u64),
                 "victim_ent_index",
             )?,
             medic_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("medic_entindex"),
+                definition.get_entry(9117426914612648485u64),
                 "medic_ent_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "pyro_entindex" => Ok(self.pyro_ent_index.clone().into()),
-            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
-            "medic_entindex" => Ok(self.medic_ent_index.clone().into()),
+        match field.hash {
+            2481028106190820025u64 => Ok(self.pyro_ent_index.clone().into()),
+            7608903543976233025u64 => Ok(self.victim_ent_index.clone().into()),
+            9117426914612648485u64 => Ok(self.medic_ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerIgnitedInv",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6790,7 +7571,7 @@ impl PlayerIgnitedInvEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6810,27 +7591,31 @@ impl PlayerIgnitedEvent {
         Ok(PlayerIgnitedEvent {
             pyro_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("pyro_entindex"),
+                definition.get_entry(2481028106190820025u64),
                 "pyro_ent_index",
             )?,
             victim_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("victim_entindex"),
+                definition.get_entry(7608903543976233025u64),
                 "victim_ent_index",
             )?,
-            weapon_id: read_value::<u8>(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            weapon_id: read_value::<u8>(
+                stream,
+                definition.get_entry(5542695206485500884u64),
+                "weapon_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "pyro_entindex" => Ok(self.pyro_ent_index.clone().into()),
-            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
-            "weaponid" => Ok(self.weapon_id.clone().into()),
+        match field.hash {
+            2481028106190820025u64 => Ok(self.pyro_ent_index.clone().into()),
+            7608903543976233025u64 => Ok(self.victim_ent_index.clone().into()),
+            5542695206485500884u64 => Ok(self.weapon_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerIgnited",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6842,7 +7627,7 @@ impl PlayerIgnitedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6860,25 +7645,33 @@ impl PlayerExtinguishedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerExtinguishedEvent {
-            victim: read_value::<u8>(stream, definition.get_entry("victim"), "victim")?,
-            healer: read_value::<u8>(stream, definition.get_entry("healer"), "healer")?,
+            victim: read_value::<u8>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
+            healer: read_value::<u8>(
+                stream,
+                definition.get_entry(9195440821534910520u64),
+                "healer",
+            )?,
             item_definition_index: read_value::<u16>(
                 stream,
-                definition.get_entry("itemdefindex"),
+                definition.get_entry(4926523576391011283u64),
                 "item_definition_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "victim" => Ok(self.victim.clone().into()),
-            "healer" => Ok(self.healer.clone().into()),
-            "itemdefindex" => Ok(self.item_definition_index.clone().into()),
+        match field.hash {
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
+            9195440821534910520u64 => Ok(self.healer.clone().into()),
+            4926523576391011283u64 => Ok(self.item_definition_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerExtinguished",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6890,7 +7683,7 @@ impl PlayerExtinguishedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6908,21 +7701,33 @@ impl PlayerTeleportedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerTeleportedEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            builder_id: read_value::<u16>(stream, definition.get_entry("builderid"), "builder_id")?,
-            dist: read_value::<f32>(stream, definition.get_entry("dist"), "dist")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            builder_id: read_value::<u16>(
+                stream,
+                definition.get_entry(3387979893847309533u64),
+                "builder_id",
+            )?,
+            dist: read_value::<f32>(
+                stream,
+                definition.get_entry(14574961654905149033u64),
+                "dist",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "builderid" => Ok(self.builder_id.clone().into()),
-            "dist" => Ok(self.dist.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            3387979893847309533u64 => Ok(self.builder_id.clone().into()),
+            14574961654905149033u64 => Ok(self.dist.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerTeleported",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6934,7 +7739,7 @@ impl PlayerTeleportedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6950,17 +7755,21 @@ impl PlayerHealedMedicCallEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerHealedMedicCallEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerHealedMedicCall",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -6972,7 +7781,7 @@ impl PlayerHealedMedicCallEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6988,12 +7797,12 @@ impl LocalPlayerChargeReadyEvent {
         Ok(LocalPlayerChargeReadyEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "LocalPlayerChargeReady",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7005,7 +7814,7 @@ impl LocalPlayerChargeReadyEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7021,12 +7830,12 @@ impl LocalPlayerWindDownEvent {
         Ok(LocalPlayerWindDownEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "LocalPlayerWindDown",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7038,7 +7847,7 @@ impl LocalPlayerWindDownEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7055,23 +7864,27 @@ impl PlayerInvulnedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerInvulnedEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             medic_user_id: read_value::<u16>(
                 stream,
-                definition.get_entry("medic_userid"),
+                definition.get_entry(1211611822706104928u64),
                 "medic_user_id",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "medic_userid" => Ok(self.medic_user_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            1211611822706104928u64 => Ok(self.medic_user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerInvulned",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7083,7 +7896,7 @@ impl PlayerInvulnedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7101,21 +7914,33 @@ impl EscortSpeedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EscortSpeedEvent {
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
-            speed: read_value::<u8>(stream, definition.get_entry("speed"), "speed")?,
-            players: read_value::<u8>(stream, definition.get_entry("players"), "players")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            speed: read_value::<u8>(
+                stream,
+                definition.get_entry(2486349329025994304u64),
+                "speed",
+            )?,
+            players: read_value::<u8>(
+                stream,
+                definition.get_entry(11016838732397775657u64),
+                "players",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "team" => Ok(self.team.clone().into()),
-            "speed" => Ok(self.speed.clone().into()),
-            "players" => Ok(self.players.clone().into()),
+        match field.hash {
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            2486349329025994304u64 => Ok(self.speed.clone().into()),
+            11016838732397775657u64 => Ok(self.players.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EscortSpeed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7127,7 +7952,7 @@ impl EscortSpeedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7145,21 +7970,33 @@ impl EscortProgressEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EscortProgressEvent {
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
-            progress: read_value::<f32>(stream, definition.get_entry("progress"), "progress")?,
-            reset: read_value::<bool>(stream, definition.get_entry("reset"), "reset")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            progress: read_value::<f32>(
+                stream,
+                definition.get_entry(17983033035584588230u64),
+                "progress",
+            )?,
+            reset: read_value::<bool>(
+                stream,
+                definition.get_entry(1086335023529244512u64),
+                "reset",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "team" => Ok(self.team.clone().into()),
-            "progress" => Ok(self.progress.clone().into()),
-            "reset" => Ok(self.reset.clone().into()),
+        match field.hash {
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            17983033035584588230u64 => Ok(self.progress.clone().into()),
+            1086335023529244512u64 => Ok(self.reset.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EscortProgress",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7171,7 +8008,7 @@ impl EscortProgressEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7188,23 +8025,27 @@ impl EscortRecedeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EscortRecedeEvent {
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
             recede_time: read_value::<f32>(
                 stream,
-                definition.get_entry("recedetime"),
+                definition.get_entry(12986815124312535790u64),
                 "recede_time",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "team" => Ok(self.team.clone().into()),
-            "recedetime" => Ok(self.recede_time.clone().into()),
+        match field.hash {
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            12986815124312535790u64 => Ok(self.recede_time.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EscortRecede",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7216,7 +8057,7 @@ impl EscortRecedeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7232,12 +8073,12 @@ impl GameUIActivatedEvent {
         Ok(GameUIActivatedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "GameUIActivated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7249,7 +8090,7 @@ impl GameUIActivatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7265,12 +8106,12 @@ impl GameUIHiddenEvent {
         Ok(GameUIHiddenEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "GameUIHidden",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7282,7 +8123,7 @@ impl GameUIHiddenEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7299,19 +8140,27 @@ impl PlayerEscortScoreEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerEscortScoreEvent {
-            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
-            points: read_value::<u8>(stream, definition.get_entry("points"), "points")?,
+            player: read_value::<u8>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            points: read_value::<u8>(
+                stream,
+                definition.get_entry(15925482014108518566u64),
+                "points",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "points" => Ok(self.points.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            15925482014108518566u64 => Ok(self.points.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerEscortScore",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7323,7 +8172,7 @@ impl PlayerEscortScoreEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7341,25 +8190,33 @@ impl PlayerHealOnHitEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerHealOnHitEvent {
-            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
-            ent_index: read_value::<u8>(stream, definition.get_entry("entindex"), "ent_index")?,
+            amount: read_value::<u16>(
+                stream,
+                definition.get_entry(9301057475299076457u64),
+                "amount",
+            )?,
+            ent_index: read_value::<u8>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
             weapon_def_index: read_value::<u32>(
                 stream,
-                definition.get_entry("weapon_def_index"),
+                definition.get_entry(4132306594868589054u64),
                 "weapon_def_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "amount" => Ok(self.amount.clone().into()),
-            "entindex" => Ok(self.ent_index.clone().into()),
-            "weapon_def_index" => Ok(self.weapon_def_index.clone().into()),
+        match field.hash {
+            9301057475299076457u64 => Ok(self.amount.clone().into()),
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
+            4132306594868589054u64 => Ok(self.weapon_def_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerHealOnHit",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7371,7 +8228,7 @@ impl PlayerHealOnHitEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7388,19 +8245,27 @@ impl PlayerStealSandvichEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerStealSandvichEvent {
-            owner: read_value::<u16>(stream, definition.get_entry("owner"), "owner")?,
-            target: read_value::<u16>(stream, definition.get_entry("target"), "target")?,
+            owner: read_value::<u16>(
+                stream,
+                definition.get_entry(12002927925776846068u64),
+                "owner",
+            )?,
+            target: read_value::<u16>(
+                stream,
+                definition.get_entry(1653916590517707752u64),
+                "target",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "owner" => Ok(self.owner.clone().into()),
-            "target" => Ok(self.target.clone().into()),
+        match field.hash {
+            12002927925776846068u64 => Ok(self.owner.clone().into()),
+            1653916590517707752u64 => Ok(self.target.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerStealSandvich",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7412,7 +8277,7 @@ impl PlayerStealSandvichEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7428,17 +8293,17 @@ impl ShowClassLayoutEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ShowClassLayoutEvent {
-            show: read_value::<bool>(stream, definition.get_entry("show"), "show")?,
+            show: read_value::<bool>(stream, definition.get_entry(5106060638016120252u64), "show")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "show" => Ok(self.show.clone().into()),
+        match field.hash {
+            5106060638016120252u64 => Ok(self.show.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ShowClassLayout",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7450,7 +8315,7 @@ impl ShowClassLayoutEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7466,17 +8331,17 @@ impl ShowVsPanelEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ShowVsPanelEvent {
-            show: read_value::<bool>(stream, definition.get_entry("show"), "show")?,
+            show: read_value::<bool>(stream, definition.get_entry(5106060638016120252u64), "show")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "show" => Ok(self.show.clone().into()),
+        match field.hash {
+            5106060638016120252u64 => Ok(self.show.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ShowVsPanel",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7488,7 +8353,7 @@ impl ShowVsPanelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7505,19 +8370,27 @@ impl PlayerDamagedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerDamagedEvent {
-            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
-            kind: read_value::<u32>(stream, definition.get_entry("type"), "kind")?,
+            amount: read_value::<u16>(
+                stream,
+                definition.get_entry(9301057475299076457u64),
+                "amount",
+            )?,
+            kind: read_value::<u32>(
+                stream,
+                definition.get_entry(12075340201627130925u64),
+                "kind",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "amount" => Ok(self.amount.clone().into()),
-            "type" => Ok(self.kind.clone().into()),
+        match field.hash {
+            9301057475299076457u64 => Ok(self.amount.clone().into()),
+            12075340201627130925u64 => Ok(self.kind.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerDamaged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7529,7 +8402,7 @@ impl PlayerDamagedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7546,19 +8419,27 @@ impl ArenaPlayerNotificationEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ArenaPlayerNotificationEvent {
-            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
-            message: read_value::<u8>(stream, definition.get_entry("message"), "message")?,
+            player: read_value::<u8>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            message: read_value::<u8>(
+                stream,
+                definition.get_entry(6080987277291999908u64),
+                "message",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "message" => Ok(self.message.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            6080987277291999908u64 => Ok(self.message.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ArenaPlayerNotification",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7570,7 +8451,7 @@ impl ArenaPlayerNotificationEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7587,19 +8468,27 @@ impl ArenaMatchMaxStreakEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ArenaMatchMaxStreakEvent {
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
-            streak: read_value::<u8>(stream, definition.get_entry("streak"), "streak")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            streak: read_value::<u8>(
+                stream,
+                definition.get_entry(5722439984700485459u64),
+                "streak",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "team" => Ok(self.team.clone().into()),
-            "streak" => Ok(self.streak.clone().into()),
+        match field.hash {
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            5722439984700485459u64 => Ok(self.streak.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ArenaMatchMaxStreak",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7611,7 +8500,7 @@ impl ArenaMatchMaxStreakEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7627,12 +8516,12 @@ impl ArenaRoundStartEvent {
         Ok(ArenaRoundStartEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ArenaRoundStart",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7644,7 +8533,7 @@ impl ArenaRoundStartEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7701,221 +8590,253 @@ impl ArenaWinPanelEvent {
         Ok(ArenaWinPanelEvent {
             panel_style: read_value::<u8>(
                 stream,
-                definition.get_entry("panel_style"),
+                definition.get_entry(3076948889484157827u64),
                 "panel_style",
             )?,
             winning_team: read_value::<u8>(
                 stream,
-                definition.get_entry("winning_team"),
+                definition.get_entry(12760025138952247085u64),
                 "winning_team",
             )?,
-            win_reason: read_value::<u8>(stream, definition.get_entry("winreason"), "win_reason")?,
+            win_reason: read_value::<u8>(
+                stream,
+                definition.get_entry(3803421146477351589u64),
+                "win_reason",
+            )?,
             cappers: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("cappers"),
+                definition.get_entry(11245576010855792123u64),
                 "cappers",
             )?,
             flag_cap_limit: read_value::<u16>(
                 stream,
-                definition.get_entry("flagcaplimit"),
+                definition.get_entry(8774624256288798788u64),
                 "flag_cap_limit",
             )?,
             blue_score: read_value::<u16>(
                 stream,
-                definition.get_entry("blue_score"),
+                definition.get_entry(12881173953286901124u64),
                 "blue_score",
             )?,
-            red_score: read_value::<u16>(stream, definition.get_entry("red_score"), "red_score")?,
+            red_score: read_value::<u16>(
+                stream,
+                definition.get_entry(1115892277897790273u64),
+                "red_score",
+            )?,
             blue_score_prev: read_value::<u16>(
                 stream,
-                definition.get_entry("blue_score_prev"),
+                definition.get_entry(12382344057664863052u64),
                 "blue_score_prev",
             )?,
             red_score_prev: read_value::<u16>(
                 stream,
-                definition.get_entry("red_score_prev"),
+                definition.get_entry(9684982604781518527u64),
                 "red_score_prev",
             )?,
             round_complete: read_value::<u16>(
                 stream,
-                definition.get_entry("round_complete"),
+                definition.get_entry(12165785943437780003u64),
                 "round_complete",
             )?,
-            player_1: read_value::<u16>(stream, definition.get_entry("player_1"), "player_1")?,
+            player_1: read_value::<u16>(
+                stream,
+                definition.get_entry(2316304829487618708u64),
+                "player_1",
+            )?,
             player_1_damage: read_value::<u16>(
                 stream,
-                definition.get_entry("player_1_damage"),
+                definition.get_entry(10394500961929970236u64),
                 "player_1_damage",
             )?,
             player_1_healing: read_value::<u16>(
                 stream,
-                definition.get_entry("player_1_healing"),
+                definition.get_entry(4434975577362185857u64),
                 "player_1_healing",
             )?,
             player_1_lifetime: read_value::<u16>(
                 stream,
-                definition.get_entry("player_1_lifetime"),
+                definition.get_entry(9525810424766332458u64),
                 "player_1_lifetime",
             )?,
             player_1_kills: read_value::<u16>(
                 stream,
-                definition.get_entry("player_1_kills"),
+                definition.get_entry(9144050188623277698u64),
                 "player_1_kills",
             )?,
-            player_2: read_value::<u16>(stream, definition.get_entry("player_2"), "player_2")?,
+            player_2: read_value::<u16>(
+                stream,
+                definition.get_entry(2316308128022503341u64),
+                "player_2",
+            )?,
             player_2_damage: read_value::<u16>(
                 stream,
-                definition.get_entry("player_2_damage"),
+                definition.get_entry(10233858120128677491u64),
                 "player_2_damage",
             )?,
             player_2_healing: read_value::<u16>(
                 stream,
-                definition.get_entry("player_2_healing"),
+                definition.get_entry(14185483197478656496u64),
                 "player_2_healing",
             )?,
             player_2_lifetime: read_value::<u16>(
                 stream,
-                definition.get_entry("player_2_lifetime"),
+                definition.get_entry(4136489886055437333u64),
                 "player_2_lifetime",
             )?,
             player_2_kills: read_value::<u16>(
                 stream,
-                definition.get_entry("player_2_kills"),
+                definition.get_entry(4674312054664562187u64),
                 "player_2_kills",
             )?,
-            player_3: read_value::<u16>(stream, definition.get_entry("player_3"), "player_3")?,
+            player_3: read_value::<u16>(
+                stream,
+                definition.get_entry(2316307028510875130u64),
+                "player_3",
+            )?,
             player_3_damage: read_value::<u16>(
                 stream,
-                definition.get_entry("player_3_damage"),
+                definition.get_entry(39363359054721358u64),
                 "player_3_damage",
             )?,
             player_3_healing: read_value::<u16>(
                 stream,
-                definition.get_entry("player_3_healing"),
+                definition.get_entry(3236287490998805827u64),
                 "player_3_healing",
             )?,
             player_3_lifetime: read_value::<u16>(
                 stream,
-                definition.get_entry("player_3_lifetime"),
+                definition.get_entry(14621494996524927732u64),
                 "player_3_lifetime",
             )?,
             player_3_kills: read_value::<u16>(
                 stream,
-                definition.get_entry("player_3_kills"),
+                definition.get_entry(3863298646261365396u64),
                 "player_3_kills",
             )?,
-            player_4: read_value::<u16>(stream, definition.get_entry("player_4"), "player_4")?,
+            player_4: read_value::<u16>(
+                stream,
+                definition.get_entry(2316301530952734075u64),
+                "player_4",
+            )?,
             player_4_damage: read_value::<u16>(
                 stream,
-                definition.get_entry("player_4_damage"),
+                definition.get_entry(10597470269304895533u64),
                 "player_4_damage",
             )?,
             player_4_healing: read_value::<u16>(
                 stream,
-                definition.get_entry("player_4_healing"),
+                definition.get_entry(16447535156948377850u64),
                 "player_4_healing",
             )?,
             player_4_lifetime: read_value::<u16>(
                 stream,
-                definition.get_entry("player_4_lifetime"),
+                definition.get_entry(7059298629593792111u64),
                 "player_4_lifetime",
             )?,
             player_4_kills: read_value::<u16>(
                 stream,
-                definition.get_entry("player_4_kills"),
+                definition.get_entry(3991910781166784861u64),
                 "player_4_kills",
             )?,
-            player_5: read_value::<u16>(stream, definition.get_entry("player_5"), "player_5")?,
+            player_5: read_value::<u16>(
+                stream,
+                definition.get_entry(2316300431441105864u64),
+                "player_5",
+            )?,
             player_5_damage: read_value::<u16>(
                 stream,
-                definition.get_entry("player_5_damage"),
+                definition.get_entry(5792678822030670832u64),
                 "player_5_damage",
             )?,
             player_5_healing: read_value::<u16>(
                 stream,
-                definition.get_entry("player_5_healing"),
+                definition.get_entry(10549804756926849709u64),
                 "player_5_healing",
             )?,
             player_5_lifetime: read_value::<u16>(
                 stream,
-                definition.get_entry("player_5_lifetime"),
+                definition.get_entry(5937207214365195550u64),
                 "player_5_lifetime",
             )?,
             player_5_kills: read_value::<u16>(
                 stream,
-                definition.get_entry("player_5_kills"),
+                definition.get_entry(12801315132847255054u64),
                 "player_5_kills",
             )?,
-            player_6: read_value::<u16>(stream, definition.get_entry("player_6"), "player_6")?,
+            player_6: read_value::<u16>(
+                stream,
+                definition.get_entry(2316303729975990497u64),
+                "player_6",
+            )?,
             player_6_damage: read_value::<u16>(
                 stream,
-                definition.get_entry("player_6_damage"),
+                definition.get_entry(11907089275040254807u64),
                 "player_6_damage",
             )?,
             player_6_healing: read_value::<u16>(
                 stream,
-                definition.get_entry("player_6_healing"),
+                definition.get_entry(12917045825324352380u64),
                 "player_6_healing",
             )?,
             player_6_lifetime: read_value::<u16>(
                 stream,
-                definition.get_entry("player_6_lifetime"),
+                definition.get_entry(2459117320880115529u64),
                 "player_6_lifetime",
             )?,
             player_6_kills: read_value::<u16>(
                 stream,
-                definition.get_entry("player_6_kills"),
+                definition.get_entry(9062282318485088775u64),
                 "player_6_kills",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "panel_style" => Ok(self.panel_style.clone().into()),
-            "winning_team" => Ok(self.winning_team.clone().into()),
-            "winreason" => Ok(self.win_reason.clone().into()),
-            "cappers" => Ok(self.cappers.clone().into()),
-            "flagcaplimit" => Ok(self.flag_cap_limit.clone().into()),
-            "blue_score" => Ok(self.blue_score.clone().into()),
-            "red_score" => Ok(self.red_score.clone().into()),
-            "blue_score_prev" => Ok(self.blue_score_prev.clone().into()),
-            "red_score_prev" => Ok(self.red_score_prev.clone().into()),
-            "round_complete" => Ok(self.round_complete.clone().into()),
-            "player_1" => Ok(self.player_1.clone().into()),
-            "player_1_damage" => Ok(self.player_1_damage.clone().into()),
-            "player_1_healing" => Ok(self.player_1_healing.clone().into()),
-            "player_1_lifetime" => Ok(self.player_1_lifetime.clone().into()),
-            "player_1_kills" => Ok(self.player_1_kills.clone().into()),
-            "player_2" => Ok(self.player_2.clone().into()),
-            "player_2_damage" => Ok(self.player_2_damage.clone().into()),
-            "player_2_healing" => Ok(self.player_2_healing.clone().into()),
-            "player_2_lifetime" => Ok(self.player_2_lifetime.clone().into()),
-            "player_2_kills" => Ok(self.player_2_kills.clone().into()),
-            "player_3" => Ok(self.player_3.clone().into()),
-            "player_3_damage" => Ok(self.player_3_damage.clone().into()),
-            "player_3_healing" => Ok(self.player_3_healing.clone().into()),
-            "player_3_lifetime" => Ok(self.player_3_lifetime.clone().into()),
-            "player_3_kills" => Ok(self.player_3_kills.clone().into()),
-            "player_4" => Ok(self.player_4.clone().into()),
-            "player_4_damage" => Ok(self.player_4_damage.clone().into()),
-            "player_4_healing" => Ok(self.player_4_healing.clone().into()),
-            "player_4_lifetime" => Ok(self.player_4_lifetime.clone().into()),
-            "player_4_kills" => Ok(self.player_4_kills.clone().into()),
-            "player_5" => Ok(self.player_5.clone().into()),
-            "player_5_damage" => Ok(self.player_5_damage.clone().into()),
-            "player_5_healing" => Ok(self.player_5_healing.clone().into()),
-            "player_5_lifetime" => Ok(self.player_5_lifetime.clone().into()),
-            "player_5_kills" => Ok(self.player_5_kills.clone().into()),
-            "player_6" => Ok(self.player_6.clone().into()),
-            "player_6_damage" => Ok(self.player_6_damage.clone().into()),
-            "player_6_healing" => Ok(self.player_6_healing.clone().into()),
-            "player_6_lifetime" => Ok(self.player_6_lifetime.clone().into()),
-            "player_6_kills" => Ok(self.player_6_kills.clone().into()),
+        match field.hash {
+            3076948889484157827u64 => Ok(self.panel_style.clone().into()),
+            12760025138952247085u64 => Ok(self.winning_team.clone().into()),
+            3803421146477351589u64 => Ok(self.win_reason.clone().into()),
+            11245576010855792123u64 => Ok(self.cappers.clone().into()),
+            8774624256288798788u64 => Ok(self.flag_cap_limit.clone().into()),
+            12881173953286901124u64 => Ok(self.blue_score.clone().into()),
+            1115892277897790273u64 => Ok(self.red_score.clone().into()),
+            12382344057664863052u64 => Ok(self.blue_score_prev.clone().into()),
+            9684982604781518527u64 => Ok(self.red_score_prev.clone().into()),
+            12165785943437780003u64 => Ok(self.round_complete.clone().into()),
+            2316304829487618708u64 => Ok(self.player_1.clone().into()),
+            10394500961929970236u64 => Ok(self.player_1_damage.clone().into()),
+            4434975577362185857u64 => Ok(self.player_1_healing.clone().into()),
+            9525810424766332458u64 => Ok(self.player_1_lifetime.clone().into()),
+            9144050188623277698u64 => Ok(self.player_1_kills.clone().into()),
+            2316308128022503341u64 => Ok(self.player_2.clone().into()),
+            10233858120128677491u64 => Ok(self.player_2_damage.clone().into()),
+            14185483197478656496u64 => Ok(self.player_2_healing.clone().into()),
+            4136489886055437333u64 => Ok(self.player_2_lifetime.clone().into()),
+            4674312054664562187u64 => Ok(self.player_2_kills.clone().into()),
+            2316307028510875130u64 => Ok(self.player_3.clone().into()),
+            39363359054721358u64 => Ok(self.player_3_damage.clone().into()),
+            3236287490998805827u64 => Ok(self.player_3_healing.clone().into()),
+            14621494996524927732u64 => Ok(self.player_3_lifetime.clone().into()),
+            3863298646261365396u64 => Ok(self.player_3_kills.clone().into()),
+            2316301530952734075u64 => Ok(self.player_4.clone().into()),
+            10597470269304895533u64 => Ok(self.player_4_damage.clone().into()),
+            16447535156948377850u64 => Ok(self.player_4_healing.clone().into()),
+            7059298629593792111u64 => Ok(self.player_4_lifetime.clone().into()),
+            3991910781166784861u64 => Ok(self.player_4_kills.clone().into()),
+            2316300431441105864u64 => Ok(self.player_5.clone().into()),
+            5792678822030670832u64 => Ok(self.player_5_damage.clone().into()),
+            10549804756926849709u64 => Ok(self.player_5_healing.clone().into()),
+            5937207214365195550u64 => Ok(self.player_5_lifetime.clone().into()),
+            12801315132847255054u64 => Ok(self.player_5_kills.clone().into()),
+            2316303729975990497u64 => Ok(self.player_6.clone().into()),
+            11907089275040254807u64 => Ok(self.player_6_damage.clone().into()),
+            12917045825324352380u64 => Ok(self.player_6_healing.clone().into()),
+            2459117320880115529u64 => Ok(self.player_6_lifetime.clone().into()),
+            9062282318485088775u64 => Ok(self.player_6_kills.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ArenaWinPanel",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7927,7 +8848,7 @@ impl ArenaWinPanelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7947,27 +8868,31 @@ impl PveWinPanelEvent {
         Ok(PveWinPanelEvent {
             panel_style: read_value::<u8>(
                 stream,
-                definition.get_entry("panel_style"),
+                definition.get_entry(3076948889484157827u64),
                 "panel_style",
             )?,
             winning_team: read_value::<u8>(
                 stream,
-                definition.get_entry("winning_team"),
+                definition.get_entry(12760025138952247085u64),
                 "winning_team",
             )?,
-            win_reason: read_value::<u8>(stream, definition.get_entry("winreason"), "win_reason")?,
+            win_reason: read_value::<u8>(
+                stream,
+                definition.get_entry(3803421146477351589u64),
+                "win_reason",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "panel_style" => Ok(self.panel_style.clone().into()),
-            "winning_team" => Ok(self.winning_team.clone().into()),
-            "winreason" => Ok(self.win_reason.clone().into()),
+        match field.hash {
+            3076948889484157827u64 => Ok(self.panel_style.clone().into()),
+            12760025138952247085u64 => Ok(self.winning_team.clone().into()),
+            3803421146477351589u64 => Ok(self.win_reason.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PveWinPanel",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -7979,7 +8904,7 @@ impl PveWinPanelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7995,17 +8920,21 @@ impl AirDashEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(AirDashEvent {
-            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u8>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "AirDash",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8017,7 +8946,7 @@ impl AirDashEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8033,17 +8962,21 @@ impl LandedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(LandedEvent {
-            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u8>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "Landed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8055,7 +8988,7 @@ impl LandedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8071,17 +9004,21 @@ impl PlayerDamageDodgedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerDamageDodgedEvent {
-            damage: read_value::<u16>(stream, definition.get_entry("damage"), "damage")?,
+            damage: read_value::<u16>(
+                stream,
+                definition.get_entry(9179190079975030720u64),
+                "damage",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "damage" => Ok(self.damage.clone().into()),
+        match field.hash {
+            9179190079975030720u64 => Ok(self.damage.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerDamageDodged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8093,7 +9030,7 @@ impl PlayerDamageDodgedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8112,27 +9049,39 @@ impl PlayerStunnedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerStunnedEvent {
-            stunner: read_value::<u16>(stream, definition.get_entry("stunner"), "stunner")?,
-            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
+            stunner: read_value::<u16>(
+                stream,
+                definition.get_entry(14931815241283043822u64),
+                "stunner",
+            )?,
+            victim: read_value::<u16>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
             victim_capping: read_value::<bool>(
                 stream,
-                definition.get_entry("victim_capping"),
+                definition.get_entry(6103089581884104798u64),
                 "victim_capping",
             )?,
-            big_stun: read_value::<bool>(stream, definition.get_entry("big_stun"), "big_stun")?,
+            big_stun: read_value::<bool>(
+                stream,
+                definition.get_entry(2754291295915618874u64),
+                "big_stun",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "stunner" => Ok(self.stunner.clone().into()),
-            "victim" => Ok(self.victim.clone().into()),
-            "victim_capping" => Ok(self.victim_capping.clone().into()),
-            "big_stun" => Ok(self.big_stun.clone().into()),
+        match field.hash {
+            14931815241283043822u64 => Ok(self.stunner.clone().into()),
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
+            6103089581884104798u64 => Ok(self.victim_capping.clone().into()),
+            2754291295915618874u64 => Ok(self.big_stun.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerStunned",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8144,7 +9093,7 @@ impl PlayerStunnedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8161,19 +9110,27 @@ impl ScoutGrandSlamEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ScoutGrandSlamEvent {
-            scout_id: read_value::<u16>(stream, definition.get_entry("scout_id"), "scout_id")?,
-            target_id: read_value::<u16>(stream, definition.get_entry("target_id"), "target_id")?,
+            scout_id: read_value::<u16>(
+                stream,
+                definition.get_entry(7064780806045746163u64),
+                "scout_id",
+            )?,
+            target_id: read_value::<u16>(
+                stream,
+                definition.get_entry(13239627154349772880u64),
+                "target_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "scout_id" => Ok(self.scout_id.clone().into()),
-            "target_id" => Ok(self.target_id.clone().into()),
+        match field.hash {
+            7064780806045746163u64 => Ok(self.scout_id.clone().into()),
+            13239627154349772880u64 => Ok(self.target_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ScoutGrandSlam",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8185,7 +9142,7 @@ impl ScoutGrandSlamEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8206,25 +9163,25 @@ impl ScoutSlamdollLandedEvent {
         Ok(ScoutSlamdollLandedEvent {
             target_index: read_value::<u16>(
                 stream,
-                definition.get_entry("target_index"),
+                definition.get_entry(654399427416389339u64),
                 "target_index",
             )?,
-            x: read_value::<f32>(stream, definition.get_entry("x"), "x")?,
-            y: read_value::<f32>(stream, definition.get_entry("y"), "y")?,
-            z: read_value::<f32>(stream, definition.get_entry("z"), "z")?,
+            x: read_value::<f32>(stream, definition.get_entry(12638214688346347271u64), "x")?,
+            y: read_value::<f32>(stream, definition.get_entry(12638213588834719060u64), "y")?,
+            z: read_value::<f32>(stream, definition.get_entry(12638216887369603693u64), "z")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "target_index" => Ok(self.target_index.clone().into()),
-            "x" => Ok(self.x.clone().into()),
-            "y" => Ok(self.y.clone().into()),
-            "z" => Ok(self.z.clone().into()),
+        match field.hash {
+            654399427416389339u64 => Ok(self.target_index.clone().into()),
+            12638214688346347271u64 => Ok(self.x.clone().into()),
+            12638213588834719060u64 => Ok(self.y.clone().into()),
+            12638216887369603693u64 => Ok(self.z.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ScoutSlamdollLanded",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8236,7 +9193,7 @@ impl ScoutSlamdollLandedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8264,71 +9221,79 @@ impl ArrowImpactEvent {
         Ok(ArrowImpactEvent {
             attached_entity: read_value::<u16>(
                 stream,
-                definition.get_entry("attachedEntity"),
+                definition.get_entry(961881214683019338u64),
                 "attached_entity",
             )?,
-            shooter: read_value::<u16>(stream, definition.get_entry("shooter"), "shooter")?,
+            shooter: read_value::<u16>(
+                stream,
+                definition.get_entry(13826298252589476871u64),
+                "shooter",
+            )?,
             bone_index_attached: read_value::<u16>(
                 stream,
-                definition.get_entry("boneIndexAttached"),
+                definition.get_entry(6360700909751330309u64),
                 "bone_index_attached",
             )?,
             bone_position_x: read_value::<f32>(
                 stream,
-                definition.get_entry("bonePositionX"),
+                definition.get_entry(10378941398473653372u64),
                 "bone_position_x",
             )?,
             bone_position_y: read_value::<f32>(
                 stream,
-                definition.get_entry("bonePositionY"),
+                definition.get_entry(10378942497985281583u64),
                 "bone_position_y",
             )?,
             bone_position_z: read_value::<f32>(
                 stream,
-                definition.get_entry("bonePositionZ"),
+                definition.get_entry(10378943597496909794u64),
                 "bone_position_z",
             )?,
             bone_angles_x: read_value::<f32>(
                 stream,
-                definition.get_entry("boneAnglesX"),
+                definition.get_entry(5043211860521425589u64),
                 "bone_angles_x",
             )?,
             bone_angles_y: read_value::<f32>(
                 stream,
-                definition.get_entry("boneAnglesY"),
+                definition.get_entry(5043210761009797378u64),
                 "bone_angles_y",
             )?,
             bone_angles_z: read_value::<f32>(
                 stream,
-                definition.get_entry("boneAnglesZ"),
+                definition.get_entry(5043209661498169167u64),
                 "bone_angles_z",
             )?,
             projectile_type: read_value::<u16>(
                 stream,
-                definition.get_entry("projectileType"),
+                definition.get_entry(9968460680690579194u64),
                 "projectile_type",
             )?,
-            is_crit: read_value::<bool>(stream, definition.get_entry("isCrit"), "is_crit")?,
+            is_crit: read_value::<bool>(
+                stream,
+                definition.get_entry(15363801587511353021u64),
+                "is_crit",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "attachedEntity" => Ok(self.attached_entity.clone().into()),
-            "shooter" => Ok(self.shooter.clone().into()),
-            "boneIndexAttached" => Ok(self.bone_index_attached.clone().into()),
-            "bonePositionX" => Ok(self.bone_position_x.clone().into()),
-            "bonePositionY" => Ok(self.bone_position_y.clone().into()),
-            "bonePositionZ" => Ok(self.bone_position_z.clone().into()),
-            "boneAnglesX" => Ok(self.bone_angles_x.clone().into()),
-            "boneAnglesY" => Ok(self.bone_angles_y.clone().into()),
-            "boneAnglesZ" => Ok(self.bone_angles_z.clone().into()),
-            "projectileType" => Ok(self.projectile_type.clone().into()),
-            "isCrit" => Ok(self.is_crit.clone().into()),
+        match field.hash {
+            961881214683019338u64 => Ok(self.attached_entity.clone().into()),
+            13826298252589476871u64 => Ok(self.shooter.clone().into()),
+            6360700909751330309u64 => Ok(self.bone_index_attached.clone().into()),
+            10378941398473653372u64 => Ok(self.bone_position_x.clone().into()),
+            10378942497985281583u64 => Ok(self.bone_position_y.clone().into()),
+            10378943597496909794u64 => Ok(self.bone_position_z.clone().into()),
+            5043211860521425589u64 => Ok(self.bone_angles_x.clone().into()),
+            5043210761009797378u64 => Ok(self.bone_angles_y.clone().into()),
+            5043209661498169167u64 => Ok(self.bone_angles_z.clone().into()),
+            9968460680690579194u64 => Ok(self.projectile_type.clone().into()),
+            15363801587511353021u64 => Ok(self.is_crit.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ArrowImpact",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8340,7 +9305,7 @@ impl ArrowImpactEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8359,25 +9324,25 @@ impl PlayerJaratedEvent {
         Ok(PlayerJaratedEvent {
             thrower_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("thrower_entindex"),
+                definition.get_entry(7733252424873930810u64),
                 "thrower_ent_index",
             )?,
             victim_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("victim_entindex"),
+                definition.get_entry(7608903543976233025u64),
                 "victim_ent_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "thrower_entindex" => Ok(self.thrower_ent_index.clone().into()),
-            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
+        match field.hash {
+            7733252424873930810u64 => Ok(self.thrower_ent_index.clone().into()),
+            7608903543976233025u64 => Ok(self.victim_ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerJarated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8389,7 +9354,7 @@ impl PlayerJaratedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8408,25 +9373,25 @@ impl PlayerJaratedFadeEvent {
         Ok(PlayerJaratedFadeEvent {
             thrower_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("thrower_entindex"),
+                definition.get_entry(7733252424873930810u64),
                 "thrower_ent_index",
             )?,
             victim_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("victim_entindex"),
+                definition.get_entry(7608903543976233025u64),
                 "victim_ent_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "thrower_entindex" => Ok(self.thrower_ent_index.clone().into()),
-            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
+        match field.hash {
+            7733252424873930810u64 => Ok(self.thrower_ent_index.clone().into()),
+            7608903543976233025u64 => Ok(self.victim_ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerJaratedFade",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8438,7 +9403,7 @@ impl PlayerJaratedFadeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8457,25 +9422,25 @@ impl PlayerShieldBlockedEvent {
         Ok(PlayerShieldBlockedEvent {
             attacker_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("attacker_entindex"),
+                definition.get_entry(1824579233645723292u64),
                 "attacker_ent_index",
             )?,
             blocker_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("blocker_entindex"),
+                definition.get_entry(1554237712520490433u64),
                 "blocker_ent_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "attacker_entindex" => Ok(self.attacker_ent_index.clone().into()),
-            "blocker_entindex" => Ok(self.blocker_ent_index.clone().into()),
+        match field.hash {
+            1824579233645723292u64 => Ok(self.attacker_ent_index.clone().into()),
+            1554237712520490433u64 => Ok(self.blocker_ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerShieldBlocked",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8487,7 +9452,7 @@ impl PlayerShieldBlockedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8503,17 +9468,21 @@ impl PlayerPinnedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerPinnedEvent {
-            pinned: read_value::<u8>(stream, definition.get_entry("pinned"), "pinned")?,
+            pinned: read_value::<u8>(
+                stream,
+                definition.get_entry(6882141757131022863u64),
+                "pinned",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "pinned" => Ok(self.pinned.clone().into()),
+        match field.hash {
+            6882141757131022863u64 => Ok(self.pinned.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerPinned",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8525,7 +9494,7 @@ impl PlayerPinnedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8541,17 +9510,21 @@ impl PlayerHealedByMedicEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerHealedByMedicEvent {
-            medic: read_value::<u8>(stream, definition.get_entry("medic"), "medic")?,
+            medic: read_value::<u8>(
+                stream,
+                definition.get_entry(12912869923554243305u64),
+                "medic",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "medic" => Ok(self.medic.clone().into()),
+        match field.hash {
+            12912869923554243305u64 => Ok(self.medic.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerHealedByMedic",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8563,7 +9536,7 @@ impl PlayerHealedByMedicEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8582,23 +9555,39 @@ impl PlayerSappedObjectEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerSappedObjectEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            owner_id: read_value::<u16>(stream, definition.get_entry("ownerid"), "owner_id")?,
-            object: read_value::<u8>(stream, definition.get_entry("object"), "object")?,
-            sapper_id: read_value::<u16>(stream, definition.get_entry("sapperid"), "sapper_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            owner_id: read_value::<u16>(
+                stream,
+                definition.get_entry(3274630577613078265u64),
+                "owner_id",
+            )?,
+            object: read_value::<u8>(
+                stream,
+                definition.get_entry(10231808476453998586u64),
+                "object",
+            )?,
+            sapper_id: read_value::<u16>(
+                stream,
+                definition.get_entry(14334448895032880407u64),
+                "sapper_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "ownerid" => Ok(self.owner_id.clone().into()),
-            "object" => Ok(self.object.clone().into()),
-            "sapperid" => Ok(self.sapper_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            3274630577613078265u64 => Ok(self.owner_id.clone().into()),
+            10231808476453998586u64 => Ok(self.object.clone().into()),
+            14334448895032880407u64 => Ok(self.sapper_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerSappedObject",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8610,7 +9599,7 @@ impl PlayerSappedObjectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8632,29 +9621,53 @@ impl ItemFoundEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ItemFoundEvent {
-            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
-            quality: read_value::<u8>(stream, definition.get_entry("quality"), "quality")?,
-            method: read_value::<u8>(stream, definition.get_entry("method"), "method")?,
-            item_def: read_value::<u32>(stream, definition.get_entry("itemdef"), "item_def")?,
-            is_strange: read_value::<u8>(stream, definition.get_entry("isstrange"), "is_strange")?,
-            is_unusual: read_value::<u8>(stream, definition.get_entry("isunusual"), "is_unusual")?,
-            wear: read_value::<f32>(stream, definition.get_entry("wear"), "wear")?,
+            player: read_value::<u8>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            quality: read_value::<u8>(
+                stream,
+                definition.get_entry(8827161447210483302u64),
+                "quality",
+            )?,
+            method: read_value::<u8>(
+                stream,
+                definition.get_entry(2525399976365011888u64),
+                "method",
+            )?,
+            item_def: read_value::<u32>(
+                stream,
+                definition.get_entry(13929934279997928333u64),
+                "item_def",
+            )?,
+            is_strange: read_value::<u8>(
+                stream,
+                definition.get_entry(4841352240690495167u64),
+                "is_strange",
+            )?,
+            is_unusual: read_value::<u8>(
+                stream,
+                definition.get_entry(17913208470555068296u64),
+                "is_unusual",
+            )?,
+            wear: read_value::<f32>(stream, definition.get_entry(4427899308794289118u64), "wear")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "quality" => Ok(self.quality.clone().into()),
-            "method" => Ok(self.method.clone().into()),
-            "itemdef" => Ok(self.item_def.clone().into()),
-            "isstrange" => Ok(self.is_strange.clone().into()),
-            "isunusual" => Ok(self.is_unusual.clone().into()),
-            "wear" => Ok(self.wear.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            8827161447210483302u64 => Ok(self.quality.clone().into()),
+            2525399976365011888u64 => Ok(self.method.clone().into()),
+            13929934279997928333u64 => Ok(self.item_def.clone().into()),
+            4841352240690495167u64 => Ok(self.is_strange.clone().into()),
+            17913208470555068296u64 => Ok(self.is_unusual.clone().into()),
+            4427899308794289118u64 => Ok(self.wear.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ItemFound",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8666,7 +9679,7 @@ impl ItemFoundEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8697,85 +9710,93 @@ impl ShowAnnotationEvent {
         Ok(ShowAnnotationEvent {
             world_pos_x: read_value::<f32>(
                 stream,
-                definition.get_entry("worldPosX"),
+                definition.get_entry(17136446437287500353u64),
                 "world_pos_x",
             )?,
             world_pos_y: read_value::<f32>(
                 stream,
-                definition.get_entry("worldPosY"),
+                definition.get_entry(17136445337775872142u64),
                 "world_pos_y",
             )?,
             world_pos_z: read_value::<f32>(
                 stream,
-                definition.get_entry("worldPosZ"),
+                definition.get_entry(17136444238264243931u64),
                 "world_pos_z",
             )?,
             world_normal_x: read_value::<f32>(
                 stream,
-                definition.get_entry("worldNormalX"),
+                definition.get_entry(6094703810714717260u64),
                 "world_normal_x",
             )?,
             world_normal_y: read_value::<f32>(
                 stream,
-                definition.get_entry("worldNormalY"),
+                definition.get_entry(6094704910226345471u64),
                 "world_normal_y",
             )?,
             world_normal_z: read_value::<f32>(
                 stream,
-                definition.get_entry("worldNormalZ"),
+                definition.get_entry(6094706009737973682u64),
                 "world_normal_z",
             )?,
-            id: read_value::<u32>(stream, definition.get_entry("id"), "id")?,
-            text: read_value::<MaybeUtf8String>(stream, definition.get_entry("text"), "text")?,
-            lifetime: read_value::<f32>(stream, definition.get_entry("lifetime"), "lifetime")?,
+            id: read_value::<u32>(stream, definition.get_entry(628021283683842752u64), "id")?,
+            text: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(18015793717152399486u64),
+                "text",
+            )?,
+            lifetime: read_value::<f32>(
+                stream,
+                definition.get_entry(17408443252967694094u64),
+                "lifetime",
+            )?,
             visibility_bit_field: read_value::<u32>(
                 stream,
-                definition.get_entry("visibilityBitfield"),
+                definition.get_entry(3514840313863479388u64),
                 "visibility_bit_field",
             )?,
             follow_ent_index: read_value::<u32>(
                 stream,
-                definition.get_entry("follow_entindex"),
+                definition.get_entry(5396668150069485958u64),
                 "follow_ent_index",
             )?,
             show_distance: read_value::<bool>(
                 stream,
-                definition.get_entry("show_distance"),
+                definition.get_entry(10815115409701055510u64),
                 "show_distance",
             )?,
             play_sound: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("play_sound"),
+                definition.get_entry(9580177307637293387u64),
                 "play_sound",
             )?,
             show_effect: read_value::<bool>(
                 stream,
-                definition.get_entry("show_effect"),
+                definition.get_entry(16061793018411867440u64),
                 "show_effect",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "worldPosX" => Ok(self.world_pos_x.clone().into()),
-            "worldPosY" => Ok(self.world_pos_y.clone().into()),
-            "worldPosZ" => Ok(self.world_pos_z.clone().into()),
-            "worldNormalX" => Ok(self.world_normal_x.clone().into()),
-            "worldNormalY" => Ok(self.world_normal_y.clone().into()),
-            "worldNormalZ" => Ok(self.world_normal_z.clone().into()),
-            "id" => Ok(self.id.clone().into()),
-            "text" => Ok(self.text.clone().into()),
-            "lifetime" => Ok(self.lifetime.clone().into()),
-            "visibilityBitfield" => Ok(self.visibility_bit_field.clone().into()),
-            "follow_entindex" => Ok(self.follow_ent_index.clone().into()),
-            "show_distance" => Ok(self.show_distance.clone().into()),
-            "play_sound" => Ok(self.play_sound.clone().into()),
-            "show_effect" => Ok(self.show_effect.clone().into()),
+        match field.hash {
+            17136446437287500353u64 => Ok(self.world_pos_x.clone().into()),
+            17136445337775872142u64 => Ok(self.world_pos_y.clone().into()),
+            17136444238264243931u64 => Ok(self.world_pos_z.clone().into()),
+            6094703810714717260u64 => Ok(self.world_normal_x.clone().into()),
+            6094704910226345471u64 => Ok(self.world_normal_y.clone().into()),
+            6094706009737973682u64 => Ok(self.world_normal_z.clone().into()),
+            628021283683842752u64 => Ok(self.id.clone().into()),
+            18015793717152399486u64 => Ok(self.text.clone().into()),
+            17408443252967694094u64 => Ok(self.lifetime.clone().into()),
+            3514840313863479388u64 => Ok(self.visibility_bit_field.clone().into()),
+            5396668150069485958u64 => Ok(self.follow_ent_index.clone().into()),
+            10815115409701055510u64 => Ok(self.show_distance.clone().into()),
+            9580177307637293387u64 => Ok(self.play_sound.clone().into()),
+            16061793018411867440u64 => Ok(self.show_effect.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ShowAnnotation",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8787,7 +9808,7 @@ impl ShowAnnotationEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8803,17 +9824,17 @@ impl HideAnnotationEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HideAnnotationEvent {
-            id: read_value::<u32>(stream, definition.get_entry("id"), "id")?,
+            id: read_value::<u32>(stream, definition.get_entry(628021283683842752u64), "id")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "id" => Ok(self.id.clone().into()),
+        match field.hash {
+            628021283683842752u64 => Ok(self.id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HideAnnotation",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8825,7 +9846,7 @@ impl HideAnnotationEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8841,17 +9862,21 @@ impl PostInventoryApplicationEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PostInventoryApplicationEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PostInventoryApplication",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8863,7 +9888,7 @@ impl PostInventoryApplicationEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8880,19 +9905,23 @@ impl ControlPointUnlockUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ControlPointUnlockUpdatedEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
-            time: read_value::<f32>(stream, definition.get_entry("time"), "time")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
+            time: read_value::<f32>(stream, definition.get_entry(2185518981507421060u64), "time")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
-            "time" => Ok(self.time.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
+            2185518981507421060u64 => Ok(self.time.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ControlPointUnlockUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8904,7 +9933,7 @@ impl ControlPointUnlockUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8921,23 +9950,27 @@ impl DeployBuffBannerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(DeployBuffBannerEvent {
-            buff_type: read_value::<u8>(stream, definition.get_entry("buff_type"), "buff_type")?,
+            buff_type: read_value::<u8>(
+                stream,
+                definition.get_entry(15706957908546287009u64),
+                "buff_type",
+            )?,
             buff_owner: read_value::<u16>(
                 stream,
-                definition.get_entry("buff_owner"),
+                definition.get_entry(16619542197404164576u64),
                 "buff_owner",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "buff_type" => Ok(self.buff_type.clone().into()),
-            "buff_owner" => Ok(self.buff_owner.clone().into()),
+        match field.hash {
+            15706957908546287009u64 => Ok(self.buff_type.clone().into()),
+            16619542197404164576u64 => Ok(self.buff_owner.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "DeployBuffBanner",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8949,7 +9982,7 @@ impl DeployBuffBannerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8967,25 +10000,33 @@ impl PlayerBuffEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerBuffEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             buff_owner: read_value::<u16>(
                 stream,
-                definition.get_entry("buff_owner"),
+                definition.get_entry(16619542197404164576u64),
                 "buff_owner",
             )?,
-            buff_type: read_value::<u8>(stream, definition.get_entry("buff_type"), "buff_type")?,
+            buff_type: read_value::<u8>(
+                stream,
+                definition.get_entry(15706957908546287009u64),
+                "buff_type",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "buff_owner" => Ok(self.buff_owner.clone().into()),
-            "buff_type" => Ok(self.buff_type.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            16619542197404164576u64 => Ok(self.buff_owner.clone().into()),
+            15706957908546287009u64 => Ok(self.buff_type.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerBuff",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -8997,7 +10038,7 @@ impl PlayerBuffEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9016,23 +10057,39 @@ impl MedicDeathEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MedicDeathEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            attacker: read_value::<u16>(stream, definition.get_entry("attacker"), "attacker")?,
-            healing: read_value::<u16>(stream, definition.get_entry("healing"), "healing")?,
-            charged: read_value::<bool>(stream, definition.get_entry("charged"), "charged")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            attacker: read_value::<u16>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
+            healing: read_value::<u16>(
+                stream,
+                definition.get_entry(2721180038881757981u64),
+                "healing",
+            )?,
+            charged: read_value::<bool>(
+                stream,
+                definition.get_entry(17260212114554334191u64),
+                "charged",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "attacker" => Ok(self.attacker.clone().into()),
-            "healing" => Ok(self.healing.clone().into()),
-            "charged" => Ok(self.charged.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
+            2721180038881757981u64 => Ok(self.healing.clone().into()),
+            17260212114554334191u64 => Ok(self.charged.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MedicDeath",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9044,7 +10101,7 @@ impl MedicDeathEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9060,12 +10117,12 @@ impl OvertimeNagEvent {
         Ok(OvertimeNagEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "OvertimeNag",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9077,7 +10134,7 @@ impl OvertimeNagEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9093,12 +10150,12 @@ impl TeamsChangedEvent {
         Ok(TeamsChangedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamsChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9110,7 +10167,7 @@ impl TeamsChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9126,17 +10183,21 @@ impl HalloweenPumpkinGrabEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HalloweenPumpkinGrabEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HalloweenPumpkinGrab",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9148,7 +10209,7 @@ impl HalloweenPumpkinGrabEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9165,23 +10226,27 @@ impl RocketJumpEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RocketJumpEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             play_sound: read_value::<bool>(
                 stream,
-                definition.get_entry("playsound"),
+                definition.get_entry(2035986273219443074u64),
                 "play_sound",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "playsound" => Ok(self.play_sound.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            2035986273219443074u64 => Ok(self.play_sound.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RocketJump",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9193,7 +10258,7 @@ impl RocketJumpEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9209,17 +10274,21 @@ impl RocketJumpLandedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RocketJumpLandedEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RocketJumpLanded",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9231,7 +10300,7 @@ impl RocketJumpLandedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9248,23 +10317,27 @@ impl StickyJumpEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(StickyJumpEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             play_sound: read_value::<bool>(
                 stream,
-                definition.get_entry("playsound"),
+                definition.get_entry(2035986273219443074u64),
                 "play_sound",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "playsound" => Ok(self.play_sound.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            2035986273219443074u64 => Ok(self.play_sound.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "StickyJump",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9276,7 +10349,7 @@ impl StickyJumpEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9292,17 +10365,21 @@ impl StickyJumpLandedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(StickyJumpLandedEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "StickyJumpLanded",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9314,7 +10391,7 @@ impl StickyJumpLandedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9331,23 +10408,27 @@ impl RocketPackLaunchEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RocketPackLaunchEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             play_sound: read_value::<bool>(
                 stream,
-                definition.get_entry("playsound"),
+                definition.get_entry(2035986273219443074u64),
                 "play_sound",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "playsound" => Ok(self.play_sound.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            2035986273219443074u64 => Ok(self.play_sound.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RocketPackLaunch",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9359,7 +10440,7 @@ impl RocketPackLaunchEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9375,17 +10456,21 @@ impl RocketPackLandedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RocketPackLandedEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RocketPackLanded",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9397,7 +10482,7 @@ impl RocketPackLandedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9414,19 +10499,27 @@ impl MedicDefendedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MedicDefendedEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            medic: read_value::<u16>(stream, definition.get_entry("medic"), "medic")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            medic: read_value::<u16>(
+                stream,
+                definition.get_entry(12912869923554243305u64),
+                "medic",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "medic" => Ok(self.medic.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            12912869923554243305u64 => Ok(self.medic.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MedicDefended",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9438,7 +10531,7 @@ impl MedicDefendedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9454,17 +10547,21 @@ impl LocalPlayerHealedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(LocalPlayerHealedEvent {
-            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
+            amount: read_value::<u16>(
+                stream,
+                definition.get_entry(9301057475299076457u64),
+                "amount",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "amount" => Ok(self.amount.clone().into()),
+        match field.hash {
+            9301057475299076457u64 => Ok(self.amount.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "LocalPlayerHealed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9476,7 +10573,7 @@ impl LocalPlayerHealedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9492,17 +10589,21 @@ impl PlayerDestroyedPipeBombEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerDestroyedPipeBombEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerDestroyedPipeBomb",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9514,7 +10615,7 @@ impl PlayerDestroyedPipeBombEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9533,27 +10634,39 @@ impl ObjectDeflectedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ObjectDeflectedEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            owner_id: read_value::<u16>(stream, definition.get_entry("ownerid"), "owner_id")?,
-            weapon_id: read_value::<u16>(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            owner_id: read_value::<u16>(
+                stream,
+                definition.get_entry(3274630577613078265u64),
+                "owner_id",
+            )?,
+            weapon_id: read_value::<u16>(
+                stream,
+                definition.get_entry(5542695206485500884u64),
+                "weapon_id",
+            )?,
             object_ent_index: read_value::<u16>(
                 stream,
-                definition.get_entry("object_entindex"),
+                definition.get_entry(8474579522830253112u64),
                 "object_ent_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "ownerid" => Ok(self.owner_id.clone().into()),
-            "weaponid" => Ok(self.weapon_id.clone().into()),
-            "object_entindex" => Ok(self.object_ent_index.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            3274630577613078265u64 => Ok(self.owner_id.clone().into()),
+            5542695206485500884u64 => Ok(self.weapon_id.clone().into()),
+            8474579522830253112u64 => Ok(self.object_ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ObjectDeflected",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9565,7 +10678,7 @@ impl ObjectDeflectedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9581,17 +10694,21 @@ impl PlayerMvpEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerMvpEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerMvp",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9603,7 +10720,7 @@ impl PlayerMvpEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9619,12 +10736,12 @@ impl RaidSpawnMobEvent {
         Ok(RaidSpawnMobEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RaidSpawnMob",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9636,7 +10753,7 @@ impl RaidSpawnMobEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9652,12 +10769,12 @@ impl RaidSpawnSquadEvent {
         Ok(RaidSpawnSquadEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RaidSpawnSquad",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9669,7 +10786,7 @@ impl RaidSpawnSquadEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9686,19 +10803,23 @@ impl NavBlockedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(NavBlockedEvent {
-            area: read_value::<u32>(stream, definition.get_entry("area"), "area")?,
-            blocked: read_value::<bool>(stream, definition.get_entry("blocked"), "blocked")?,
+            area: read_value::<u32>(stream, definition.get_entry(9894459526856489156u64), "area")?,
+            blocked: read_value::<bool>(
+                stream,
+                definition.get_entry(9150172433819428659u64),
+                "blocked",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "area" => Ok(self.area.clone().into()),
-            "blocked" => Ok(self.blocked.clone().into()),
+        match field.hash {
+            9894459526856489156u64 => Ok(self.area.clone().into()),
+            9150172433819428659u64 => Ok(self.blocked.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "NavBlocked",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9710,7 +10831,7 @@ impl NavBlockedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9726,17 +10847,21 @@ impl PathTrackPassedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PathTrackPassedEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PathTrackPassed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9748,7 +10873,7 @@ impl PathTrackPassedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9765,19 +10890,27 @@ impl NumCappersChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(NumCappersChangedEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
-            count: read_value::<u8>(stream, definition.get_entry("count"), "count")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
+            count: read_value::<u8>(
+                stream,
+                definition.get_entry(12818901015042040436u64),
+                "count",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
-            "count" => Ok(self.count.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
+            12818901015042040436u64 => Ok(self.count.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "NumCappersChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9789,7 +10922,7 @@ impl NumCappersChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9805,12 +10938,12 @@ impl PlayerRegenerateEvent {
         Ok(PlayerRegenerateEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerRegenerate",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9822,7 +10955,7 @@ impl PlayerRegenerateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9839,19 +10972,27 @@ impl UpdateStatusItemEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(UpdateStatusItemEvent {
-            index: read_value::<u8>(stream, definition.get_entry("index"), "index")?,
-            object: read_value::<u8>(stream, definition.get_entry("object"), "object")?,
+            index: read_value::<u8>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
+            object: read_value::<u8>(
+                stream,
+                definition.get_entry(10231808476453998586u64),
+                "object",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
-            "object" => Ok(self.object.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
+            10231808476453998586u64 => Ok(self.object.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "UpdateStatusItem",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9863,7 +11004,7 @@ impl UpdateStatusItemEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9879,12 +11020,12 @@ impl StatsResetRoundEvent {
         Ok(StatsResetRoundEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "StatsResetRound",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9896,7 +11037,7 @@ impl StatsResetRoundEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9912,12 +11053,12 @@ impl ScoreStatsAccumulatedUpdateEvent {
         Ok(ScoreStatsAccumulatedUpdateEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ScoreStatsAccumulatedUpdate",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9929,7 +11070,7 @@ impl ScoreStatsAccumulatedUpdateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9945,12 +11086,12 @@ impl ScoreStatsAccumulatedResetEvent {
         Ok(ScoreStatsAccumulatedResetEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ScoreStatsAccumulatedReset",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -9962,7 +11103,7 @@ impl ScoreStatsAccumulatedResetEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9980,19 +11121,19 @@ impl AchievementEarnedLocalEvent {
         Ok(AchievementEarnedLocalEvent {
             achievement: read_value::<u16>(
                 stream,
-                definition.get_entry("achievement"),
+                definition.get_entry(7071905471600864408u64),
                 "achievement",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "achievement" => Ok(self.achievement.clone().into()),
+        match field.hash {
+            7071905471600864408u64 => Ok(self.achievement.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "AchievementEarnedLocal",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10004,7 +11145,7 @@ impl AchievementEarnedLocalEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10022,21 +11163,33 @@ impl PlayerHealedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerHealedEvent {
-            patient: read_value::<u16>(stream, definition.get_entry("patient"), "patient")?,
-            healer: read_value::<u16>(stream, definition.get_entry("healer"), "healer")?,
-            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
+            patient: read_value::<u16>(
+                stream,
+                definition.get_entry(1896141292373524286u64),
+                "patient",
+            )?,
+            healer: read_value::<u16>(
+                stream,
+                definition.get_entry(9195440821534910520u64),
+                "healer",
+            )?,
+            amount: read_value::<u16>(
+                stream,
+                definition.get_entry(9301057475299076457u64),
+                "amount",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "patient" => Ok(self.patient.clone().into()),
-            "healer" => Ok(self.healer.clone().into()),
-            "amount" => Ok(self.amount.clone().into()),
+        match field.hash {
+            1896141292373524286u64 => Ok(self.patient.clone().into()),
+            9195440821534910520u64 => Ok(self.healer.clone().into()),
+            9301057475299076457u64 => Ok(self.amount.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerHealed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10048,7 +11201,7 @@ impl PlayerHealedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10066,21 +11219,33 @@ impl BuildingHealedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(BuildingHealedEvent {
-            building: read_value::<u16>(stream, definition.get_entry("building"), "building")?,
-            healer: read_value::<u16>(stream, definition.get_entry("healer"), "healer")?,
-            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
+            building: read_value::<u16>(
+                stream,
+                definition.get_entry(18077801548994995317u64),
+                "building",
+            )?,
+            healer: read_value::<u16>(
+                stream,
+                definition.get_entry(9195440821534910520u64),
+                "healer",
+            )?,
+            amount: read_value::<u16>(
+                stream,
+                definition.get_entry(9301057475299076457u64),
+                "amount",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "building" => Ok(self.building.clone().into()),
-            "healer" => Ok(self.healer.clone().into()),
-            "amount" => Ok(self.amount.clone().into()),
+        match field.hash {
+            18077801548994995317u64 => Ok(self.building.clone().into()),
+            9195440821534910520u64 => Ok(self.healer.clone().into()),
+            9301057475299076457u64 => Ok(self.amount.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "BuildingHealed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10092,7 +11257,7 @@ impl BuildingHealedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10109,19 +11274,27 @@ impl ItemPickupEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ItemPickupEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            item: read_value::<MaybeUtf8String>(stream, definition.get_entry("item"), "item")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            item: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(2900776405502981158u64),
+                "item",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "item" => Ok(self.item.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            2900776405502981158u64 => Ok(self.item.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ItemPickup",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10133,7 +11306,7 @@ impl ItemPickupEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10154,39 +11327,51 @@ impl DuelStatusEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(DuelStatusEvent {
-            killer: read_value::<u16>(stream, definition.get_entry("killer"), "killer")?,
+            killer: read_value::<u16>(
+                stream,
+                definition.get_entry(7927307102854403058u64),
+                "killer",
+            )?,
             score_type: read_value::<u16>(
                 stream,
-                definition.get_entry("score_type"),
+                definition.get_entry(5898901342300468638u64),
                 "score_type",
             )?,
-            initiator: read_value::<u16>(stream, definition.get_entry("initiator"), "initiator")?,
-            target: read_value::<u16>(stream, definition.get_entry("target"), "target")?,
+            initiator: read_value::<u16>(
+                stream,
+                definition.get_entry(7196121162372295066u64),
+                "initiator",
+            )?,
+            target: read_value::<u16>(
+                stream,
+                definition.get_entry(1653916590517707752u64),
+                "target",
+            )?,
             initiator_score: read_value::<u16>(
                 stream,
-                definition.get_entry("initiator_score"),
+                definition.get_entry(3503682569462171123u64),
                 "initiator_score",
             )?,
             target_score: read_value::<u16>(
                 stream,
-                definition.get_entry("target_score"),
+                definition.get_entry(3432502518358366373u64),
                 "target_score",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "killer" => Ok(self.killer.clone().into()),
-            "score_type" => Ok(self.score_type.clone().into()),
-            "initiator" => Ok(self.initiator.clone().into()),
-            "target" => Ok(self.target.clone().into()),
-            "initiator_score" => Ok(self.initiator_score.clone().into()),
-            "target_score" => Ok(self.target_score.clone().into()),
+        match field.hash {
+            7927307102854403058u64 => Ok(self.killer.clone().into()),
+            5898901342300468638u64 => Ok(self.score_type.clone().into()),
+            7196121162372295066u64 => Ok(self.initiator.clone().into()),
+            1653916590517707752u64 => Ok(self.target.clone().into()),
+            3503682569462171123u64 => Ok(self.initiator_score.clone().into()),
+            3432502518358366373u64 => Ok(self.target_score.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "DuelStatus",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10198,7 +11383,7 @@ impl DuelStatusEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10227,83 +11412,99 @@ impl FishNoticeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(FishNoticeEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             victim_ent_index: read_value::<u32>(
                 stream,
-                definition.get_entry("victim_entindex"),
+                definition.get_entry(7608903543976233025u64),
                 "victim_ent_index",
             )?,
             inflictor_ent_index: read_value::<u32>(
                 stream,
-                definition.get_entry("inflictor_entindex"),
+                definition.get_entry(7862267791693534473u64),
                 "inflictor_ent_index",
             )?,
-            attacker: read_value::<u16>(stream, definition.get_entry("attacker"), "attacker")?,
+            attacker: read_value::<u16>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
             weapon: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("weapon"),
+                definition.get_entry(11580461223051554305u64),
                 "weapon",
             )?,
-            weapon_id: read_value::<u16>(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            weapon_id: read_value::<u16>(
+                stream,
+                definition.get_entry(5542695206485500884u64),
+                "weapon_id",
+            )?,
             damage_bits: read_value::<u32>(
                 stream,
-                definition.get_entry("damagebits"),
+                definition.get_entry(2104626753992558984u64),
                 "damage_bits",
             )?,
             custom_kill: read_value::<u16>(
                 stream,
-                definition.get_entry("customkill"),
+                definition.get_entry(9002408094759571186u64),
                 "custom_kill",
             )?,
-            assister: read_value::<u16>(stream, definition.get_entry("assister"), "assister")?,
+            assister: read_value::<u16>(
+                stream,
+                definition.get_entry(17978308754419261977u64),
+                "assister",
+            )?,
             weapon_log_class_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("weapon_logclassname"),
+                definition.get_entry(8214628514117900939u64),
                 "weapon_log_class_name",
             )?,
             stun_flags: read_value::<u16>(
                 stream,
-                definition.get_entry("stun_flags"),
+                definition.get_entry(16746745151415897845u64),
                 "stun_flags",
             )?,
             death_flags: read_value::<u16>(
                 stream,
-                definition.get_entry("death_flags"),
+                definition.get_entry(210841622282264177u64),
                 "death_flags",
             )?,
             silent_kill: read_value::<bool>(
                 stream,
-                definition.get_entry("silent_kill"),
+                definition.get_entry(5449831253309542421u64),
                 "silent_kill",
             )?,
             assister_fallback: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("assister_fallback"),
+                definition.get_entry(2624120833319605424u64),
                 "assister_fallback",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
-            "inflictor_entindex" => Ok(self.inflictor_ent_index.clone().into()),
-            "attacker" => Ok(self.attacker.clone().into()),
-            "weapon" => Ok(self.weapon.clone().into()),
-            "weaponid" => Ok(self.weapon_id.clone().into()),
-            "damagebits" => Ok(self.damage_bits.clone().into()),
-            "customkill" => Ok(self.custom_kill.clone().into()),
-            "assister" => Ok(self.assister.clone().into()),
-            "weapon_logclassname" => Ok(self.weapon_log_class_name.clone().into()),
-            "stun_flags" => Ok(self.stun_flags.clone().into()),
-            "death_flags" => Ok(self.death_flags.clone().into()),
-            "silent_kill" => Ok(self.silent_kill.clone().into()),
-            "assister_fallback" => Ok(self.assister_fallback.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            7608903543976233025u64 => Ok(self.victim_ent_index.clone().into()),
+            7862267791693534473u64 => Ok(self.inflictor_ent_index.clone().into()),
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
+            11580461223051554305u64 => Ok(self.weapon.clone().into()),
+            5542695206485500884u64 => Ok(self.weapon_id.clone().into()),
+            2104626753992558984u64 => Ok(self.damage_bits.clone().into()),
+            9002408094759571186u64 => Ok(self.custom_kill.clone().into()),
+            17978308754419261977u64 => Ok(self.assister.clone().into()),
+            8214628514117900939u64 => Ok(self.weapon_log_class_name.clone().into()),
+            16746745151415897845u64 => Ok(self.stun_flags.clone().into()),
+            210841622282264177u64 => Ok(self.death_flags.clone().into()),
+            5449831253309542421u64 => Ok(self.silent_kill.clone().into()),
+            2624120833319605424u64 => Ok(self.assister_fallback.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "FishNotice",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10315,7 +11516,7 @@ impl FishNoticeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10344,83 +11545,99 @@ impl FishNoticeArmEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(FishNoticeArmEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             victim_ent_index: read_value::<u32>(
                 stream,
-                definition.get_entry("victim_entindex"),
+                definition.get_entry(7608903543976233025u64),
                 "victim_ent_index",
             )?,
             inflictor_ent_index: read_value::<u32>(
                 stream,
-                definition.get_entry("inflictor_entindex"),
+                definition.get_entry(7862267791693534473u64),
                 "inflictor_ent_index",
             )?,
-            attacker: read_value::<u16>(stream, definition.get_entry("attacker"), "attacker")?,
+            attacker: read_value::<u16>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
             weapon: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("weapon"),
+                definition.get_entry(11580461223051554305u64),
                 "weapon",
             )?,
-            weapon_id: read_value::<u16>(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            weapon_id: read_value::<u16>(
+                stream,
+                definition.get_entry(5542695206485500884u64),
+                "weapon_id",
+            )?,
             damage_bits: read_value::<u32>(
                 stream,
-                definition.get_entry("damagebits"),
+                definition.get_entry(2104626753992558984u64),
                 "damage_bits",
             )?,
             custom_kill: read_value::<u16>(
                 stream,
-                definition.get_entry("customkill"),
+                definition.get_entry(9002408094759571186u64),
                 "custom_kill",
             )?,
-            assister: read_value::<u16>(stream, definition.get_entry("assister"), "assister")?,
+            assister: read_value::<u16>(
+                stream,
+                definition.get_entry(17978308754419261977u64),
+                "assister",
+            )?,
             weapon_log_class_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("weapon_logclassname"),
+                definition.get_entry(8214628514117900939u64),
                 "weapon_log_class_name",
             )?,
             stun_flags: read_value::<u16>(
                 stream,
-                definition.get_entry("stun_flags"),
+                definition.get_entry(16746745151415897845u64),
                 "stun_flags",
             )?,
             death_flags: read_value::<u16>(
                 stream,
-                definition.get_entry("death_flags"),
+                definition.get_entry(210841622282264177u64),
                 "death_flags",
             )?,
             silent_kill: read_value::<bool>(
                 stream,
-                definition.get_entry("silent_kill"),
+                definition.get_entry(5449831253309542421u64),
                 "silent_kill",
             )?,
             assister_fallback: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("assister_fallback"),
+                definition.get_entry(2624120833319605424u64),
                 "assister_fallback",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
-            "inflictor_entindex" => Ok(self.inflictor_ent_index.clone().into()),
-            "attacker" => Ok(self.attacker.clone().into()),
-            "weapon" => Ok(self.weapon.clone().into()),
-            "weaponid" => Ok(self.weapon_id.clone().into()),
-            "damagebits" => Ok(self.damage_bits.clone().into()),
-            "customkill" => Ok(self.custom_kill.clone().into()),
-            "assister" => Ok(self.assister.clone().into()),
-            "weapon_logclassname" => Ok(self.weapon_log_class_name.clone().into()),
-            "stun_flags" => Ok(self.stun_flags.clone().into()),
-            "death_flags" => Ok(self.death_flags.clone().into()),
-            "silent_kill" => Ok(self.silent_kill.clone().into()),
-            "assister_fallback" => Ok(self.assister_fallback.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            7608903543976233025u64 => Ok(self.victim_ent_index.clone().into()),
+            7862267791693534473u64 => Ok(self.inflictor_ent_index.clone().into()),
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
+            11580461223051554305u64 => Ok(self.weapon.clone().into()),
+            5542695206485500884u64 => Ok(self.weapon_id.clone().into()),
+            2104626753992558984u64 => Ok(self.damage_bits.clone().into()),
+            9002408094759571186u64 => Ok(self.custom_kill.clone().into()),
+            17978308754419261977u64 => Ok(self.assister.clone().into()),
+            8214628514117900939u64 => Ok(self.weapon_log_class_name.clone().into()),
+            16746745151415897845u64 => Ok(self.stun_flags.clone().into()),
+            210841622282264177u64 => Ok(self.death_flags.clone().into()),
+            5449831253309542421u64 => Ok(self.silent_kill.clone().into()),
+            2624120833319605424u64 => Ok(self.assister_fallback.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "FishNoticeArm",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10432,7 +11649,7 @@ impl FishNoticeArmEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10461,83 +11678,99 @@ impl SlapNoticeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(SlapNoticeEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             victim_ent_index: read_value::<u32>(
                 stream,
-                definition.get_entry("victim_entindex"),
+                definition.get_entry(7608903543976233025u64),
                 "victim_ent_index",
             )?,
             inflictor_ent_index: read_value::<u32>(
                 stream,
-                definition.get_entry("inflictor_entindex"),
+                definition.get_entry(7862267791693534473u64),
                 "inflictor_ent_index",
             )?,
-            attacker: read_value::<u16>(stream, definition.get_entry("attacker"), "attacker")?,
+            attacker: read_value::<u16>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
             weapon: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("weapon"),
+                definition.get_entry(11580461223051554305u64),
                 "weapon",
             )?,
-            weapon_id: read_value::<u16>(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            weapon_id: read_value::<u16>(
+                stream,
+                definition.get_entry(5542695206485500884u64),
+                "weapon_id",
+            )?,
             damage_bits: read_value::<u32>(
                 stream,
-                definition.get_entry("damagebits"),
+                definition.get_entry(2104626753992558984u64),
                 "damage_bits",
             )?,
             custom_kill: read_value::<u16>(
                 stream,
-                definition.get_entry("customkill"),
+                definition.get_entry(9002408094759571186u64),
                 "custom_kill",
             )?,
-            assister: read_value::<u16>(stream, definition.get_entry("assister"), "assister")?,
+            assister: read_value::<u16>(
+                stream,
+                definition.get_entry(17978308754419261977u64),
+                "assister",
+            )?,
             weapon_log_class_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("weapon_logclassname"),
+                definition.get_entry(8214628514117900939u64),
                 "weapon_log_class_name",
             )?,
             stun_flags: read_value::<u16>(
                 stream,
-                definition.get_entry("stun_flags"),
+                definition.get_entry(16746745151415897845u64),
                 "stun_flags",
             )?,
             death_flags: read_value::<u16>(
                 stream,
-                definition.get_entry("death_flags"),
+                definition.get_entry(210841622282264177u64),
                 "death_flags",
             )?,
             silent_kill: read_value::<bool>(
                 stream,
-                definition.get_entry("silent_kill"),
+                definition.get_entry(5449831253309542421u64),
                 "silent_kill",
             )?,
             assister_fallback: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("assister_fallback"),
+                definition.get_entry(2624120833319605424u64),
                 "assister_fallback",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
-            "inflictor_entindex" => Ok(self.inflictor_ent_index.clone().into()),
-            "attacker" => Ok(self.attacker.clone().into()),
-            "weapon" => Ok(self.weapon.clone().into()),
-            "weaponid" => Ok(self.weapon_id.clone().into()),
-            "damagebits" => Ok(self.damage_bits.clone().into()),
-            "customkill" => Ok(self.custom_kill.clone().into()),
-            "assister" => Ok(self.assister.clone().into()),
-            "weapon_logclassname" => Ok(self.weapon_log_class_name.clone().into()),
-            "stun_flags" => Ok(self.stun_flags.clone().into()),
-            "death_flags" => Ok(self.death_flags.clone().into()),
-            "silent_kill" => Ok(self.silent_kill.clone().into()),
-            "assister_fallback" => Ok(self.assister_fallback.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            7608903543976233025u64 => Ok(self.victim_ent_index.clone().into()),
+            7862267791693534473u64 => Ok(self.inflictor_ent_index.clone().into()),
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
+            11580461223051554305u64 => Ok(self.weapon.clone().into()),
+            5542695206485500884u64 => Ok(self.weapon_id.clone().into()),
+            2104626753992558984u64 => Ok(self.damage_bits.clone().into()),
+            9002408094759571186u64 => Ok(self.custom_kill.clone().into()),
+            17978308754419261977u64 => Ok(self.assister.clone().into()),
+            8214628514117900939u64 => Ok(self.weapon_log_class_name.clone().into()),
+            16746745151415897845u64 => Ok(self.stun_flags.clone().into()),
+            210841622282264177u64 => Ok(self.death_flags.clone().into()),
+            5449831253309542421u64 => Ok(self.silent_kill.clone().into()),
+            2624120833319605424u64 => Ok(self.assister_fallback.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "SlapNotice",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10549,7 +11782,7 @@ impl SlapNoticeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10579,85 +11812,105 @@ impl ThrowableHitEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ThrowableHitEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             victim_ent_index: read_value::<u32>(
                 stream,
-                definition.get_entry("victim_entindex"),
+                definition.get_entry(7608903543976233025u64),
                 "victim_ent_index",
             )?,
             inflictor_ent_index: read_value::<u32>(
                 stream,
-                definition.get_entry("inflictor_entindex"),
+                definition.get_entry(7862267791693534473u64),
                 "inflictor_ent_index",
             )?,
-            attacker: read_value::<u16>(stream, definition.get_entry("attacker"), "attacker")?,
+            attacker: read_value::<u16>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
             weapon: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("weapon"),
+                definition.get_entry(11580461223051554305u64),
                 "weapon",
             )?,
-            weapon_id: read_value::<u16>(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            weapon_id: read_value::<u16>(
+                stream,
+                definition.get_entry(5542695206485500884u64),
+                "weapon_id",
+            )?,
             damage_bits: read_value::<u32>(
                 stream,
-                definition.get_entry("damagebits"),
+                definition.get_entry(2104626753992558984u64),
                 "damage_bits",
             )?,
             custom_kill: read_value::<u16>(
                 stream,
-                definition.get_entry("customkill"),
+                definition.get_entry(9002408094759571186u64),
                 "custom_kill",
             )?,
-            assister: read_value::<u16>(stream, definition.get_entry("assister"), "assister")?,
+            assister: read_value::<u16>(
+                stream,
+                definition.get_entry(17978308754419261977u64),
+                "assister",
+            )?,
             weapon_log_class_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("weapon_logclassname"),
+                definition.get_entry(8214628514117900939u64),
                 "weapon_log_class_name",
             )?,
             stun_flags: read_value::<u16>(
                 stream,
-                definition.get_entry("stun_flags"),
+                definition.get_entry(16746745151415897845u64),
                 "stun_flags",
             )?,
             death_flags: read_value::<u16>(
                 stream,
-                definition.get_entry("death_flags"),
+                definition.get_entry(210841622282264177u64),
                 "death_flags",
             )?,
             silent_kill: read_value::<bool>(
                 stream,
-                definition.get_entry("silent_kill"),
+                definition.get_entry(5449831253309542421u64),
                 "silent_kill",
             )?,
             assister_fallback: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("assister_fallback"),
+                definition.get_entry(2624120833319605424u64),
                 "assister_fallback",
             )?,
-            total_hits: read_value::<u16>(stream, definition.get_entry("totalhits"), "total_hits")?,
+            total_hits: read_value::<u16>(
+                stream,
+                definition.get_entry(16097486085498709235u64),
+                "total_hits",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
-            "inflictor_entindex" => Ok(self.inflictor_ent_index.clone().into()),
-            "attacker" => Ok(self.attacker.clone().into()),
-            "weapon" => Ok(self.weapon.clone().into()),
-            "weaponid" => Ok(self.weapon_id.clone().into()),
-            "damagebits" => Ok(self.damage_bits.clone().into()),
-            "customkill" => Ok(self.custom_kill.clone().into()),
-            "assister" => Ok(self.assister.clone().into()),
-            "weapon_logclassname" => Ok(self.weapon_log_class_name.clone().into()),
-            "stun_flags" => Ok(self.stun_flags.clone().into()),
-            "death_flags" => Ok(self.death_flags.clone().into()),
-            "silent_kill" => Ok(self.silent_kill.clone().into()),
-            "assister_fallback" => Ok(self.assister_fallback.clone().into()),
-            "totalhits" => Ok(self.total_hits.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            7608903543976233025u64 => Ok(self.victim_ent_index.clone().into()),
+            7862267791693534473u64 => Ok(self.inflictor_ent_index.clone().into()),
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
+            11580461223051554305u64 => Ok(self.weapon.clone().into()),
+            5542695206485500884u64 => Ok(self.weapon_id.clone().into()),
+            2104626753992558984u64 => Ok(self.damage_bits.clone().into()),
+            9002408094759571186u64 => Ok(self.custom_kill.clone().into()),
+            17978308754419261977u64 => Ok(self.assister.clone().into()),
+            8214628514117900939u64 => Ok(self.weapon_log_class_name.clone().into()),
+            16746745151415897845u64 => Ok(self.stun_flags.clone().into()),
+            210841622282264177u64 => Ok(self.death_flags.clone().into()),
+            5449831253309542421u64 => Ok(self.silent_kill.clone().into()),
+            2624120833319605424u64 => Ok(self.assister_fallback.clone().into()),
+            16097486085498709235u64 => Ok(self.total_hits.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ThrowableHit",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10669,7 +11922,7 @@ impl ThrowableHitEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10685,12 +11938,12 @@ impl PumpkinLordSummonedEvent {
         Ok(PumpkinLordSummonedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PumpkinLordSummoned",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10702,7 +11955,7 @@ impl PumpkinLordSummonedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10718,12 +11971,12 @@ impl PumpkinLordKilledEvent {
         Ok(PumpkinLordKilledEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PumpkinLordKilled",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10735,7 +11988,7 @@ impl PumpkinLordKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10751,17 +12004,21 @@ impl MerasmusSummonedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MerasmusSummonedEvent {
-            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            level: read_value::<u16>(
+                stream,
+                definition.get_entry(16779788834081370269u64),
+                "level",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "level" => Ok(self.level.clone().into()),
+        match field.hash {
+            16779788834081370269u64 => Ok(self.level.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MerasmusSummoned",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10773,7 +12030,7 @@ impl MerasmusSummonedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10789,17 +12046,21 @@ impl MerasmusKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MerasmusKilledEvent {
-            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            level: read_value::<u16>(
+                stream,
+                definition.get_entry(16779788834081370269u64),
+                "level",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "level" => Ok(self.level.clone().into()),
+        match field.hash {
+            16779788834081370269u64 => Ok(self.level.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MerasmusKilled",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10811,7 +12072,7 @@ impl MerasmusKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10828,23 +12089,27 @@ impl MerasmusEscapeWarningEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MerasmusEscapeWarningEvent {
-            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            level: read_value::<u16>(
+                stream,
+                definition.get_entry(16779788834081370269u64),
+                "level",
+            )?,
             time_remaining: read_value::<u8>(
                 stream,
-                definition.get_entry("time_remaining"),
+                definition.get_entry(4322130481848759231u64),
                 "time_remaining",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "level" => Ok(self.level.clone().into()),
-            "time_remaining" => Ok(self.time_remaining.clone().into()),
+        match field.hash {
+            16779788834081370269u64 => Ok(self.level.clone().into()),
+            4322130481848759231u64 => Ok(self.time_remaining.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MerasmusEscapeWarning",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10856,7 +12121,7 @@ impl MerasmusEscapeWarningEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10872,17 +12137,21 @@ impl MerasmusEscapedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MerasmusEscapedEvent {
-            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            level: read_value::<u16>(
+                stream,
+                definition.get_entry(16779788834081370269u64),
+                "level",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "level" => Ok(self.level.clone().into()),
+        match field.hash {
+            16779788834081370269u64 => Ok(self.level.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MerasmusEscaped",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10894,7 +12163,7 @@ impl MerasmusEscapedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10910,17 +12179,21 @@ impl EyeballBossSummonedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EyeballBossSummonedEvent {
-            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            level: read_value::<u16>(
+                stream,
+                definition.get_entry(16779788834081370269u64),
+                "level",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "level" => Ok(self.level.clone().into()),
+        match field.hash {
+            16779788834081370269u64 => Ok(self.level.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EyeballBossSummoned",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10932,7 +12205,7 @@ impl EyeballBossSummonedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10949,23 +12222,27 @@ impl EyeballBossStunnedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EyeballBossStunnedEvent {
-            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            level: read_value::<u16>(
+                stream,
+                definition.get_entry(16779788834081370269u64),
+                "level",
+            )?,
             player_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("player_entindex"),
+                definition.get_entry(13724068420967497014u64),
                 "player_ent_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "level" => Ok(self.level.clone().into()),
-            "player_entindex" => Ok(self.player_ent_index.clone().into()),
+        match field.hash {
+            16779788834081370269u64 => Ok(self.level.clone().into()),
+            13724068420967497014u64 => Ok(self.player_ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EyeballBossStunned",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -10977,7 +12254,7 @@ impl EyeballBossStunnedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10993,17 +12270,21 @@ impl EyeballBossKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EyeballBossKilledEvent {
-            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            level: read_value::<u16>(
+                stream,
+                definition.get_entry(16779788834081370269u64),
+                "level",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "level" => Ok(self.level.clone().into()),
+        match field.hash {
+            16779788834081370269u64 => Ok(self.level.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EyeballBossKilled",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11015,7 +12296,7 @@ impl EyeballBossKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11032,23 +12313,27 @@ impl EyeballBossKillerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EyeballBossKillerEvent {
-            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            level: read_value::<u16>(
+                stream,
+                definition.get_entry(16779788834081370269u64),
+                "level",
+            )?,
             player_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("player_entindex"),
+                definition.get_entry(13724068420967497014u64),
                 "player_ent_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "level" => Ok(self.level.clone().into()),
-            "player_entindex" => Ok(self.player_ent_index.clone().into()),
+        match field.hash {
+            16779788834081370269u64 => Ok(self.level.clone().into()),
+            13724068420967497014u64 => Ok(self.player_ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EyeballBossKiller",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11060,7 +12345,7 @@ impl EyeballBossKillerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11077,23 +12362,27 @@ impl EyeballBossEscapeImminentEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EyeballBossEscapeImminentEvent {
-            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            level: read_value::<u16>(
+                stream,
+                definition.get_entry(16779788834081370269u64),
+                "level",
+            )?,
             time_remaining: read_value::<u8>(
                 stream,
-                definition.get_entry("time_remaining"),
+                definition.get_entry(4322130481848759231u64),
                 "time_remaining",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "level" => Ok(self.level.clone().into()),
-            "time_remaining" => Ok(self.time_remaining.clone().into()),
+        match field.hash {
+            16779788834081370269u64 => Ok(self.level.clone().into()),
+            4322130481848759231u64 => Ok(self.time_remaining.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EyeballBossEscapeImminent",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11105,7 +12394,7 @@ impl EyeballBossEscapeImminentEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11121,17 +12410,21 @@ impl EyeballBossEscapedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EyeballBossEscapedEvent {
-            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            level: read_value::<u16>(
+                stream,
+                definition.get_entry(16779788834081370269u64),
+                "level",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "level" => Ok(self.level.clone().into()),
+        match field.hash {
+            16779788834081370269u64 => Ok(self.level.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EyeballBossEscaped",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11143,7 +12436,7 @@ impl EyeballBossEscapedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11165,37 +12458,53 @@ impl NpcHurtEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(NpcHurtEvent {
-            ent_index: read_value::<u16>(stream, definition.get_entry("entindex"), "ent_index")?,
-            health: read_value::<u16>(stream, definition.get_entry("health"), "health")?,
+            ent_index: read_value::<u16>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
+            health: read_value::<u16>(
+                stream,
+                definition.get_entry(9181103189905877455u64),
+                "health",
+            )?,
             attacker_player: read_value::<u16>(
                 stream,
-                definition.get_entry("attacker_player"),
+                definition.get_entry(7636913148849873330u64),
                 "attacker_player",
             )?,
-            weapon_id: read_value::<u16>(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            weapon_id: read_value::<u16>(
+                stream,
+                definition.get_entry(5542695206485500884u64),
+                "weapon_id",
+            )?,
             damage_amount: read_value::<u16>(
                 stream,
-                definition.get_entry("damageamount"),
+                definition.get_entry(7439038394412279612u64),
                 "damage_amount",
             )?,
-            crit: read_value::<bool>(stream, definition.get_entry("crit"), "crit")?,
-            boss: read_value::<u16>(stream, definition.get_entry("boss"), "boss")?,
+            crit: read_value::<bool>(stream, definition.get_entry(1324453635955533101u64), "crit")?,
+            boss: read_value::<u16>(
+                stream,
+                definition.get_entry(14781339113128978092u64),
+                "boss",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
-            "health" => Ok(self.health.clone().into()),
-            "attacker_player" => Ok(self.attacker_player.clone().into()),
-            "weaponid" => Ok(self.weapon_id.clone().into()),
-            "damageamount" => Ok(self.damage_amount.clone().into()),
-            "crit" => Ok(self.crit.clone().into()),
-            "boss" => Ok(self.boss.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
+            9181103189905877455u64 => Ok(self.health.clone().into()),
+            7636913148849873330u64 => Ok(self.attacker_player.clone().into()),
+            5542695206485500884u64 => Ok(self.weapon_id.clone().into()),
+            7439038394412279612u64 => Ok(self.damage_amount.clone().into()),
+            1324453635955533101u64 => Ok(self.crit.clone().into()),
+            14781339113128978092u64 => Ok(self.boss.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "NpcHurt",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11207,7 +12516,7 @@ impl NpcHurtEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11224,19 +12533,23 @@ impl ControlPointTimerUpdatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ControlPointTimerUpdatedEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
-            time: read_value::<f32>(stream, definition.get_entry("time"), "time")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
+            time: read_value::<f32>(stream, definition.get_entry(2185518981507421060u64), "time")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
-            "time" => Ok(self.time.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
+            2185518981507421060u64 => Ok(self.time.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ControlPointTimerUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11248,7 +12561,7 @@ impl ControlPointTimerUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11264,17 +12577,21 @@ impl PlayerHighFiveStartEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerHighFiveStartEvent {
-            ent_index: read_value::<u8>(stream, definition.get_entry("entindex"), "ent_index")?,
+            ent_index: read_value::<u8>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerHighFiveStart",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11286,7 +12603,7 @@ impl PlayerHighFiveStartEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11302,17 +12619,21 @@ impl PlayerHighFiveCancelEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerHighFiveCancelEvent {
-            ent_index: read_value::<u8>(stream, definition.get_entry("entindex"), "ent_index")?,
+            ent_index: read_value::<u8>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerHighFiveCancel",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11324,7 +12645,7 @@ impl PlayerHighFiveCancelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11343,25 +12664,25 @@ impl PlayerHighFiveSuccessEvent {
         Ok(PlayerHighFiveSuccessEvent {
             initiator_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("initiator_entindex"),
+                definition.get_entry(18349426944415386264u64),
                 "initiator_ent_index",
             )?,
             partner_ent_index: read_value::<u8>(
                 stream,
-                definition.get_entry("partner_entindex"),
+                definition.get_entry(6552235651321274101u64),
                 "partner_ent_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "initiator_entindex" => Ok(self.initiator_ent_index.clone().into()),
-            "partner_entindex" => Ok(self.partner_ent_index.clone().into()),
+        match field.hash {
+            18349426944415386264u64 => Ok(self.initiator_ent_index.clone().into()),
+            6552235651321274101u64 => Ok(self.partner_ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerHighFiveSuccess",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11373,7 +12694,7 @@ impl PlayerHighFiveSuccessEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11391,29 +12712,33 @@ impl PlayerBonusPointsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerBonusPointsEvent {
-            points: read_value::<u16>(stream, definition.get_entry("points"), "points")?,
+            points: read_value::<u16>(
+                stream,
+                definition.get_entry(15925482014108518566u64),
+                "points",
+            )?,
             player_ent_index: read_value::<u16>(
                 stream,
-                definition.get_entry("player_entindex"),
+                definition.get_entry(13724068420967497014u64),
                 "player_ent_index",
             )?,
             source_ent_index: read_value::<u16>(
                 stream,
-                definition.get_entry("source_entindex"),
+                definition.get_entry(7014721347321999598u64),
                 "source_ent_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "points" => Ok(self.points.clone().into()),
-            "player_entindex" => Ok(self.player_ent_index.clone().into()),
-            "source_entindex" => Ok(self.source_ent_index.clone().into()),
+        match field.hash {
+            15925482014108518566u64 => Ok(self.points.clone().into()),
+            13724068420967497014u64 => Ok(self.player_ent_index.clone().into()),
+            7014721347321999598u64 => Ok(self.source_ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerBonusPoints",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11425,7 +12750,7 @@ impl PlayerBonusPointsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11441,12 +12766,12 @@ impl PlayerUpgradedEvent {
         Ok(PlayerUpgradedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerUpgraded",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11458,7 +12783,7 @@ impl PlayerUpgradedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11475,19 +12800,23 @@ impl PlayerBuybackEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerBuybackEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
-            cost: read_value::<u16>(stream, definition.get_entry("cost"), "cost")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            cost: read_value::<u16>(stream, definition.get_entry(859913274118676344u64), "cost")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "cost" => Ok(self.cost.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            859913274118676344u64 => Ok(self.cost.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerBuyback",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11499,7 +12828,7 @@ impl PlayerBuybackEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11517,21 +12846,29 @@ impl PlayerUsedPowerUpBottleEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerUsedPowerUpBottleEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
-            kind: read_value::<u16>(stream, definition.get_entry("type"), "kind")?,
-            time: read_value::<f32>(stream, definition.get_entry("time"), "time")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            kind: read_value::<u16>(
+                stream,
+                definition.get_entry(12075340201627130925u64),
+                "kind",
+            )?,
+            time: read_value::<f32>(stream, definition.get_entry(2185518981507421060u64), "time")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "type" => Ok(self.kind.clone().into()),
-            "time" => Ok(self.time.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            12075340201627130925u64 => Ok(self.kind.clone().into()),
+            2185518981507421060u64 => Ok(self.time.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerUsedPowerUpBottle",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11543,7 +12880,7 @@ impl PlayerUsedPowerUpBottleEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11559,17 +12896,21 @@ impl ChristmasGiftGrabEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ChristmasGiftGrabEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ChristmasGiftGrab",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11581,7 +12922,7 @@ impl ChristmasGiftGrabEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11599,21 +12940,33 @@ impl PlayerKilledAchievementZoneEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerKilledAchievementZoneEvent {
-            attacker: read_value::<u16>(stream, definition.get_entry("attacker"), "attacker")?,
-            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
-            zone_id: read_value::<u16>(stream, definition.get_entry("zone_id"), "zone_id")?,
+            attacker: read_value::<u16>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
+            victim: read_value::<u16>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
+            zone_id: read_value::<u16>(
+                stream,
+                definition.get_entry(15583775021870447765u64),
+                "zone_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "attacker" => Ok(self.attacker.clone().into()),
-            "victim" => Ok(self.victim.clone().into()),
-            "zone_id" => Ok(self.zone_id.clone().into()),
+        match field.hash {
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
+            15583775021870447765u64 => Ok(self.zone_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerKilledAchievementZone",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11625,7 +12978,7 @@ impl PlayerKilledAchievementZoneEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11641,12 +12994,12 @@ impl PartyUpdatedEvent {
         Ok(PartyUpdatedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PartyUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11658,7 +13011,7 @@ impl PartyUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11674,12 +13027,12 @@ impl PartyPrefChangedEvent {
         Ok(PartyPrefChangedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PartyPrefChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11691,7 +13044,7 @@ impl PartyPrefChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11707,12 +13060,12 @@ impl PartyCriteriaChangedEvent {
         Ok(PartyCriteriaChangedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PartyCriteriaChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11724,7 +13077,7 @@ impl PartyCriteriaChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11740,12 +13093,12 @@ impl PartyInvitesChangedEvent {
         Ok(PartyInvitesChangedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PartyInvitesChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11757,7 +13110,7 @@ impl PartyInvitesChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11775,19 +13128,19 @@ impl PartyQueueStateChangedEvent {
         Ok(PartyQueueStateChangedEvent {
             match_group: read_value::<u16>(
                 stream,
-                definition.get_entry("matchgroup"),
+                definition.get_entry(932658807224826441u64),
                 "match_group",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "matchgroup" => Ok(self.match_group.clone().into()),
+        match field.hash {
+            932658807224826441u64 => Ok(self.match_group.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PartyQueueStateChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11799,7 +13152,7 @@ impl PartyQueueStateChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11819,23 +13172,31 @@ impl PartyChatEvent {
         Ok(PartyChatEvent {
             steam_id: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("steamid"),
+                definition.get_entry(2266437675922439198u64),
                 "steam_id",
             )?,
-            text: read_value::<MaybeUtf8String>(stream, definition.get_entry("text"), "text")?,
-            kind: read_value::<u16>(stream, definition.get_entry("type"), "kind")?,
+            text: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(18015793717152399486u64),
+                "text",
+            )?,
+            kind: read_value::<u16>(
+                stream,
+                definition.get_entry(12075340201627130925u64),
+                "kind",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "steamid" => Ok(self.steam_id.clone().into()),
-            "text" => Ok(self.text.clone().into()),
-            "type" => Ok(self.kind.clone().into()),
+        match field.hash {
+            2266437675922439198u64 => Ok(self.steam_id.clone().into()),
+            18015793717152399486u64 => Ok(self.text.clone().into()),
+            12075340201627130925u64 => Ok(self.kind.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PartyChat",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11847,7 +13208,7 @@ impl PartyChatEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11865,19 +13226,19 @@ impl PartyMemberJoinEvent {
         Ok(PartyMemberJoinEvent {
             steam_id: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("steamid"),
+                definition.get_entry(2266437675922439198u64),
                 "steam_id",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "steamid" => Ok(self.steam_id.clone().into()),
+        match field.hash {
+            2266437675922439198u64 => Ok(self.steam_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PartyMemberJoin",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11889,7 +13250,7 @@ impl PartyMemberJoinEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11907,19 +13268,19 @@ impl PartyMemberLeaveEvent {
         Ok(PartyMemberLeaveEvent {
             steam_id: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("steamid"),
+                definition.get_entry(2266437675922439198u64),
                 "steam_id",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "steamid" => Ok(self.steam_id.clone().into()),
+        match field.hash {
+            2266437675922439198u64 => Ok(self.steam_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PartyMemberLeave",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11931,7 +13292,7 @@ impl PartyMemberLeaveEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11947,12 +13308,12 @@ impl MatchInvitesUpdatedEvent {
         Ok(MatchInvitesUpdatedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MatchInvitesUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11964,7 +13325,7 @@ impl MatchInvitesUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11980,12 +13341,12 @@ impl LobbyUpdatedEvent {
         Ok(LobbyUpdatedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "LobbyUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -11997,7 +13358,7 @@ impl LobbyUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12014,19 +13375,27 @@ impl MvmMissionUpdateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmMissionUpdateEvent {
-            class: read_value::<u16>(stream, definition.get_entry("class"), "class")?,
-            count: read_value::<u16>(stream, definition.get_entry("count"), "count")?,
+            class: read_value::<u16>(
+                stream,
+                definition.get_entry(15066323702654938015u64),
+                "class",
+            )?,
+            count: read_value::<u16>(
+                stream,
+                definition.get_entry(12818901015042040436u64),
+                "count",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "class" => Ok(self.class.clone().into()),
-            "count" => Ok(self.count.clone().into()),
+        match field.hash {
+            15066323702654938015u64 => Ok(self.class.clone().into()),
+            12818901015042040436u64 => Ok(self.count.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmMissionUpdate",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12038,7 +13407,7 @@ impl MvmMissionUpdateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12054,12 +13423,12 @@ impl RecalculateHolidaysEvent {
         Ok(RecalculateHolidaysEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RecalculateHolidays",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12071,7 +13440,7 @@ impl RecalculateHolidaysEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12087,17 +13456,21 @@ impl PlayerCurrencyChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerCurrencyChangedEvent {
-            currency: read_value::<u16>(stream, definition.get_entry("currency"), "currency")?,
+            currency: read_value::<u16>(
+                stream,
+                definition.get_entry(8477458519032517654u64),
+                "currency",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "currency" => Ok(self.currency.clone().into()),
+        match field.hash {
+            8477458519032517654u64 => Ok(self.currency.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerCurrencyChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12109,7 +13482,7 @@ impl PlayerCurrencyChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12125,17 +13498,21 @@ impl DoomsdayRocketOpenEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(DoomsdayRocketOpenEvent {
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "team" => Ok(self.team.clone().into()),
+        match field.hash {
+            18024489754618217260u64 => Ok(self.team.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "DoomsdayRocketOpen",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12147,7 +13524,7 @@ impl DoomsdayRocketOpenEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12163,17 +13540,21 @@ impl RemoveNemesisRelationshipsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RemoveNemesisRelationshipsEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RemoveNemesisRelationships",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12185,7 +13566,7 @@ impl RemoveNemesisRelationshipsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12201,12 +13582,12 @@ impl MvmCreditBonusWaveEvent {
         Ok(MvmCreditBonusWaveEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmCreditBonusWave",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12218,7 +13599,7 @@ impl MvmCreditBonusWaveEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12234,12 +13615,12 @@ impl MvmCreditBonusAllEvent {
         Ok(MvmCreditBonusAllEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmCreditBonusAll",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12251,7 +13632,7 @@ impl MvmCreditBonusAllEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12267,12 +13648,12 @@ impl MvmCreditBonusAllAdvancedEvent {
         Ok(MvmCreditBonusAllAdvancedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmCreditBonusAllAdvanced",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12284,7 +13665,7 @@ impl MvmCreditBonusAllAdvancedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12300,17 +13681,21 @@ impl MvmQuickSentryUpgradeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmQuickSentryUpgradeEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmQuickSentryUpgrade",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12322,7 +13707,7 @@ impl MvmQuickSentryUpgradeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12338,12 +13723,12 @@ impl MvmTankDestroyedByPlayersEvent {
         Ok(MvmTankDestroyedByPlayersEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmTankDestroyedByPlayers",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12355,7 +13740,7 @@ impl MvmTankDestroyedByPlayersEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12371,17 +13756,21 @@ impl MvmKillRobotDeliveringBombEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmKillRobotDeliveringBombEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmKillRobotDeliveringBomb",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12393,7 +13782,7 @@ impl MvmKillRobotDeliveringBombEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12410,19 +13799,27 @@ impl MvmPickupCurrencyEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmPickupCurrencyEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
-            currency: read_value::<u16>(stream, definition.get_entry("currency"), "currency")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            currency: read_value::<u16>(
+                stream,
+                definition.get_entry(8477458519032517654u64),
+                "currency",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "currency" => Ok(self.currency.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            8477458519032517654u64 => Ok(self.currency.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmPickupCurrency",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12434,7 +13831,7 @@ impl MvmPickupCurrencyEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12450,17 +13847,21 @@ impl MvmBombCarrierKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmBombCarrierKilledEvent {
-            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            level: read_value::<u16>(
+                stream,
+                definition.get_entry(16779788834081370269u64),
+                "level",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "level" => Ok(self.level.clone().into()),
+        match field.hash {
+            16779788834081370269u64 => Ok(self.level.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmBombCarrierKilled",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12472,7 +13873,7 @@ impl MvmBombCarrierKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12491,23 +13892,39 @@ impl MvmSentryBusterDetonateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmSentryBusterDetonateEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
-            det_x: read_value::<f32>(stream, definition.get_entry("det_x"), "det_x")?,
-            det_y: read_value::<f32>(stream, definition.get_entry("det_y"), "det_y")?,
-            det_z: read_value::<f32>(stream, definition.get_entry("det_z"), "det_z")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            det_x: read_value::<f32>(
+                stream,
+                definition.get_entry(10880309079248206573u64),
+                "det_x",
+            )?,
+            det_y: read_value::<f32>(
+                stream,
+                definition.get_entry(10880307979736578362u64),
+                "det_y",
+            )?,
+            det_z: read_value::<f32>(
+                stream,
+                definition.get_entry(10880306880224950151u64),
+                "det_z",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "det_x" => Ok(self.det_x.clone().into()),
-            "det_y" => Ok(self.det_y.clone().into()),
-            "det_z" => Ok(self.det_z.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            10880309079248206573u64 => Ok(self.det_x.clone().into()),
+            10880307979736578362u64 => Ok(self.det_y.clone().into()),
+            10880306880224950151u64 => Ok(self.det_z.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmSentryBusterDetonate",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12519,7 +13936,7 @@ impl MvmSentryBusterDetonateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12535,17 +13952,21 @@ impl MvmScoutMarkedForDeathEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmScoutMarkedForDeathEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmScoutMarkedForDeath",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12557,7 +13978,7 @@ impl MvmScoutMarkedForDeathEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12573,17 +13994,21 @@ impl MvmMedicPowerUpSharedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmMedicPowerUpSharedEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmMedicPowerUpShared",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12595,7 +14020,7 @@ impl MvmMedicPowerUpSharedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12615,23 +14040,31 @@ impl MvmBeginWaveEvent {
         Ok(MvmBeginWaveEvent {
             wave_index: read_value::<u16>(
                 stream,
-                definition.get_entry("wave_index"),
+                definition.get_entry(3508416600111464007u64),
                 "wave_index",
             )?,
-            max_waves: read_value::<u16>(stream, definition.get_entry("max_waves"), "max_waves")?,
-            advanced: read_value::<u16>(stream, definition.get_entry("advanced"), "advanced")?,
+            max_waves: read_value::<u16>(
+                stream,
+                definition.get_entry(16186306532262586848u64),
+                "max_waves",
+            )?,
+            advanced: read_value::<u16>(
+                stream,
+                definition.get_entry(2115851684636468731u64),
+                "advanced",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "wave_index" => Ok(self.wave_index.clone().into()),
-            "max_waves" => Ok(self.max_waves.clone().into()),
-            "advanced" => Ok(self.advanced.clone().into()),
+        match field.hash {
+            3508416600111464007u64 => Ok(self.wave_index.clone().into()),
+            16186306532262586848u64 => Ok(self.max_waves.clone().into()),
+            2115851684636468731u64 => Ok(self.advanced.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmBeginWave",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12643,7 +14076,7 @@ impl MvmBeginWaveEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12659,17 +14092,21 @@ impl MvmWaveCompleteEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmWaveCompleteEvent {
-            advanced: read_value::<bool>(stream, definition.get_entry("advanced"), "advanced")?,
+            advanced: read_value::<bool>(
+                stream,
+                definition.get_entry(2115851684636468731u64),
+                "advanced",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "advanced" => Ok(self.advanced.clone().into()),
+        match field.hash {
+            2115851684636468731u64 => Ok(self.advanced.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmWaveComplete",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12681,7 +14118,7 @@ impl MvmWaveCompleteEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12699,19 +14136,19 @@ impl MvmMissionCompleteEvent {
         Ok(MvmMissionCompleteEvent {
             mission: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("mission"),
+                definition.get_entry(9969423424304279641u64),
                 "mission",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "mission" => Ok(self.mission.clone().into()),
+        match field.hash {
+            9969423424304279641u64 => Ok(self.mission.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmMissionComplete",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12723,7 +14160,7 @@ impl MvmMissionCompleteEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12739,17 +14176,21 @@ impl MvmBombResetByPlayerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmBombResetByPlayerEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmBombResetByPlayer",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12761,7 +14202,7 @@ impl MvmBombResetByPlayerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12777,12 +14218,12 @@ impl MvmBombAlarmTriggeredEvent {
         Ok(MvmBombAlarmTriggeredEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmBombAlarmTriggered",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12794,7 +14235,7 @@ impl MvmBombAlarmTriggeredEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12810,17 +14251,21 @@ impl MvmBombDeployResetByPlayerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmBombDeployResetByPlayerEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmBombDeployResetByPlayer",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12832,7 +14277,7 @@ impl MvmBombDeployResetByPlayerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12848,12 +14293,12 @@ impl MvmWaveFailedEvent {
         Ok(MvmWaveFailedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmWaveFailed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12865,7 +14310,7 @@ impl MvmWaveFailedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12881,12 +14326,12 @@ impl MvmResetStatsEvent {
         Ok(MvmResetStatsEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmResetStats",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12898,7 +14343,7 @@ impl MvmResetStatsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12914,17 +14359,21 @@ impl DamageResistedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(DamageResistedEvent {
-            ent_index: read_value::<u8>(stream, definition.get_entry("entindex"), "ent_index")?,
+            ent_index: read_value::<u8>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "DamageResisted",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12936,7 +14385,7 @@ impl DamageResistedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12953,23 +14402,27 @@ impl RevivePlayerNotifyEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RevivePlayerNotifyEvent {
-            ent_index: read_value::<u16>(stream, definition.get_entry("entindex"), "ent_index")?,
+            ent_index: read_value::<u16>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
             marker_ent_index: read_value::<u16>(
                 stream,
-                definition.get_entry("marker_entindex"),
+                definition.get_entry(3793715953080702003u64),
                 "marker_ent_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
-            "marker_entindex" => Ok(self.marker_ent_index.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
+            3793715953080702003u64 => Ok(self.marker_ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RevivePlayerNotify",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -12981,7 +14434,7 @@ impl RevivePlayerNotifyEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12997,17 +14450,21 @@ impl RevivePlayerStoppedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RevivePlayerStoppedEvent {
-            ent_index: read_value::<u16>(stream, definition.get_entry("entindex"), "ent_index")?,
+            ent_index: read_value::<u16>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RevivePlayerStopped",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13019,7 +14476,7 @@ impl RevivePlayerStoppedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13035,17 +14492,21 @@ impl RevivePlayerCompleteEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RevivePlayerCompleteEvent {
-            ent_index: read_value::<u16>(stream, definition.get_entry("entindex"), "ent_index")?,
+            ent_index: read_value::<u16>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RevivePlayerComplete",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13057,7 +14518,7 @@ impl RevivePlayerCompleteEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13073,17 +14534,21 @@ impl PlayerTurnedToGhostEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerTurnedToGhostEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerTurnedToGhost",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13095,7 +14560,7 @@ impl PlayerTurnedToGhostEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13112,19 +14577,27 @@ impl MedigunShieldBlockedDamageEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MedigunShieldBlockedDamageEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            damage: read_value::<f32>(stream, definition.get_entry("damage"), "damage")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            damage: read_value::<f32>(
+                stream,
+                definition.get_entry(9179190079975030720u64),
+                "damage",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "damage" => Ok(self.damage.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            9179190079975030720u64 => Ok(self.damage.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MedigunShieldBlockedDamage",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13136,7 +14609,7 @@ impl MedigunShieldBlockedDamageEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13152,17 +14625,21 @@ impl MvmAdvWaveCompleteNoGatesEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmAdvWaveCompleteNoGatesEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmAdvWaveCompleteNoGates",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13174,7 +14651,7 @@ impl MvmAdvWaveCompleteNoGatesEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13191,19 +14668,27 @@ impl MvmSniperHeadshotCurrencyEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MvmSniperHeadshotCurrencyEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
-            currency: read_value::<u16>(stream, definition.get_entry("currency"), "currency")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
+            currency: read_value::<u16>(
+                stream,
+                definition.get_entry(8477458519032517654u64),
+                "currency",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "currency" => Ok(self.currency.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            8477458519032517654u64 => Ok(self.currency.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmSniperHeadshotCurrency",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13215,7 +14700,7 @@ impl MvmSniperHeadshotCurrencyEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13231,12 +14716,12 @@ impl MvmMannhattanPitEvent {
         Ok(MvmMannhattanPitEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmMannhattanPit",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13248,7 +14733,7 @@ impl MvmMannhattanPitEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13264,12 +14749,12 @@ impl FlagCarriedInDetectionZoneEvent {
         Ok(FlagCarriedInDetectionZoneEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "FlagCarriedInDetectionZone",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13281,7 +14766,7 @@ impl FlagCarriedInDetectionZoneEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13297,12 +14782,12 @@ impl MvmAdvWaveKilledStunRadioEvent {
         Ok(MvmAdvWaveKilledStunRadioEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmAdvWaveKilledStunRadio",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13314,7 +14799,7 @@ impl MvmAdvWaveKilledStunRadioEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13331,19 +14816,27 @@ impl PlayerDirectHitStunEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerDirectHitStunEvent {
-            attacker: read_value::<u16>(stream, definition.get_entry("attacker"), "attacker")?,
-            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
+            attacker: read_value::<u16>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
+            victim: read_value::<u16>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "attacker" => Ok(self.attacker.clone().into()),
-            "victim" => Ok(self.victim.clone().into()),
+        match field.hash {
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerDirectHitStun",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13355,7 +14848,7 @@ impl PlayerDirectHitStunEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13373,19 +14866,19 @@ impl MvmSentryBusterKilledEvent {
         Ok(MvmSentryBusterKilledEvent {
             sentry_buster: read_value::<u16>(
                 stream,
-                definition.get_entry("sentry_buster"),
+                definition.get_entry(7717696824740572250u64),
                 "sentry_buster",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "sentry_buster" => Ok(self.sentry_buster.clone().into()),
+        match field.hash {
+            7717696824740572250u64 => Ok(self.sentry_buster.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MvmSentryBusterKilled",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13397,7 +14890,7 @@ impl MvmSentryBusterKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13413,17 +14906,21 @@ impl UpgradesFileChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(UpgradesFileChangedEvent {
-            path: read_value::<MaybeUtf8String>(stream, definition.get_entry("path"), "path")?,
+            path: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(271672890340345462u64),
+                "path",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "path" => Ok(self.path.clone().into()),
+        match field.hash {
+            271672890340345462u64 => Ok(self.path.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "UpgradesFileChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13435,7 +14932,7 @@ impl UpgradesFileChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13453,21 +14950,33 @@ impl RdTeamPointsChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RdTeamPointsChangedEvent {
-            points: read_value::<u16>(stream, definition.get_entry("points"), "points")?,
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
-            method: read_value::<u8>(stream, definition.get_entry("method"), "method")?,
+            points: read_value::<u16>(
+                stream,
+                definition.get_entry(15925482014108518566u64),
+                "points",
+            )?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            method: read_value::<u8>(
+                stream,
+                definition.get_entry(2525399976365011888u64),
+                "method",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "points" => Ok(self.points.clone().into()),
-            "team" => Ok(self.team.clone().into()),
-            "method" => Ok(self.method.clone().into()),
+        match field.hash {
+            15925482014108518566u64 => Ok(self.points.clone().into()),
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            2525399976365011888u64 => Ok(self.method.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RdTeamPointsChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13479,7 +14988,7 @@ impl RdTeamPointsChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13495,12 +15004,12 @@ impl RdRulesStateChangedEvent {
         Ok(RdRulesStateChangedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RdRulesStateChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13512,7 +15021,7 @@ impl RdRulesStateChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13536,57 +15045,69 @@ impl RdRobotKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RdRobotKilledEvent {
-            user_id: read_value::<u16>(stream, definition.get_entry("userid"), "user_id")?,
+            user_id: read_value::<u16>(
+                stream,
+                definition.get_entry(17826443226371159423u64),
+                "user_id",
+            )?,
             victim_ent_index: read_value::<u32>(
                 stream,
-                definition.get_entry("victim_entindex"),
+                definition.get_entry(7608903543976233025u64),
                 "victim_ent_index",
             )?,
             inflictor_ent_index: read_value::<u32>(
                 stream,
-                definition.get_entry("inflictor_entindex"),
+                definition.get_entry(7862267791693534473u64),
                 "inflictor_ent_index",
             )?,
-            attacker: read_value::<u16>(stream, definition.get_entry("attacker"), "attacker")?,
+            attacker: read_value::<u16>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
             weapon: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("weapon"),
+                definition.get_entry(11580461223051554305u64),
                 "weapon",
             )?,
-            weapon_id: read_value::<u16>(stream, definition.get_entry("weaponid"), "weapon_id")?,
+            weapon_id: read_value::<u16>(
+                stream,
+                definition.get_entry(5542695206485500884u64),
+                "weapon_id",
+            )?,
             damage_bits: read_value::<u32>(
                 stream,
-                definition.get_entry("damagebits"),
+                definition.get_entry(2104626753992558984u64),
                 "damage_bits",
             )?,
             custom_kill: read_value::<u16>(
                 stream,
-                definition.get_entry("customkill"),
+                definition.get_entry(9002408094759571186u64),
                 "custom_kill",
             )?,
             weapon_log_class_name: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("weapon_logclassname"),
+                definition.get_entry(8214628514117900939u64),
                 "weapon_log_class_name",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "userid" => Ok(self.user_id.clone().into()),
-            "victim_entindex" => Ok(self.victim_ent_index.clone().into()),
-            "inflictor_entindex" => Ok(self.inflictor_ent_index.clone().into()),
-            "attacker" => Ok(self.attacker.clone().into()),
-            "weapon" => Ok(self.weapon.clone().into()),
-            "weaponid" => Ok(self.weapon_id.clone().into()),
-            "damagebits" => Ok(self.damage_bits.clone().into()),
-            "customkill" => Ok(self.custom_kill.clone().into()),
-            "weapon_logclassname" => Ok(self.weapon_log_class_name.clone().into()),
+        match field.hash {
+            17826443226371159423u64 => Ok(self.user_id.clone().into()),
+            7608903543976233025u64 => Ok(self.victim_ent_index.clone().into()),
+            7862267791693534473u64 => Ok(self.inflictor_ent_index.clone().into()),
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
+            11580461223051554305u64 => Ok(self.weapon.clone().into()),
+            5542695206485500884u64 => Ok(self.weapon_id.clone().into()),
+            2104626753992558984u64 => Ok(self.damage_bits.clone().into()),
+            9002408094759571186u64 => Ok(self.custom_kill.clone().into()),
+            8214628514117900939u64 => Ok(self.weapon_log_class_name.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RdRobotKilled",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13598,7 +15119,7 @@ impl RdRobotKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13617,23 +15138,39 @@ impl RdRobotImpactEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RdRobotImpactEvent {
-            ent_index: read_value::<u16>(stream, definition.get_entry("entindex"), "ent_index")?,
-            impulse_x: read_value::<f32>(stream, definition.get_entry("impulse_x"), "impulse_x")?,
-            impulse_y: read_value::<f32>(stream, definition.get_entry("impulse_y"), "impulse_y")?,
-            impulse_z: read_value::<f32>(stream, definition.get_entry("impulse_z"), "impulse_z")?,
+            ent_index: read_value::<u16>(
+                stream,
+                definition.get_entry(17554918082946193550u64),
+                "ent_index",
+            )?,
+            impulse_x: read_value::<f32>(
+                stream,
+                definition.get_entry(2780540280585913547u64),
+                "impulse_x",
+            )?,
+            impulse_y: read_value::<f32>(
+                stream,
+                definition.get_entry(2780539181074285336u64),
+                "impulse_y",
+            )?,
+            impulse_z: read_value::<f32>(
+                stream,
+                definition.get_entry(2780542479609169969u64),
+                "impulse_z",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "entindex" => Ok(self.ent_index.clone().into()),
-            "impulse_x" => Ok(self.impulse_x.clone().into()),
-            "impulse_y" => Ok(self.impulse_y.clone().into()),
-            "impulse_z" => Ok(self.impulse_z.clone().into()),
+        match field.hash {
+            17554918082946193550u64 => Ok(self.ent_index.clone().into()),
+            2780540280585913547u64 => Ok(self.impulse_x.clone().into()),
+            2780539181074285336u64 => Ok(self.impulse_y.clone().into()),
+            2780542479609169969u64 => Ok(self.impulse_z.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RdRobotImpact",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13645,7 +15182,7 @@ impl RdRobotImpactEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13661,17 +15198,17 @@ impl TeamPlayPreRoundTimeLeftEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamPlayPreRoundTimeLeftEvent {
-            time: read_value::<u16>(stream, definition.get_entry("time"), "time")?,
+            time: read_value::<u16>(stream, definition.get_entry(2185518981507421060u64), "time")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "time" => Ok(self.time.clone().into()),
+        match field.hash {
+            2185518981507421060u64 => Ok(self.time.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamPlayPreRoundTimeLeft",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13683,7 +15220,7 @@ impl TeamPlayPreRoundTimeLeftEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13699,17 +15236,21 @@ impl ParachuteDeployEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ParachuteDeployEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ParachuteDeploy",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13721,7 +15262,7 @@ impl ParachuteDeployEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13737,17 +15278,21 @@ impl ParachuteHolsterEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ParachuteHolsterEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ParachuteHolster",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13759,7 +15304,7 @@ impl ParachuteHolsterEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13775,17 +15320,21 @@ impl KillRefillsMeterEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(KillRefillsMeterEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "KillRefillsMeter",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13797,7 +15346,7 @@ impl KillRefillsMeterEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13816,23 +15365,39 @@ impl RpsTauntEventEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RpsTauntEventEvent {
-            winner: read_value::<u16>(stream, definition.get_entry("winner"), "winner")?,
-            winner_rps: read_value::<u8>(stream, definition.get_entry("winner_rps"), "winner_rps")?,
-            loser: read_value::<u16>(stream, definition.get_entry("loser"), "loser")?,
-            loser_rps: read_value::<u8>(stream, definition.get_entry("loser_rps"), "loser_rps")?,
+            winner: read_value::<u16>(
+                stream,
+                definition.get_entry(4337804175666422150u64),
+                "winner",
+            )?,
+            winner_rps: read_value::<u8>(
+                stream,
+                definition.get_entry(10341772402923738934u64),
+                "winner_rps",
+            )?,
+            loser: read_value::<u16>(
+                stream,
+                definition.get_entry(12743961777105763166u64),
+                "loser",
+            )?,
+            loser_rps: read_value::<u8>(
+                stream,
+                definition.get_entry(7097735284409203870u64),
+                "loser_rps",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "winner" => Ok(self.winner.clone().into()),
-            "winner_rps" => Ok(self.winner_rps.clone().into()),
-            "loser" => Ok(self.loser.clone().into()),
-            "loser_rps" => Ok(self.loser_rps.clone().into()),
+        match field.hash {
+            4337804175666422150u64 => Ok(self.winner.clone().into()),
+            10341772402923738934u64 => Ok(self.winner_rps.clone().into()),
+            12743961777105763166u64 => Ok(self.loser.clone().into()),
+            7097735284409203870u64 => Ok(self.loser_rps.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RpsTauntEvent",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13844,7 +15409,7 @@ impl RpsTauntEventEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13860,17 +15425,21 @@ impl CongaKillEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(CongaKillEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "CongaKill",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13882,7 +15451,7 @@ impl CongaKillEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13898,17 +15467,21 @@ impl PlayerInitialSpawnEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerInitialSpawnEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerInitialSpawn",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13920,7 +15493,7 @@ impl PlayerInitialSpawnEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13936,12 +15509,12 @@ impl CompetitiveVictoryEvent {
         Ok(CompetitiveVictoryEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "CompetitiveVictory",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -13953,7 +15526,7 @@ impl CompetitiveVictoryEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13974,39 +15547,51 @@ impl CompetitiveStatsUpdateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(CompetitiveStatsUpdateEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
-            kills_rank: read_value::<u8>(stream, definition.get_entry("kills_rank"), "kills_rank")?,
-            score_rank: read_value::<u8>(stream, definition.get_entry("score_rank"), "score_rank")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
+            kills_rank: read_value::<u8>(
+                stream,
+                definition.get_entry(1647429874780590553u64),
+                "kills_rank",
+            )?,
+            score_rank: read_value::<u8>(
+                stream,
+                definition.get_entry(7011983216168462200u64),
+                "score_rank",
+            )?,
             damage_rank: read_value::<u8>(
                 stream,
-                definition.get_entry("damage_rank"),
+                definition.get_entry(1489671713798354735u64),
                 "damage_rank",
             )?,
             healing_rank: read_value::<u8>(
                 stream,
-                definition.get_entry("healing_rank"),
+                definition.get_entry(4364771850637042816u64),
                 "healing_rank",
             )?,
             support_rank: read_value::<u8>(
                 stream,
-                definition.get_entry("support_rank"),
+                definition.get_entry(177739702519296055u64),
                 "support_rank",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
-            "kills_rank" => Ok(self.kills_rank.clone().into()),
-            "score_rank" => Ok(self.score_rank.clone().into()),
-            "damage_rank" => Ok(self.damage_rank.clone().into()),
-            "healing_rank" => Ok(self.healing_rank.clone().into()),
-            "support_rank" => Ok(self.support_rank.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
+            1647429874780590553u64 => Ok(self.kills_rank.clone().into()),
+            7011983216168462200u64 => Ok(self.score_rank.clone().into()),
+            1489671713798354735u64 => Ok(self.damage_rank.clone().into()),
+            4364771850637042816u64 => Ok(self.healing_rank.clone().into()),
+            177739702519296055u64 => Ok(self.support_rank.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "CompetitiveStatsUpdate",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14018,7 +15603,7 @@ impl CompetitiveStatsUpdateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14035,19 +15620,27 @@ impl MiniGameWinEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MiniGameWinEvent {
-            team: read_value::<u8>(stream, definition.get_entry("team"), "team")?,
-            kind: read_value::<u8>(stream, definition.get_entry("type"), "kind")?,
+            team: read_value::<u8>(
+                stream,
+                definition.get_entry(18024489754618217260u64),
+                "team",
+            )?,
+            kind: read_value::<u8>(
+                stream,
+                definition.get_entry(12075340201627130925u64),
+                "kind",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "team" => Ok(self.team.clone().into()),
-            "type" => Ok(self.kind.clone().into()),
+        match field.hash {
+            18024489754618217260u64 => Ok(self.team.clone().into()),
+            12075340201627130925u64 => Ok(self.kind.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MiniGameWin",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14059,7 +15652,7 @@ impl MiniGameWinEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14075,17 +15668,21 @@ impl SentryOnGoActiveEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(SentryOnGoActiveEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "SentryOnGoActive",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14097,7 +15694,7 @@ impl SentryOnGoActiveEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14113,17 +15710,21 @@ impl DuckXpLevelUpEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(DuckXpLevelUpEvent {
-            level: read_value::<u16>(stream, definition.get_entry("level"), "level")?,
+            level: read_value::<u16>(
+                stream,
+                definition.get_entry(16779788834081370269u64),
+                "level",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "level" => Ok(self.level.clone().into()),
+        match field.hash {
+            16779788834081370269u64 => Ok(self.level.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "DuckXpLevelUp",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14135,7 +15736,7 @@ impl DuckXpLevelUpEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14151,12 +15752,12 @@ impl QuestLogOpenedEvent {
         Ok(QuestLogOpenedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "QuestLogOpened",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14168,7 +15769,7 @@ impl QuestLogOpenedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14184,12 +15785,12 @@ impl SchemaUpdatedEvent {
         Ok(SchemaUpdatedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "SchemaUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14201,7 +15802,7 @@ impl SchemaUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14217,12 +15818,12 @@ impl LocalPlayerPickupWeaponEvent {
         Ok(LocalPlayerPickupWeaponEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "LocalPlayerPickupWeapon",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14234,7 +15835,7 @@ impl LocalPlayerPickupWeaponEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14252,21 +15853,33 @@ impl RdPlayerScorePointsEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RdPlayerScorePointsEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
-            method: read_value::<u16>(stream, definition.get_entry("method"), "method")?,
-            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            method: read_value::<u16>(
+                stream,
+                definition.get_entry(2525399976365011888u64),
+                "method",
+            )?,
+            amount: read_value::<u16>(
+                stream,
+                definition.get_entry(9301057475299076457u64),
+                "amount",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "method" => Ok(self.method.clone().into()),
-            "amount" => Ok(self.amount.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            2525399976365011888u64 => Ok(self.method.clone().into()),
+            9301057475299076457u64 => Ok(self.amount.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RdPlayerScorePoints",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14278,7 +15891,7 @@ impl RdPlayerScorePointsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14294,17 +15907,21 @@ impl DemomanDetStickiesEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(DemomanDetStickiesEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "DemomanDetStickies",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14316,7 +15933,7 @@ impl DemomanDetStickiesEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14337,37 +15954,37 @@ impl QuestObjectiveCompletedEvent {
         Ok(QuestObjectiveCompletedEvent {
             quest_item_id_low: read_value::<u32>(
                 stream,
-                definition.get_entry("quest_item_id_low"),
+                definition.get_entry(6899404301657350854u64),
                 "quest_item_id_low",
             )?,
             quest_item_id_hi: read_value::<u32>(
                 stream,
-                definition.get_entry("quest_item_id_hi"),
+                definition.get_entry(5919305845835660727u64),
                 "quest_item_id_hi",
             )?,
             quest_objective_id: read_value::<u32>(
                 stream,
-                definition.get_entry("quest_objective_id"),
+                definition.get_entry(16538099295756322479u64),
                 "quest_objective_id",
             )?,
             scorer_user_id: read_value::<u16>(
                 stream,
-                definition.get_entry("scorer_user_id"),
+                definition.get_entry(10733259024453182903u64),
                 "scorer_user_id",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "quest_item_id_low" => Ok(self.quest_item_id_low.clone().into()),
-            "quest_item_id_hi" => Ok(self.quest_item_id_hi.clone().into()),
-            "quest_objective_id" => Ok(self.quest_objective_id.clone().into()),
-            "scorer_user_id" => Ok(self.scorer_user_id.clone().into()),
+        match field.hash {
+            6899404301657350854u64 => Ok(self.quest_item_id_low.clone().into()),
+            5919305845835660727u64 => Ok(self.quest_item_id_hi.clone().into()),
+            16538099295756322479u64 => Ok(self.quest_objective_id.clone().into()),
+            10733259024453182903u64 => Ok(self.scorer_user_id.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "QuestObjectiveCompleted",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14379,7 +15996,7 @@ impl QuestObjectiveCompletedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14396,19 +16013,27 @@ impl PlayerScoreChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerScoreChangedEvent {
-            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
-            delta: read_value::<u16>(stream, definition.get_entry("delta"), "delta")?,
+            player: read_value::<u8>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            delta: read_value::<u16>(
+                stream,
+                definition.get_entry(5910805692604981441u64),
+                "delta",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "delta" => Ok(self.delta.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            5910805692604981441u64 => Ok(self.delta.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerScoreChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14420,7 +16045,7 @@ impl PlayerScoreChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14439,23 +16064,35 @@ impl KilledCappingPlayerEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(KilledCappingPlayerEvent {
-            cp: read_value::<u8>(stream, definition.get_entry("cp"), "cp")?,
-            killer: read_value::<u8>(stream, definition.get_entry("killer"), "killer")?,
-            victim: read_value::<u8>(stream, definition.get_entry("victim"), "victim")?,
-            assister: read_value::<u8>(stream, definition.get_entry("assister"), "assister")?,
+            cp: read_value::<u8>(stream, definition.get_entry(622127901357767142u64), "cp")?,
+            killer: read_value::<u8>(
+                stream,
+                definition.get_entry(7927307102854403058u64),
+                "killer",
+            )?,
+            victim: read_value::<u8>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
+            assister: read_value::<u8>(
+                stream,
+                definition.get_entry(17978308754419261977u64),
+                "assister",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "cp" => Ok(self.cp.clone().into()),
-            "killer" => Ok(self.killer.clone().into()),
-            "victim" => Ok(self.victim.clone().into()),
-            "assister" => Ok(self.assister.clone().into()),
+        match field.hash {
+            622127901357767142u64 => Ok(self.cp.clone().into()),
+            7927307102854403058u64 => Ok(self.killer.clone().into()),
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
+            17978308754419261977u64 => Ok(self.assister.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "KilledCappingPlayer",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14467,7 +16104,7 @@ impl KilledCappingPlayerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14484,19 +16121,27 @@ impl EnvironmentalDeathEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EnvironmentalDeathEvent {
-            killer: read_value::<u8>(stream, definition.get_entry("killer"), "killer")?,
-            victim: read_value::<u8>(stream, definition.get_entry("victim"), "victim")?,
+            killer: read_value::<u8>(
+                stream,
+                definition.get_entry(7927307102854403058u64),
+                "killer",
+            )?,
+            victim: read_value::<u8>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "killer" => Ok(self.killer.clone().into()),
-            "victim" => Ok(self.victim.clone().into()),
+        match field.hash {
+            7927307102854403058u64 => Ok(self.killer.clone().into()),
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EnvironmentalDeath",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14508,7 +16153,7 @@ impl EnvironmentalDeathEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14526,25 +16171,33 @@ impl ProjectileDirectHitEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ProjectileDirectHitEvent {
-            attacker: read_value::<u8>(stream, definition.get_entry("attacker"), "attacker")?,
-            victim: read_value::<u8>(stream, definition.get_entry("victim"), "victim")?,
+            attacker: read_value::<u8>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
+            victim: read_value::<u8>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
             weapon_def_index: read_value::<u32>(
                 stream,
-                definition.get_entry("weapon_def_index"),
+                definition.get_entry(4132306594868589054u64),
                 "weapon_def_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "attacker" => Ok(self.attacker.clone().into()),
-            "victim" => Ok(self.victim.clone().into()),
-            "weapon_def_index" => Ok(self.weapon_def_index.clone().into()),
+        match field.hash {
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
+            4132306594868589054u64 => Ok(self.weapon_def_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ProjectileDirectHit",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14556,7 +16209,7 @@ impl ProjectileDirectHitEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14572,17 +16225,21 @@ impl PassGetEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PassGetEvent {
-            owner: read_value::<u16>(stream, definition.get_entry("owner"), "owner")?,
+            owner: read_value::<u16>(
+                stream,
+                definition.get_entry(12002927925776846068u64),
+                "owner",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "owner" => Ok(self.owner.clone().into()),
+        match field.hash {
+            12002927925776846068u64 => Ok(self.owner.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PassGet",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14594,7 +16251,7 @@ impl PassGetEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14612,21 +16269,33 @@ impl PassScoreEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PassScoreEvent {
-            scorer: read_value::<u16>(stream, definition.get_entry("scorer"), "scorer")?,
-            assister: read_value::<u16>(stream, definition.get_entry("assister"), "assister")?,
-            points: read_value::<u8>(stream, definition.get_entry("points"), "points")?,
+            scorer: read_value::<u16>(
+                stream,
+                definition.get_entry(114960585656897893u64),
+                "scorer",
+            )?,
+            assister: read_value::<u16>(
+                stream,
+                definition.get_entry(17978308754419261977u64),
+                "assister",
+            )?,
+            points: read_value::<u8>(
+                stream,
+                definition.get_entry(15925482014108518566u64),
+                "points",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "scorer" => Ok(self.scorer.clone().into()),
-            "assister" => Ok(self.assister.clone().into()),
-            "points" => Ok(self.points.clone().into()),
+        match field.hash {
+            114960585656897893u64 => Ok(self.scorer.clone().into()),
+            17978308754419261977u64 => Ok(self.assister.clone().into()),
+            15925482014108518566u64 => Ok(self.points.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PassScore",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14638,7 +16307,7 @@ impl PassScoreEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14655,19 +16324,27 @@ impl PassFreeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PassFreeEvent {
-            owner: read_value::<u16>(stream, definition.get_entry("owner"), "owner")?,
-            attacker: read_value::<u16>(stream, definition.get_entry("attacker"), "attacker")?,
+            owner: read_value::<u16>(
+                stream,
+                definition.get_entry(12002927925776846068u64),
+                "owner",
+            )?,
+            attacker: read_value::<u16>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "owner" => Ok(self.owner.clone().into()),
-            "attacker" => Ok(self.attacker.clone().into()),
+        match field.hash {
+            12002927925776846068u64 => Ok(self.owner.clone().into()),
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PassFree",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14679,7 +16356,7 @@ impl PassFreeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14698,23 +16375,39 @@ impl PassPassCaughtEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PassPassCaughtEvent {
-            passer: read_value::<u16>(stream, definition.get_entry("passer"), "passer")?,
-            catcher: read_value::<u16>(stream, definition.get_entry("catcher"), "catcher")?,
-            dist: read_value::<f32>(stream, definition.get_entry("dist"), "dist")?,
-            duration: read_value::<f32>(stream, definition.get_entry("duration"), "duration")?,
+            passer: read_value::<u16>(
+                stream,
+                definition.get_entry(807676909013642383u64),
+                "passer",
+            )?,
+            catcher: read_value::<u16>(
+                stream,
+                definition.get_entry(10052723730022137051u64),
+                "catcher",
+            )?,
+            dist: read_value::<f32>(
+                stream,
+                definition.get_entry(14574961654905149033u64),
+                "dist",
+            )?,
+            duration: read_value::<f32>(
+                stream,
+                definition.get_entry(10012068961515151501u64),
+                "duration",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "passer" => Ok(self.passer.clone().into()),
-            "catcher" => Ok(self.catcher.clone().into()),
-            "dist" => Ok(self.dist.clone().into()),
-            "duration" => Ok(self.duration.clone().into()),
+        match field.hash {
+            807676909013642383u64 => Ok(self.passer.clone().into()),
+            10052723730022137051u64 => Ok(self.catcher.clone().into()),
+            14574961654905149033u64 => Ok(self.dist.clone().into()),
+            10012068961515151501u64 => Ok(self.duration.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PassPassCaught",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14726,7 +16419,7 @@ impl PassPassCaughtEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14743,19 +16436,27 @@ impl PassBallStolenEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PassBallStolenEvent {
-            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
-            attacker: read_value::<u16>(stream, definition.get_entry("attacker"), "attacker")?,
+            victim: read_value::<u16>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
+            attacker: read_value::<u16>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "victim" => Ok(self.victim.clone().into()),
-            "attacker" => Ok(self.attacker.clone().into()),
+        match field.hash {
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PassBallStolen",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14767,7 +16468,7 @@ impl PassBallStolenEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14784,19 +16485,27 @@ impl PassBallBlockedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PassBallBlockedEvent {
-            owner: read_value::<u16>(stream, definition.get_entry("owner"), "owner")?,
-            blocker: read_value::<u16>(stream, definition.get_entry("blocker"), "blocker")?,
+            owner: read_value::<u16>(
+                stream,
+                definition.get_entry(12002927925776846068u64),
+                "owner",
+            )?,
+            blocker: read_value::<u16>(
+                stream,
+                definition.get_entry(9150196623075249301u64),
+                "blocker",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "owner" => Ok(self.owner.clone().into()),
-            "blocker" => Ok(self.blocker.clone().into()),
+        match field.hash {
+            12002927925776846068u64 => Ok(self.owner.clone().into()),
+            9150196623075249301u64 => Ok(self.blocker.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PassBallBlocked",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14808,7 +16517,7 @@ impl PassBallBlockedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14827,23 +16536,39 @@ impl DamagePreventedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(DamagePreventedEvent {
-            preventor: read_value::<u16>(stream, definition.get_entry("preventor"), "preventor")?,
-            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
-            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
-            condition: read_value::<u16>(stream, definition.get_entry("condition"), "condition")?,
+            preventor: read_value::<u16>(
+                stream,
+                definition.get_entry(4517367470558074628u64),
+                "preventor",
+            )?,
+            victim: read_value::<u16>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
+            amount: read_value::<u16>(
+                stream,
+                definition.get_entry(9301057475299076457u64),
+                "amount",
+            )?,
+            condition: read_value::<u16>(
+                stream,
+                definition.get_entry(15296338085916210270u64),
+                "condition",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "preventor" => Ok(self.preventor.clone().into()),
-            "victim" => Ok(self.victim.clone().into()),
-            "amount" => Ok(self.amount.clone().into()),
-            "condition" => Ok(self.condition.clone().into()),
+        match field.hash {
+            4517367470558074628u64 => Ok(self.preventor.clone().into()),
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
+            9301057475299076457u64 => Ok(self.amount.clone().into()),
+            15296338085916210270u64 => Ok(self.condition.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "DamagePrevented",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14855,7 +16580,7 @@ impl DamagePreventedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14872,19 +16597,27 @@ impl HalloweenBossKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HalloweenBossKilledEvent {
-            boss: read_value::<u16>(stream, definition.get_entry("boss"), "boss")?,
-            killer: read_value::<u16>(stream, definition.get_entry("killer"), "killer")?,
+            boss: read_value::<u16>(
+                stream,
+                definition.get_entry(14781339113128978092u64),
+                "boss",
+            )?,
+            killer: read_value::<u16>(
+                stream,
+                definition.get_entry(7927307102854403058u64),
+                "killer",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "boss" => Ok(self.boss.clone().into()),
-            "killer" => Ok(self.killer.clone().into()),
+        match field.hash {
+            14781339113128978092u64 => Ok(self.boss.clone().into()),
+            7927307102854403058u64 => Ok(self.killer.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HalloweenBossKilled",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14896,7 +16629,7 @@ impl HalloweenBossKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14912,17 +16645,21 @@ impl EscapedLootIslandEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EscapedLootIslandEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EscapedLootIsland",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14934,7 +16671,7 @@ impl EscapedLootIslandEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14950,17 +16687,21 @@ impl TaggedPlayerAsItEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TaggedPlayerAsItEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TaggedPlayerAsIt",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -14972,7 +16713,7 @@ impl TaggedPlayerAsItEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14988,17 +16729,21 @@ impl MerasmusStunnedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MerasmusStunnedEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MerasmusStunned",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15010,7 +16755,7 @@ impl MerasmusStunnedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15026,17 +16771,21 @@ impl MerasmusPropFoundEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MerasmusPropFoundEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MerasmusPropFound",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15048,7 +16797,7 @@ impl MerasmusPropFoundEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15064,17 +16813,21 @@ impl HalloweenSkeletonKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HalloweenSkeletonKilledEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HalloweenSkeletonKilled",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15086,7 +16839,7 @@ impl HalloweenSkeletonKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15102,17 +16855,21 @@ impl SkeletonKilledQuestEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(SkeletonKilledQuestEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "SkeletonKilledQuest",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15124,7 +16881,7 @@ impl SkeletonKilledQuestEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15140,17 +16897,21 @@ impl SkeletonKingKilledQuestEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(SkeletonKingKilledQuestEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "SkeletonKingKilledQuest",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15162,7 +16923,7 @@ impl SkeletonKingKilledQuestEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15178,17 +16939,21 @@ impl EscapeHellEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(EscapeHellEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "EscapeHell",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15200,7 +16965,7 @@ impl EscapeHellEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15216,17 +16981,21 @@ impl CrossSpectralBridgeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(CrossSpectralBridgeEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "CrossSpectralBridge",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15238,7 +17007,7 @@ impl CrossSpectralBridgeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15255,19 +17024,27 @@ impl MiniGameWonEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(MiniGameWonEvent {
-            player: read_value::<u16>(stream, definition.get_entry("player"), "player")?,
-            game: read_value::<u16>(stream, definition.get_entry("game"), "game")?,
+            player: read_value::<u16>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            game: read_value::<u16>(
+                stream,
+                definition.get_entry(10005491431272162599u64),
+                "game",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "game" => Ok(self.game.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            10005491431272162599u64 => Ok(self.game.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MiniGameWon",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15279,7 +17056,7 @@ impl MiniGameWonEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15296,19 +17073,27 @@ impl RespawnGhostEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RespawnGhostEvent {
-            reviver: read_value::<u16>(stream, definition.get_entry("reviver"), "reviver")?,
-            ghost: read_value::<u16>(stream, definition.get_entry("ghost"), "ghost")?,
+            reviver: read_value::<u16>(
+                stream,
+                definition.get_entry(12335255211204103206u64),
+                "reviver",
+            )?,
+            ghost: read_value::<u16>(
+                stream,
+                definition.get_entry(7564851073369177808u64),
+                "ghost",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "reviver" => Ok(self.reviver.clone().into()),
-            "ghost" => Ok(self.ghost.clone().into()),
+        match field.hash {
+            12335255211204103206u64 => Ok(self.reviver.clone().into()),
+            7564851073369177808u64 => Ok(self.ghost.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RespawnGhost",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15320,7 +17105,7 @@ impl RespawnGhostEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15337,19 +17122,27 @@ impl KillInHellEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(KillInHellEvent {
-            killer: read_value::<u16>(stream, definition.get_entry("killer"), "killer")?,
-            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
+            killer: read_value::<u16>(
+                stream,
+                definition.get_entry(7927307102854403058u64),
+                "killer",
+            )?,
+            victim: read_value::<u16>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "killer" => Ok(self.killer.clone().into()),
-            "victim" => Ok(self.victim.clone().into()),
+        match field.hash {
+            7927307102854403058u64 => Ok(self.killer.clone().into()),
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "KillInHell",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15361,7 +17154,7 @@ impl KillInHellEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15377,17 +17170,21 @@ impl HalloweenDuckCollectedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HalloweenDuckCollectedEvent {
-            collector: read_value::<u16>(stream, definition.get_entry("collector"), "collector")?,
+            collector: read_value::<u16>(
+                stream,
+                definition.get_entry(10138905367994436056u64),
+                "collector",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "collector" => Ok(self.collector.clone().into()),
+        match field.hash {
+            10138905367994436056u64 => Ok(self.collector.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HalloweenDuckCollected",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15399,7 +17196,7 @@ impl HalloweenDuckCollectedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15415,17 +17212,21 @@ impl SpecialScoreEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(SpecialScoreEvent {
-            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
+            player: read_value::<u8>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "SpecialScore",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15437,7 +17238,7 @@ impl SpecialScoreEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15454,19 +17255,27 @@ impl TeamLeaderKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(TeamLeaderKilledEvent {
-            killer: read_value::<u8>(stream, definition.get_entry("killer"), "killer")?,
-            victim: read_value::<u8>(stream, definition.get_entry("victim"), "victim")?,
+            killer: read_value::<u8>(
+                stream,
+                definition.get_entry(7927307102854403058u64),
+                "killer",
+            )?,
+            victim: read_value::<u8>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "killer" => Ok(self.killer.clone().into()),
-            "victim" => Ok(self.victim.clone().into()),
+        match field.hash {
+            7927307102854403058u64 => Ok(self.killer.clone().into()),
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TeamLeaderKilled",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15478,7 +17287,7 @@ impl TeamLeaderKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15498,27 +17307,31 @@ impl HalloweenSoulCollectedEvent {
         Ok(HalloweenSoulCollectedEvent {
             intended_target: read_value::<u8>(
                 stream,
-                definition.get_entry("intended_target"),
+                definition.get_entry(6824378530660796482u64),
                 "intended_target",
             )?,
             collecting_player: read_value::<u8>(
                 stream,
-                definition.get_entry("collecting_player"),
+                definition.get_entry(12517516231050690021u64),
                 "collecting_player",
             )?,
-            soul_count: read_value::<u8>(stream, definition.get_entry("soul_count"), "soul_count")?,
+            soul_count: read_value::<u8>(
+                stream,
+                definition.get_entry(715456465272287634u64),
+                "soul_count",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "intended_target" => Ok(self.intended_target.clone().into()),
-            "collecting_player" => Ok(self.collecting_player.clone().into()),
-            "soul_count" => Ok(self.soul_count.clone().into()),
+        match field.hash {
+            6824378530660796482u64 => Ok(self.intended_target.clone().into()),
+            12517516231050690021u64 => Ok(self.collecting_player.clone().into()),
+            715456465272287634u64 => Ok(self.soul_count.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HalloweenSoulCollected",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15530,7 +17343,7 @@ impl HalloweenSoulCollectedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15546,12 +17359,12 @@ impl RecalculateTruceEvent {
         Ok(RecalculateTruceEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RecalculateTruce",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15563,7 +17376,7 @@ impl RecalculateTruceEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15580,19 +17393,23 @@ impl DeadRingerCheatDeathEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(DeadRingerCheatDeathEvent {
-            spy: read_value::<u8>(stream, definition.get_entry("spy"), "spy")?,
-            attacker: read_value::<u8>(stream, definition.get_entry("attacker"), "attacker")?,
+            spy: read_value::<u8>(stream, definition.get_entry(9394673858373567453u64), "spy")?,
+            attacker: read_value::<u8>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "spy" => Ok(self.spy.clone().into()),
-            "attacker" => Ok(self.attacker.clone().into()),
+        match field.hash {
+            9394673858373567453u64 => Ok(self.spy.clone().into()),
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "DeadRingerCheatDeath",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15604,7 +17421,7 @@ impl DeadRingerCheatDeathEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15622,21 +17439,33 @@ impl CrossbowHealEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(CrossbowHealEvent {
-            healer: read_value::<u8>(stream, definition.get_entry("healer"), "healer")?,
-            target: read_value::<u8>(stream, definition.get_entry("target"), "target")?,
-            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
+            healer: read_value::<u8>(
+                stream,
+                definition.get_entry(9195440821534910520u64),
+                "healer",
+            )?,
+            target: read_value::<u8>(
+                stream,
+                definition.get_entry(1653916590517707752u64),
+                "target",
+            )?,
+            amount: read_value::<u16>(
+                stream,
+                definition.get_entry(9301057475299076457u64),
+                "amount",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "healer" => Ok(self.healer.clone().into()),
-            "target" => Ok(self.target.clone().into()),
-            "amount" => Ok(self.amount.clone().into()),
+        match field.hash {
+            9195440821534910520u64 => Ok(self.healer.clone().into()),
+            1653916590517707752u64 => Ok(self.target.clone().into()),
+            9301057475299076457u64 => Ok(self.amount.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "CrossbowHeal",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15648,7 +17477,7 @@ impl CrossbowHealEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15667,27 +17496,39 @@ impl DamageMitigatedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(DamageMitigatedEvent {
-            mitigator: read_value::<u8>(stream, definition.get_entry("mitigator"), "mitigator")?,
-            damaged: read_value::<u8>(stream, definition.get_entry("damaged"), "damaged")?,
-            amount: read_value::<u16>(stream, definition.get_entry("amount"), "amount")?,
+            mitigator: read_value::<u8>(
+                stream,
+                definition.get_entry(6131810397813237369u64),
+                "mitigator",
+            )?,
+            damaged: read_value::<u8>(
+                stream,
+                definition.get_entry(2938457768903959468u64),
+                "damaged",
+            )?,
+            amount: read_value::<u16>(
+                stream,
+                definition.get_entry(9301057475299076457u64),
+                "amount",
+            )?,
             item_definition_index: read_value::<u16>(
                 stream,
-                definition.get_entry("itemdefindex"),
+                definition.get_entry(4926523576391011283u64),
                 "item_definition_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "mitigator" => Ok(self.mitigator.clone().into()),
-            "damaged" => Ok(self.damaged.clone().into()),
-            "amount" => Ok(self.amount.clone().into()),
-            "itemdefindex" => Ok(self.item_definition_index.clone().into()),
+        match field.hash {
+            6131810397813237369u64 => Ok(self.mitigator.clone().into()),
+            2938457768903959468u64 => Ok(self.damaged.clone().into()),
+            9301057475299076457u64 => Ok(self.amount.clone().into()),
+            4926523576391011283u64 => Ok(self.item_definition_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "DamageMitigated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15699,7 +17540,7 @@ impl DamageMitigatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15716,19 +17557,27 @@ impl PayloadPushedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PayloadPushedEvent {
-            pusher: read_value::<u8>(stream, definition.get_entry("pusher"), "pusher")?,
-            distance: read_value::<u16>(stream, definition.get_entry("distance"), "distance")?,
+            pusher: read_value::<u8>(
+                stream,
+                definition.get_entry(16364632941784438830u64),
+                "pusher",
+            )?,
+            distance: read_value::<u16>(
+                stream,
+                definition.get_entry(15956180055569954882u64),
+                "distance",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "pusher" => Ok(self.pusher.clone().into()),
-            "distance" => Ok(self.distance.clone().into()),
+        match field.hash {
+            16364632941784438830u64 => Ok(self.pusher.clone().into()),
+            15956180055569954882u64 => Ok(self.distance.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PayloadPushed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15740,7 +17589,7 @@ impl PayloadPushedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15756,17 +17605,21 @@ impl PlayerAbandonedMatchEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerAbandonedMatchEvent {
-            game_over: read_value::<bool>(stream, definition.get_entry("game_over"), "game_over")?,
+            game_over: read_value::<bool>(
+                stream,
+                definition.get_entry(17040732377939006530u64),
+                "game_over",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "game_over" => Ok(self.game_over.clone().into()),
+        match field.hash {
+            17040732377939006530u64 => Ok(self.game_over.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerAbandonedMatch",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15778,7 +17631,7 @@ impl PlayerAbandonedMatchEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15798,25 +17651,37 @@ impl ClDrawlineEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ClDrawlineEvent {
-            player: read_value::<u8>(stream, definition.get_entry("player"), "player")?,
-            panel: read_value::<u8>(stream, definition.get_entry("panel"), "panel")?,
-            line: read_value::<u8>(stream, definition.get_entry("line"), "line")?,
-            x: read_value::<f32>(stream, definition.get_entry("x"), "x")?,
-            y: read_value::<f32>(stream, definition.get_entry("y"), "y")?,
+            player: read_value::<u8>(
+                stream,
+                definition.get_entry(5008278420455340480u64),
+                "player",
+            )?,
+            panel: read_value::<u8>(
+                stream,
+                definition.get_entry(6829252156396663685u64),
+                "panel",
+            )?,
+            line: read_value::<u8>(
+                stream,
+                definition.get_entry(13784293248712268039u64),
+                "line",
+            )?,
+            x: read_value::<f32>(stream, definition.get_entry(12638214688346347271u64), "x")?,
+            y: read_value::<f32>(stream, definition.get_entry(12638213588834719060u64), "y")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "player" => Ok(self.player.clone().into()),
-            "panel" => Ok(self.panel.clone().into()),
-            "line" => Ok(self.line.clone().into()),
-            "x" => Ok(self.x.clone().into()),
-            "y" => Ok(self.y.clone().into()),
+        match field.hash {
+            5008278420455340480u64 => Ok(self.player.clone().into()),
+            6829252156396663685u64 => Ok(self.panel.clone().into()),
+            13784293248712268039u64 => Ok(self.line.clone().into()),
+            12638214688346347271u64 => Ok(self.x.clone().into()),
+            12638213588834719060u64 => Ok(self.y.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ClDrawline",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15828,7 +17693,7 @@ impl ClDrawlineEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15844,17 +17709,17 @@ impl RestartTimerTimeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RestartTimerTimeEvent {
-            time: read_value::<u8>(stream, definition.get_entry("time"), "time")?,
+            time: read_value::<u8>(stream, definition.get_entry(2185518981507421060u64), "time")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "time" => Ok(self.time.clone().into()),
+        match field.hash {
+            2185518981507421060u64 => Ok(self.time.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RestartTimerTime",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15866,7 +17731,7 @@ impl RestartTimerTimeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15882,12 +17747,12 @@ impl WinLimitChangedEvent {
         Ok(WinLimitChangedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "WinLimitChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15899,7 +17764,7 @@ impl WinLimitChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15915,12 +17780,12 @@ impl WinPanelShowScoresEvent {
         Ok(WinPanelShowScoresEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "WinPanelShowScores",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15932,7 +17797,7 @@ impl WinPanelShowScoresEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15948,12 +17813,12 @@ impl TopStreamsRequestFinishedEvent {
         Ok(TopStreamsRequestFinishedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "TopStreamsRequestFinished",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15965,7 +17830,7 @@ impl TopStreamsRequestFinishedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15981,12 +17846,12 @@ impl CompetitiveStateChangedEvent {
         Ok(CompetitiveStateChangedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "CompetitiveStateChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -15998,7 +17863,7 @@ impl CompetitiveStateChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16014,12 +17879,12 @@ impl GlobalWarDataUpdatedEvent {
         Ok(GlobalWarDataUpdatedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "GlobalWarDataUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16031,7 +17896,7 @@ impl GlobalWarDataUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16047,12 +17912,12 @@ impl StopWatchChangedEvent {
         Ok(StopWatchChangedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "StopWatchChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16064,7 +17929,7 @@ impl StopWatchChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16080,12 +17945,12 @@ impl DsStopEvent {
         Ok(DsStopEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "DsStop",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16097,7 +17962,7 @@ impl DsStopEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16113,17 +17978,21 @@ impl DsScreenshotEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(DsScreenshotEvent {
-            delay: read_value::<f32>(stream, definition.get_entry("delay"), "delay")?,
+            delay: read_value::<f32>(
+                stream,
+                definition.get_entry(5892760507766377784u64),
+                "delay",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "delay" => Ok(self.delay.clone().into()),
+        match field.hash {
+            5892760507766377784u64 => Ok(self.delay.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "DsScreenshot",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16135,7 +18004,7 @@ impl DsScreenshotEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16151,12 +18020,12 @@ impl ShowMatchSummaryEvent {
         Ok(ShowMatchSummaryEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ShowMatchSummary",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16168,7 +18037,7 @@ impl ShowMatchSummaryEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16184,12 +18053,12 @@ impl ExperienceChangedEvent {
         Ok(ExperienceChangedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ExperienceChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16201,7 +18070,7 @@ impl ExperienceChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16217,12 +18086,12 @@ impl BeginXpLerpEvent {
         Ok(BeginXpLerpEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "BeginXpLerp",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16234,7 +18103,7 @@ impl BeginXpLerpEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16250,12 +18119,12 @@ impl MatchmakerStatsUpdatedEvent {
         Ok(MatchmakerStatsUpdatedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MatchmakerStatsUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16267,7 +18136,7 @@ impl MatchmakerStatsUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16283,17 +18152,21 @@ impl RematchVotePeriodOverEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(RematchVotePeriodOverEvent {
-            success: read_value::<bool>(stream, definition.get_entry("success"), "success")?,
+            success: read_value::<bool>(
+                stream,
+                definition.get_entry(1872942068143117264u64),
+                "success",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "success" => Ok(self.success.clone().into()),
+        match field.hash {
+            1872942068143117264u64 => Ok(self.success.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RematchVotePeriodOver",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16305,7 +18178,7 @@ impl RematchVotePeriodOverEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16321,12 +18194,12 @@ impl RematchFailedToCreateEvent {
         Ok(RematchFailedToCreateEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "RematchFailedToCreate",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16338,7 +18211,7 @@ impl RematchFailedToCreateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16354,12 +18227,12 @@ impl PlayerRematchChangeEvent {
         Ok(PlayerRematchChangeEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerRematchChange",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16371,7 +18244,7 @@ impl PlayerRematchChangeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16387,12 +18260,12 @@ impl PingUpdatedEvent {
         Ok(PingUpdatedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PingUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16404,7 +18277,7 @@ impl PingUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16420,12 +18293,12 @@ impl MMStatsUpdatedEvent {
         Ok(MMStatsUpdatedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MMStatsUpdated",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16437,7 +18310,7 @@ impl MMStatsUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16454,19 +18327,23 @@ impl PlayerNextMapVoteChangeEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerNextMapVoteChangeEvent {
-            map_index: read_value::<u8>(stream, definition.get_entry("map_index"), "map_index")?,
-            vote: read_value::<u8>(stream, definition.get_entry("vote"), "vote")?,
+            map_index: read_value::<u8>(
+                stream,
+                definition.get_entry(14809078982718236190u64),
+                "map_index",
+            )?,
+            vote: read_value::<u8>(stream, definition.get_entry(3543466495390456501u64), "vote")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "map_index" => Ok(self.map_index.clone().into()),
-            "vote" => Ok(self.vote.clone().into()),
+        match field.hash {
+            14809078982718236190u64 => Ok(self.map_index.clone().into()),
+            3543466495390456501u64 => Ok(self.vote.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerNextMapVoteChange",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16478,7 +18355,7 @@ impl PlayerNextMapVoteChangeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16494,12 +18371,12 @@ impl VoteMapsChangedEvent {
         Ok(VoteMapsChangedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "VoteMapsChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16511,7 +18388,7 @@ impl VoteMapsChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16531,33 +18408,45 @@ impl ProtoDefChangedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ProtoDefChangedEvent {
-            kind: read_value::<u8>(stream, definition.get_entry("type"), "kind")?,
+            kind: read_value::<u8>(
+                stream,
+                definition.get_entry(12075340201627130925u64),
+                "kind",
+            )?,
             definition_index: read_value::<u32>(
                 stream,
-                definition.get_entry("defindex"),
+                definition.get_entry(13641141875887813064u64),
                 "definition_index",
             )?,
-            created: read_value::<bool>(stream, definition.get_entry("created"), "created")?,
-            deleted: read_value::<bool>(stream, definition.get_entry("deleted"), "deleted")?,
+            created: read_value::<bool>(
+                stream,
+                definition.get_entry(16258158586571091195u64),
+                "created",
+            )?,
+            deleted: read_value::<bool>(
+                stream,
+                definition.get_entry(2244448350166952426u64),
+                "deleted",
+            )?,
             erase_history: read_value::<bool>(
                 stream,
-                definition.get_entry("erase_history"),
+                definition.get_entry(7145567783783222582u64),
                 "erase_history",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "type" => Ok(self.kind.clone().into()),
-            "defindex" => Ok(self.definition_index.clone().into()),
-            "created" => Ok(self.created.clone().into()),
-            "deleted" => Ok(self.deleted.clone().into()),
-            "erase_history" => Ok(self.erase_history.clone().into()),
+        match field.hash {
+            12075340201627130925u64 => Ok(self.kind.clone().into()),
+            13641141875887813064u64 => Ok(self.definition_index.clone().into()),
+            16258158586571091195u64 => Ok(self.created.clone().into()),
+            2244448350166952426u64 => Ok(self.deleted.clone().into()),
+            7145567783783222582u64 => Ok(self.erase_history.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ProtoDefChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16569,7 +18458,7 @@ impl ProtoDefChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16587,25 +18476,33 @@ impl PlayerDominationEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerDominationEvent {
-            dominator: read_value::<u16>(stream, definition.get_entry("dominator"), "dominator")?,
-            dominated: read_value::<u16>(stream, definition.get_entry("dominated"), "dominated")?,
+            dominator: read_value::<u16>(
+                stream,
+                definition.get_entry(738416687693650492u64),
+                "dominator",
+            )?,
+            dominated: read_value::<u16>(
+                stream,
+                definition.get_entry(744074774531288948u64),
+                "dominated",
+            )?,
             dominations: read_value::<u16>(
                 stream,
-                definition.get_entry("dominations"),
+                definition.get_entry(14151598225611438354u64),
                 "dominations",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "dominator" => Ok(self.dominator.clone().into()),
-            "dominated" => Ok(self.dominated.clone().into()),
-            "dominations" => Ok(self.dominations.clone().into()),
+        match field.hash {
+            738416687693650492u64 => Ok(self.dominator.clone().into()),
+            744074774531288948u64 => Ok(self.dominated.clone().into()),
+            14151598225611438354u64 => Ok(self.dominations.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerDomination",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16617,7 +18514,7 @@ impl PlayerDominationEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16634,19 +18531,27 @@ impl PlayerRocketPackPushedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(PlayerRocketPackPushedEvent {
-            pusher: read_value::<u16>(stream, definition.get_entry("pusher"), "pusher")?,
-            pushed: read_value::<u16>(stream, definition.get_entry("pushed"), "pushed")?,
+            pusher: read_value::<u16>(
+                stream,
+                definition.get_entry(16364632941784438830u64),
+                "pusher",
+            )?,
+            pushed: read_value::<u16>(
+                stream,
+                definition.get_entry(16364617548621643876u64),
+                "pushed",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "pusher" => Ok(self.pusher.clone().into()),
-            "pushed" => Ok(self.pushed.clone().into()),
+        match field.hash {
+            16364632941784438830u64 => Ok(self.pusher.clone().into()),
+            16364617548621643876u64 => Ok(self.pushed.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "PlayerRocketPackPushed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16658,7 +18563,7 @@ impl PlayerRocketPackPushedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16675,19 +18580,27 @@ impl QuestRequestEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(QuestRequestEvent {
-            request: read_value::<u32>(stream, definition.get_entry("request"), "request")?,
-            msg: read_value::<MaybeUtf8String>(stream, definition.get_entry("msg"), "msg")?,
+            request: read_value::<u32>(
+                stream,
+                definition.get_entry(8018452122269601458u64),
+                "request",
+            )?,
+            msg: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(567552616859811458u64),
+                "msg",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "request" => Ok(self.request.clone().into()),
-            "msg" => Ok(self.msg.clone().into()),
+        match field.hash {
+            8018452122269601458u64 => Ok(self.request.clone().into()),
+            567552616859811458u64 => Ok(self.msg.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "QuestRequest",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16699,7 +18612,7 @@ impl QuestRequestEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16717,21 +18630,33 @@ impl QuestResponseEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(QuestResponseEvent {
-            request: read_value::<u32>(stream, definition.get_entry("request"), "request")?,
-            success: read_value::<bool>(stream, definition.get_entry("success"), "success")?,
-            msg: read_value::<MaybeUtf8String>(stream, definition.get_entry("msg"), "msg")?,
+            request: read_value::<u32>(
+                stream,
+                definition.get_entry(8018452122269601458u64),
+                "request",
+            )?,
+            success: read_value::<bool>(
+                stream,
+                definition.get_entry(1872942068143117264u64),
+                "success",
+            )?,
+            msg: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(567552616859811458u64),
+                "msg",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "request" => Ok(self.request.clone().into()),
-            "success" => Ok(self.success.clone().into()),
-            "msg" => Ok(self.msg.clone().into()),
+        match field.hash {
+            8018452122269601458u64 => Ok(self.request.clone().into()),
+            1872942068143117264u64 => Ok(self.success.clone().into()),
+            567552616859811458u64 => Ok(self.msg.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "QuestResponse",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16743,7 +18668,7 @@ impl QuestResponseEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16763,29 +18688,45 @@ impl QuestProgressEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(QuestProgressEvent {
-            owner: read_value::<u16>(stream, definition.get_entry("owner"), "owner")?,
-            scorer: read_value::<u16>(stream, definition.get_entry("scorer"), "scorer")?,
-            kind: read_value::<u8>(stream, definition.get_entry("type"), "kind")?,
-            completed: read_value::<bool>(stream, definition.get_entry("completed"), "completed")?,
+            owner: read_value::<u16>(
+                stream,
+                definition.get_entry(12002927925776846068u64),
+                "owner",
+            )?,
+            scorer: read_value::<u16>(
+                stream,
+                definition.get_entry(114960585656897893u64),
+                "scorer",
+            )?,
+            kind: read_value::<u8>(
+                stream,
+                definition.get_entry(12075340201627130925u64),
+                "kind",
+            )?,
+            completed: read_value::<bool>(
+                stream,
+                definition.get_entry(18293112347497300626u64),
+                "completed",
+            )?,
             quest_definition_index: read_value::<u32>(
                 stream,
-                definition.get_entry("quest_defindex"),
+                definition.get_entry(16190323556600580467u64),
                 "quest_definition_index",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "owner" => Ok(self.owner.clone().into()),
-            "scorer" => Ok(self.scorer.clone().into()),
-            "type" => Ok(self.kind.clone().into()),
-            "completed" => Ok(self.completed.clone().into()),
-            "quest_defindex" => Ok(self.quest_definition_index.clone().into()),
+        match field.hash {
+            12002927925776846068u64 => Ok(self.owner.clone().into()),
+            114960585656897893u64 => Ok(self.scorer.clone().into()),
+            12075340201627130925u64 => Ok(self.kind.clone().into()),
+            18293112347497300626u64 => Ok(self.completed.clone().into()),
+            16190323556600580467u64 => Ok(self.quest_definition_index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "QuestProgress",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16797,7 +18738,7 @@ impl QuestProgressEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16816,31 +18757,39 @@ impl ProjectileRemovedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ProjectileRemovedEvent {
-            attacker: read_value::<u8>(stream, definition.get_entry("attacker"), "attacker")?,
+            attacker: read_value::<u8>(
+                stream,
+                definition.get_entry(7198542740550218478u64),
+                "attacker",
+            )?,
             weapon_def_index: read_value::<u32>(
                 stream,
-                definition.get_entry("weapon_def_index"),
+                definition.get_entry(4132306594868589054u64),
                 "weapon_def_index",
             )?,
-            num_hit: read_value::<u8>(stream, definition.get_entry("num_hit"), "num_hit")?,
+            num_hit: read_value::<u8>(
+                stream,
+                definition.get_entry(12553580167082885753u64),
+                "num_hit",
+            )?,
             num_direct_hit: read_value::<u8>(
                 stream,
-                definition.get_entry("num_direct_hit"),
+                definition.get_entry(8604189910367298615u64),
                 "num_direct_hit",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "attacker" => Ok(self.attacker.clone().into()),
-            "weapon_def_index" => Ok(self.weapon_def_index.clone().into()),
-            "num_hit" => Ok(self.num_hit.clone().into()),
-            "num_direct_hit" => Ok(self.num_direct_hit.clone().into()),
+        match field.hash {
+            7198542740550218478u64 => Ok(self.attacker.clone().into()),
+            4132306594868589054u64 => Ok(self.weapon_def_index.clone().into()),
+            12553580167082885753u64 => Ok(self.num_hit.clone().into()),
+            8604189910367298615u64 => Ok(self.num_direct_hit.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ProjectileRemoved",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16852,7 +18801,7 @@ impl ProjectileRemovedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16868,12 +18817,12 @@ impl QuestMapDataChangedEvent {
         Ok(QuestMapDataChangedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "QuestMapDataChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16885,7 +18834,7 @@ impl QuestMapDataChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16903,21 +18852,33 @@ impl GasDousedPlayerIgnitedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(GasDousedPlayerIgnitedEvent {
-            igniter: read_value::<u16>(stream, definition.get_entry("igniter"), "igniter")?,
-            douser: read_value::<u16>(stream, definition.get_entry("douser"), "douser")?,
-            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
+            igniter: read_value::<u16>(
+                stream,
+                definition.get_entry(9421640134696329943u64),
+                "igniter",
+            )?,
+            douser: read_value::<u16>(
+                stream,
+                definition.get_entry(888696338692993559u64),
+                "douser",
+            )?,
+            victim: read_value::<u16>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "igniter" => Ok(self.igniter.clone().into()),
-            "douser" => Ok(self.douser.clone().into()),
-            "victim" => Ok(self.victim.clone().into()),
+        match field.hash {
+            9421640134696329943u64 => Ok(self.igniter.clone().into()),
+            888696338692993559u64 => Ok(self.douser.clone().into()),
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "GasDousedPlayerIgnited",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16929,7 +18890,7 @@ impl GasDousedPlayerIgnitedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16945,17 +18906,21 @@ impl QuestTurnInStateEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(QuestTurnInStateEvent {
-            state: read_value::<u16>(stream, definition.get_entry("state"), "state")?,
+            state: read_value::<u16>(
+                stream,
+                definition.get_entry(17177761064896540950u64),
+                "state",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "state" => Ok(self.state.clone().into()),
+        match field.hash {
+            17177761064896540950u64 => Ok(self.state.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "QuestTurnInState",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -16967,7 +18932,7 @@ impl QuestTurnInStateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16983,12 +18948,12 @@ impl ItemsAcknowledgedEvent {
         Ok(ItemsAcknowledgedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ItemsAcknowledged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17000,7 +18965,7 @@ impl ItemsAcknowledgedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17017,19 +18982,27 @@ impl CapperKilledEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(CapperKilledEvent {
-            blocker: read_value::<u16>(stream, definition.get_entry("blocker"), "blocker")?,
-            victim: read_value::<u16>(stream, definition.get_entry("victim"), "victim")?,
+            blocker: read_value::<u16>(
+                stream,
+                definition.get_entry(9150196623075249301u64),
+                "blocker",
+            )?,
+            victim: read_value::<u16>(
+                stream,
+                definition.get_entry(3120917251440744469u64),
+                "victim",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "blocker" => Ok(self.blocker.clone().into()),
-            "victim" => Ok(self.victim.clone().into()),
+        match field.hash {
+            9150196623075249301u64 => Ok(self.blocker.clone().into()),
+            3120917251440744469u64 => Ok(self.victim.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "CapperKilled",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17041,7 +19014,7 @@ impl CapperKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17057,12 +19030,12 @@ impl MainMenuStabilizedEvent {
         Ok(MainMenuStabilizedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "MainMenuStabilized",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17074,7 +19047,7 @@ impl MainMenuStabilizedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17090,12 +19063,12 @@ impl WorldStatusChangedEvent {
         Ok(WorldStatusChangedEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "WorldStatusChanged",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17107,7 +19080,7 @@ impl WorldStatusChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17126,27 +19099,39 @@ impl HLTVStatusEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HLTVStatusEvent {
-            clients: read_value::<u32>(stream, definition.get_entry("clients"), "clients")?,
-            slots: read_value::<u32>(stream, definition.get_entry("slots"), "slots")?,
-            proxies: read_value::<u16>(stream, definition.get_entry("proxies"), "proxies")?,
+            clients: read_value::<u32>(
+                stream,
+                definition.get_entry(7649887508575031031u64),
+                "clients",
+            )?,
+            slots: read_value::<u32>(
+                stream,
+                definition.get_entry(16612704165544482374u64),
+                "slots",
+            )?,
+            proxies: read_value::<u16>(
+                stream,
+                definition.get_entry(15307552237670760667u64),
+                "proxies",
+            )?,
             master: read_value::<MaybeUtf8String>(
                 stream,
-                definition.get_entry("master"),
+                definition.get_entry(17259658682407053043u64),
                 "master",
             )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "clients" => Ok(self.clients.clone().into()),
-            "slots" => Ok(self.slots.clone().into()),
-            "proxies" => Ok(self.proxies.clone().into()),
-            "master" => Ok(self.master.clone().into()),
+        match field.hash {
+            7649887508575031031u64 => Ok(self.clients.clone().into()),
+            16612704165544482374u64 => Ok(self.slots.clone().into()),
+            15307552237670760667u64 => Ok(self.proxies.clone().into()),
+            17259658682407053043u64 => Ok(self.master.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HLTVStatus",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17158,7 +19143,7 @@ impl HLTVStatusEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17174,17 +19159,21 @@ impl HLTVCameramanEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HLTVCameramanEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HLTVCameraman",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17196,7 +19185,7 @@ impl HLTVCameramanEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17214,21 +19203,29 @@ impl HLTVRankCameraEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HLTVRankCameraEvent {
-            index: read_value::<u8>(stream, definition.get_entry("index"), "index")?,
-            rank: read_value::<f32>(stream, definition.get_entry("rank"), "rank")?,
-            target: read_value::<u16>(stream, definition.get_entry("target"), "target")?,
+            index: read_value::<u8>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
+            rank: read_value::<f32>(stream, definition.get_entry(7904697092003280967u64), "rank")?,
+            target: read_value::<u16>(
+                stream,
+                definition.get_entry(1653916590517707752u64),
+                "target",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
-            "rank" => Ok(self.rank.clone().into()),
-            "target" => Ok(self.target.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
+            7904697092003280967u64 => Ok(self.rank.clone().into()),
+            1653916590517707752u64 => Ok(self.target.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HLTVRankCamera",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17240,7 +19237,7 @@ impl HLTVRankCameraEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17258,21 +19255,29 @@ impl HLTVRankEntityEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HLTVRankEntityEvent {
-            index: read_value::<u16>(stream, definition.get_entry("index"), "index")?,
-            rank: read_value::<f32>(stream, definition.get_entry("rank"), "rank")?,
-            target: read_value::<u16>(stream, definition.get_entry("target"), "target")?,
+            index: read_value::<u16>(
+                stream,
+                definition.get_entry(9497966886403524235u64),
+                "index",
+            )?,
+            rank: read_value::<f32>(stream, definition.get_entry(7904697092003280967u64), "rank")?,
+            target: read_value::<u16>(
+                stream,
+                definition.get_entry(1653916590517707752u64),
+                "target",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "index" => Ok(self.index.clone().into()),
-            "rank" => Ok(self.rank.clone().into()),
-            "target" => Ok(self.target.clone().into()),
+        match field.hash {
+            9497966886403524235u64 => Ok(self.index.clone().into()),
+            7904697092003280967u64 => Ok(self.rank.clone().into()),
+            1653916590517707752u64 => Ok(self.target.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HLTVRankEntity",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17284,7 +19289,7 @@ impl HLTVRankEntityEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17307,31 +19312,55 @@ impl HLTVFixedEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HLTVFixedEvent {
-            pos_x: read_value::<u32>(stream, definition.get_entry("posx"), "pos_x")?,
-            pos_y: read_value::<u32>(stream, definition.get_entry("posy"), "pos_y")?,
-            pos_z: read_value::<u32>(stream, definition.get_entry("posz"), "pos_z")?,
-            theta: read_value::<u16>(stream, definition.get_entry("theta"), "theta")?,
-            phi: read_value::<u16>(stream, definition.get_entry("phi"), "phi")?,
-            offset: read_value::<u16>(stream, definition.get_entry("offset"), "offset")?,
-            fov: read_value::<f32>(stream, definition.get_entry("fov"), "fov")?,
-            target: read_value::<u16>(stream, definition.get_entry("target"), "target")?,
+            pos_x: read_value::<u32>(
+                stream,
+                definition.get_entry(10101535539947993315u64),
+                "pos_x",
+            )?,
+            pos_y: read_value::<u32>(
+                stream,
+                definition.get_entry(10101534440436365104u64),
+                "pos_y",
+            )?,
+            pos_z: read_value::<u32>(
+                stream,
+                definition.get_entry(10101537738971249737u64),
+                "pos_z",
+            )?,
+            theta: read_value::<u16>(
+                stream,
+                definition.get_entry(16923039152111475483u64),
+                "theta",
+            )?,
+            phi: read_value::<u16>(stream, definition.get_entry(8625054201726242788u64), "phi")?,
+            offset: read_value::<u16>(
+                stream,
+                definition.get_entry(173583165163845066u64),
+                "offset",
+            )?,
+            fov: read_value::<f32>(stream, definition.get_entry(15902909680995393884u64), "fov")?,
+            target: read_value::<u16>(
+                stream,
+                definition.get_entry(1653916590517707752u64),
+                "target",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "posx" => Ok(self.pos_x.clone().into()),
-            "posy" => Ok(self.pos_y.clone().into()),
-            "posz" => Ok(self.pos_z.clone().into()),
-            "theta" => Ok(self.theta.clone().into()),
-            "phi" => Ok(self.phi.clone().into()),
-            "offset" => Ok(self.offset.clone().into()),
-            "fov" => Ok(self.fov.clone().into()),
-            "target" => Ok(self.target.clone().into()),
+        match field.hash {
+            10101535539947993315u64 => Ok(self.pos_x.clone().into()),
+            10101534440436365104u64 => Ok(self.pos_y.clone().into()),
+            10101537738971249737u64 => Ok(self.pos_z.clone().into()),
+            16923039152111475483u64 => Ok(self.theta.clone().into()),
+            8625054201726242788u64 => Ok(self.phi.clone().into()),
+            173583165163845066u64 => Ok(self.offset.clone().into()),
+            15902909680995393884u64 => Ok(self.fov.clone().into()),
+            1653916590517707752u64 => Ok(self.target.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HLTVFixed",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17343,7 +19372,7 @@ impl HLTVFixedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17365,29 +19394,53 @@ impl HLTVChaseEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HLTVChaseEvent {
-            target_1: read_value::<u16>(stream, definition.get_entry("target1"), "target_1")?,
-            target_2: read_value::<u16>(stream, definition.get_entry("target2"), "target_2")?,
-            distance: read_value::<u16>(stream, definition.get_entry("distance"), "distance")?,
-            theta: read_value::<u16>(stream, definition.get_entry("theta"), "theta")?,
-            phi: read_value::<u16>(stream, definition.get_entry("phi"), "phi")?,
-            inertia: read_value::<u8>(stream, definition.get_entry("inertia"), "inertia")?,
-            in_eye: read_value::<u8>(stream, definition.get_entry("ineye"), "in_eye")?,
+            target_1: read_value::<u16>(
+                stream,
+                definition.get_entry(17244538795293747643u64),
+                "target_1",
+            )?,
+            target_2: read_value::<u16>(
+                stream,
+                definition.get_entry(17244539894805375854u64),
+                "target_2",
+            )?,
+            distance: read_value::<u16>(
+                stream,
+                definition.get_entry(15956180055569954882u64),
+                "distance",
+            )?,
+            theta: read_value::<u16>(
+                stream,
+                definition.get_entry(16923039152111475483u64),
+                "theta",
+            )?,
+            phi: read_value::<u16>(stream, definition.get_entry(8625054201726242788u64), "phi")?,
+            inertia: read_value::<u8>(
+                stream,
+                definition.get_entry(16127751084747526033u64),
+                "inertia",
+            )?,
+            in_eye: read_value::<u8>(
+                stream,
+                definition.get_entry(10269529380097519287u64),
+                "in_eye",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "target1" => Ok(self.target_1.clone().into()),
-            "target2" => Ok(self.target_2.clone().into()),
-            "distance" => Ok(self.distance.clone().into()),
-            "theta" => Ok(self.theta.clone().into()),
-            "phi" => Ok(self.phi.clone().into()),
-            "inertia" => Ok(self.inertia.clone().into()),
-            "ineye" => Ok(self.in_eye.clone().into()),
+        match field.hash {
+            17244538795293747643u64 => Ok(self.target_1.clone().into()),
+            17244539894805375854u64 => Ok(self.target_2.clone().into()),
+            15956180055569954882u64 => Ok(self.distance.clone().into()),
+            16923039152111475483u64 => Ok(self.theta.clone().into()),
+            8625054201726242788u64 => Ok(self.phi.clone().into()),
+            16127751084747526033u64 => Ok(self.inertia.clone().into()),
+            10269529380097519287u64 => Ok(self.in_eye.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HLTVChase",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17399,7 +19452,7 @@ impl HLTVChaseEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17415,17 +19468,21 @@ impl HLTVMessageEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HLTVMessageEvent {
-            text: read_value::<MaybeUtf8String>(stream, definition.get_entry("text"), "text")?,
+            text: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(18015793717152399486u64),
+                "text",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "text" => Ok(self.text.clone().into()),
+        match field.hash {
+            18015793717152399486u64 => Ok(self.text.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HLTVMessage",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17437,7 +19494,7 @@ impl HLTVMessageEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17453,17 +19510,21 @@ impl HLTVTitleEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HLTVTitleEvent {
-            text: read_value::<MaybeUtf8String>(stream, definition.get_entry("text"), "text")?,
+            text: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(18015793717152399486u64),
+                "text",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "text" => Ok(self.text.clone().into()),
+        match field.hash {
+            18015793717152399486u64 => Ok(self.text.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HLTVTitle",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17475,7 +19536,7 @@ impl HLTVTitleEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17491,17 +19552,21 @@ impl HLTVChatEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(HLTVChatEvent {
-            text: read_value::<MaybeUtf8String>(stream, definition.get_entry("text"), "text")?,
+            text: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(18015793717152399486u64),
+                "text",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "text" => Ok(self.text.clone().into()),
+        match field.hash {
+            18015793717152399486u64 => Ok(self.text.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "HLTVChat",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17513,7 +19578,7 @@ impl HLTVChatEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17529,12 +19594,12 @@ impl ReplayStartRecordEvent {
         Ok(ReplayStartRecordEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ReplayStartRecord",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17546,7 +19611,7 @@ impl ReplayStartRecordEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17565,23 +19630,27 @@ impl ReplaySessionInfoEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ReplaySessionInfoEvent {
-            sn: read_value::<MaybeUtf8String>(stream, definition.get_entry("sn"), "sn")?,
-            di: read_value::<u8>(stream, definition.get_entry("di"), "di")?,
-            cb: read_value::<u32>(stream, definition.get_entry("cb"), "cb")?,
-            st: read_value::<u32>(stream, definition.get_entry("st"), "st")?,
+            sn: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(637602428010181156u64),
+                "sn",
+            )?,
+            di: read_value::<u8>(stream, definition.get_entry(617370314543444270u64), "di")?,
+            cb: read_value::<u32>(stream, definition.get_entry(622143294520562096u64), "cb")?,
+            st: read_value::<u32>(stream, definition.get_entry(637613423126463266u64), "st")?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "sn" => Ok(self.sn.clone().into()),
-            "di" => Ok(self.di.clone().into()),
-            "cb" => Ok(self.cb.clone().into()),
-            "st" => Ok(self.st.clone().into()),
+        match field.hash {
+            637602428010181156u64 => Ok(self.sn.clone().into()),
+            617370314543444270u64 => Ok(self.di.clone().into()),
+            622143294520562096u64 => Ok(self.cb.clone().into()),
+            637613423126463266u64 => Ok(self.st.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ReplaySessionInfo",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17593,7 +19662,7 @@ impl ReplaySessionInfoEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17609,12 +19678,12 @@ impl ReplayEndRecordEvent {
         Ok(ReplayEndRecordEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ReplayEndRecord",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17626,7 +19695,7 @@ impl ReplayEndRecordEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17642,12 +19711,12 @@ impl ReplayReplaysAvailableEvent {
         Ok(ReplayReplaysAvailableEvent {})
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
+        match field.hash {
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ReplayReplaysAvailable",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17659,7 +19728,7 @@ impl ReplayReplaysAvailableEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17675,17 +19744,21 @@ impl ReplayServerErrorEvent {
     #[allow(unused_variables)]
     fn read(stream: &mut Stream, definition: &GameEventDefinition) -> Result<Self> {
         Ok(ReplayServerErrorEvent {
-            error: read_value::<MaybeUtf8String>(stream, definition.get_entry("error"), "error")?,
+            error: read_value::<MaybeUtf8String>(
+                stream,
+                definition.get_entry(11489899660447141169u64),
+                "error",
+            )?,
         })
     }
     #[allow(unused_variables)]
-    fn get_field(&self, field: &str) -> Result<GameEventValue> {
+    fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
         #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-        match field {
-            "error" => Ok(self.error.clone().into()),
+        match field.hash {
+            11489899660447141169u64 => Ok(self.error.clone().into()),
             _ => Err(ParseError::MissingGameEventValue {
                 ty: "ReplayServerError",
-                field: field.into(),
+                field: "todo".into(),
             }),
         }
     }
@@ -17697,7 +19770,7 @@ impl ReplayServerErrorEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry.name)
+                .get_field(&entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -21774,1198 +23847,733 @@ impl GameEvent {
 }
 pub fn get_sizes() -> fnv::FnvHashMap<&'static str, usize> {
     [
-        ("ServerSpawn", std::mem::size_of::<ServerSpawnEvent>()),
+        ("ServerSpawn", size_of::<ServerSpawnEvent>()),
         (
             "ServerChangeLevelFailed",
-            std::mem::size_of::<ServerChangeLevelFailedEvent>(),
+            size_of::<ServerChangeLevelFailedEvent>(),
         ),
-        ("ServerShutdown", std::mem::size_of::<ServerShutdownEvent>()),
-        ("ServerCvar", std::mem::size_of::<ServerCvarEvent>()),
-        ("ServerMessage", std::mem::size_of::<ServerMessageEvent>()),
-        ("ServerAddBan", std::mem::size_of::<ServerAddBanEvent>()),
-        (
-            "ServerRemoveBan",
-            std::mem::size_of::<ServerRemoveBanEvent>(),
-        ),
-        ("PlayerConnect", std::mem::size_of::<PlayerConnectEvent>()),
-        (
-            "PlayerConnectClient",
-            std::mem::size_of::<PlayerConnectClientEvent>(),
-        ),
-        ("PlayerInfo", std::mem::size_of::<PlayerInfoEvent>()),
-        (
-            "PlayerDisconnect",
-            std::mem::size_of::<PlayerDisconnectEvent>(),
-        ),
-        ("PlayerActivate", std::mem::size_of::<PlayerActivateEvent>()),
-        ("PlayerSay", std::mem::size_of::<PlayerSayEvent>()),
-        (
-            "ClientDisconnect",
-            std::mem::size_of::<ClientDisconnectEvent>(),
-        ),
-        (
-            "ClientBeginConnect",
-            std::mem::size_of::<ClientBeginConnectEvent>(),
-        ),
-        (
-            "ClientConnected",
-            std::mem::size_of::<ClientConnectedEvent>(),
-        ),
-        (
-            "ClientFullConnect",
-            std::mem::size_of::<ClientFullConnectEvent>(),
-        ),
-        ("HostQuit", std::mem::size_of::<HostQuitEvent>()),
-        ("TeamInfo", std::mem::size_of::<TeamInfoEvent>()),
-        ("TeamScore", std::mem::size_of::<TeamScoreEvent>()),
+        ("ServerShutdown", size_of::<ServerShutdownEvent>()),
+        ("ServerCvar", size_of::<ServerCvarEvent>()),
+        ("ServerMessage", size_of::<ServerMessageEvent>()),
+        ("ServerAddBan", size_of::<ServerAddBanEvent>()),
+        ("ServerRemoveBan", size_of::<ServerRemoveBanEvent>()),
+        ("PlayerConnect", size_of::<PlayerConnectEvent>()),
+        ("PlayerConnectClient", size_of::<PlayerConnectClientEvent>()),
+        ("PlayerInfo", size_of::<PlayerInfoEvent>()),
+        ("PlayerDisconnect", size_of::<PlayerDisconnectEvent>()),
+        ("PlayerActivate", size_of::<PlayerActivateEvent>()),
+        ("PlayerSay", size_of::<PlayerSayEvent>()),
+        ("ClientDisconnect", size_of::<ClientDisconnectEvent>()),
+        ("ClientBeginConnect", size_of::<ClientBeginConnectEvent>()),
+        ("ClientConnected", size_of::<ClientConnectedEvent>()),
+        ("ClientFullConnect", size_of::<ClientFullConnectEvent>()),
+        ("HostQuit", size_of::<HostQuitEvent>()),
+        ("TeamInfo", size_of::<TeamInfoEvent>()),
+        ("TeamScore", size_of::<TeamScoreEvent>()),
         (
             "TeamPlayBroadcastAudio",
-            std::mem::size_of::<TeamPlayBroadcastAudioEvent>(),
+            size_of::<TeamPlayBroadcastAudioEvent>(),
         ),
-        ("PlayerTeam", std::mem::size_of::<PlayerTeamEvent>()),
-        ("PlayerClass", std::mem::size_of::<PlayerClassEvent>()),
-        ("PlayerDeath", std::mem::size_of::<PlayerDeathEvent>()),
-        ("PlayerHurt", std::mem::size_of::<PlayerHurtEvent>()),
-        ("PlayerChat", std::mem::size_of::<PlayerChatEvent>()),
-        ("PlayerScore", std::mem::size_of::<PlayerScoreEvent>()),
-        ("PlayerSpawn", std::mem::size_of::<PlayerSpawnEvent>()),
-        ("PlayerShoot", std::mem::size_of::<PlayerShootEvent>()),
-        ("PlayerUse", std::mem::size_of::<PlayerUseEvent>()),
-        (
-            "PlayerChangeName",
-            std::mem::size_of::<PlayerChangeNameEvent>(),
-        ),
-        (
-            "PlayerHintMessage",
-            std::mem::size_of::<PlayerHintMessageEvent>(),
-        ),
+        ("PlayerTeam", size_of::<PlayerTeamEvent>()),
+        ("PlayerClass", size_of::<PlayerClassEvent>()),
+        ("PlayerDeath", size_of::<PlayerDeathEvent>()),
+        ("PlayerHurt", size_of::<PlayerHurtEvent>()),
+        ("PlayerChat", size_of::<PlayerChatEvent>()),
+        ("PlayerScore", size_of::<PlayerScoreEvent>()),
+        ("PlayerSpawn", size_of::<PlayerSpawnEvent>()),
+        ("PlayerShoot", size_of::<PlayerShootEvent>()),
+        ("PlayerUse", size_of::<PlayerUseEvent>()),
+        ("PlayerChangeName", size_of::<PlayerChangeNameEvent>()),
+        ("PlayerHintMessage", size_of::<PlayerHintMessageEvent>()),
         (
             "BasePlayerTeleported",
-            std::mem::size_of::<BasePlayerTeleportedEvent>(),
+            size_of::<BasePlayerTeleportedEvent>(),
         ),
-        ("GameInit", std::mem::size_of::<GameInitEvent>()),
-        ("GameNewMap", std::mem::size_of::<GameNewMapEvent>()),
-        ("GameStart", std::mem::size_of::<GameStartEvent>()),
-        ("GameEnd", std::mem::size_of::<GameEndEvent>()),
-        ("RoundStart", std::mem::size_of::<RoundStartEvent>()),
-        ("RoundEnd", std::mem::size_of::<RoundEndEvent>()),
-        ("GameMessage", std::mem::size_of::<GameMessageEvent>()),
-        ("BreakBreakable", std::mem::size_of::<BreakBreakableEvent>()),
-        ("BreakProp", std::mem::size_of::<BreakPropEvent>()),
-        ("EntityKilled", std::mem::size_of::<EntityKilledEvent>()),
-        ("BonusUpdated", std::mem::size_of::<BonusUpdatedEvent>()),
-        (
-            "AchievementEvent",
-            std::mem::size_of::<AchievementEventEvent>(),
-        ),
+        ("GameInit", size_of::<GameInitEvent>()),
+        ("GameNewMap", size_of::<GameNewMapEvent>()),
+        ("GameStart", size_of::<GameStartEvent>()),
+        ("GameEnd", size_of::<GameEndEvent>()),
+        ("RoundStart", size_of::<RoundStartEvent>()),
+        ("RoundEnd", size_of::<RoundEndEvent>()),
+        ("GameMessage", size_of::<GameMessageEvent>()),
+        ("BreakBreakable", size_of::<BreakBreakableEvent>()),
+        ("BreakProp", size_of::<BreakPropEvent>()),
+        ("EntityKilled", size_of::<EntityKilledEvent>()),
+        ("BonusUpdated", size_of::<BonusUpdatedEvent>()),
+        ("AchievementEvent", size_of::<AchievementEventEvent>()),
         (
             "AchievementIncrement",
-            std::mem::size_of::<AchievementIncrementEvent>(),
+            size_of::<AchievementIncrementEvent>(),
         ),
-        ("PhysgunPickup", std::mem::size_of::<PhysgunPickupEvent>()),
-        ("FlareIgniteNpc", std::mem::size_of::<FlareIgniteNpcEvent>()),
+        ("PhysgunPickup", size_of::<PhysgunPickupEvent>()),
+        ("FlareIgniteNpc", size_of::<FlareIgniteNpcEvent>()),
         (
             "HelicopterGrenadePuntMiss",
-            std::mem::size_of::<HelicopterGrenadePuntMissEvent>(),
+            size_of::<HelicopterGrenadePuntMissEvent>(),
         ),
-        (
-            "UserDataDownloaded",
-            std::mem::size_of::<UserDataDownloadedEvent>(),
-        ),
-        (
-            "RagdollDissolved",
-            std::mem::size_of::<RagdollDissolvedEvent>(),
-        ),
-        (
-            "HLTVChangedMode",
-            std::mem::size_of::<HLTVChangedModeEvent>(),
-        ),
-        (
-            "HLTVChangedTarget",
-            std::mem::size_of::<HLTVChangedTargetEvent>(),
-        ),
-        ("VoteEnded", std::mem::size_of::<VoteEndedEvent>()),
-        ("VoteStarted", std::mem::size_of::<VoteStartedEvent>()),
-        ("VoteChanged", std::mem::size_of::<VoteChangedEvent>()),
-        ("VotePassed", std::mem::size_of::<VotePassedEvent>()),
-        ("VoteFailed", std::mem::size_of::<VoteFailedEvent>()),
-        ("VoteCast", std::mem::size_of::<VoteCastEvent>()),
-        ("VoteOptions", std::mem::size_of::<VoteOptionsEvent>()),
-        ("ReplaySaved", std::mem::size_of::<ReplaySavedEvent>()),
+        ("UserDataDownloaded", size_of::<UserDataDownloadedEvent>()),
+        ("RagdollDissolved", size_of::<RagdollDissolvedEvent>()),
+        ("HLTVChangedMode", size_of::<HLTVChangedModeEvent>()),
+        ("HLTVChangedTarget", size_of::<HLTVChangedTargetEvent>()),
+        ("VoteEnded", size_of::<VoteEndedEvent>()),
+        ("VoteStarted", size_of::<VoteStartedEvent>()),
+        ("VoteChanged", size_of::<VoteChangedEvent>()),
+        ("VotePassed", size_of::<VotePassedEvent>()),
+        ("VoteFailed", size_of::<VoteFailedEvent>()),
+        ("VoteCast", size_of::<VoteCastEvent>()),
+        ("VoteOptions", size_of::<VoteOptionsEvent>()),
+        ("ReplaySaved", size_of::<ReplaySavedEvent>()),
         (
             "EnteredPerformanceMode",
-            std::mem::size_of::<EnteredPerformanceModeEvent>(),
+            size_of::<EnteredPerformanceModeEvent>(),
         ),
-        ("BrowseReplays", std::mem::size_of::<BrowseReplaysEvent>()),
-        (
-            "ReplayYoutubeStats",
-            std::mem::size_of::<ReplayYoutubeStatsEvent>(),
-        ),
-        (
-            "InventoryUpdated",
-            std::mem::size_of::<InventoryUpdatedEvent>(),
-        ),
-        ("CartUpdated", std::mem::size_of::<CartUpdatedEvent>()),
+        ("BrowseReplays", size_of::<BrowseReplaysEvent>()),
+        ("ReplayYoutubeStats", size_of::<ReplayYoutubeStatsEvent>()),
+        ("InventoryUpdated", size_of::<InventoryUpdatedEvent>()),
+        ("CartUpdated", size_of::<CartUpdatedEvent>()),
         (
             "StorePriceSheetUpdated",
-            std::mem::size_of::<StorePriceSheetUpdatedEvent>(),
+            size_of::<StorePriceSheetUpdatedEvent>(),
         ),
         (
             "EconInventoryConnected",
-            std::mem::size_of::<EconInventoryConnectedEvent>(),
+            size_of::<EconInventoryConnectedEvent>(),
         ),
         (
             "ItemSchemaInitialized",
-            std::mem::size_of::<ItemSchemaInitializedEvent>(),
+            size_of::<ItemSchemaInitializedEvent>(),
         ),
-        ("GcNewSession", std::mem::size_of::<GcNewSessionEvent>()),
-        ("GcLostSession", std::mem::size_of::<GcLostSessionEvent>()),
-        ("IntroFinish", std::mem::size_of::<IntroFinishEvent>()),
-        (
-            "IntroNextCamera",
-            std::mem::size_of::<IntroNextCameraEvent>(),
-        ),
-        (
-            "PlayerChangeClass",
-            std::mem::size_of::<PlayerChangeClassEvent>(),
-        ),
-        (
-            "TfMapTimeRemaining",
-            std::mem::size_of::<TfMapTimeRemainingEvent>(),
-        ),
-        ("TfGameOver", std::mem::size_of::<TfGameOverEvent>()),
-        (
-            "CtfFlagCaptured",
-            std::mem::size_of::<CtfFlagCapturedEvent>(),
-        ),
+        ("GcNewSession", size_of::<GcNewSessionEvent>()),
+        ("GcLostSession", size_of::<GcLostSessionEvent>()),
+        ("IntroFinish", size_of::<IntroFinishEvent>()),
+        ("IntroNextCamera", size_of::<IntroNextCameraEvent>()),
+        ("PlayerChangeClass", size_of::<PlayerChangeClassEvent>()),
+        ("TfMapTimeRemaining", size_of::<TfMapTimeRemainingEvent>()),
+        ("TfGameOver", size_of::<TfGameOverEvent>()),
+        ("CtfFlagCaptured", size_of::<CtfFlagCapturedEvent>()),
         (
             "ControlPointInitialized",
-            std::mem::size_of::<ControlPointInitializedEvent>(),
+            size_of::<ControlPointInitializedEvent>(),
         ),
         (
             "ControlPointUpdateImages",
-            std::mem::size_of::<ControlPointUpdateImagesEvent>(),
+            size_of::<ControlPointUpdateImagesEvent>(),
         ),
         (
             "ControlPointUpdateLayout",
-            std::mem::size_of::<ControlPointUpdateLayoutEvent>(),
+            size_of::<ControlPointUpdateLayoutEvent>(),
         ),
         (
             "ControlPointUpdateCapping",
-            std::mem::size_of::<ControlPointUpdateCappingEvent>(),
+            size_of::<ControlPointUpdateCappingEvent>(),
         ),
         (
             "ControlPointUpdateOwner",
-            std::mem::size_of::<ControlPointUpdateOwnerEvent>(),
+            size_of::<ControlPointUpdateOwnerEvent>(),
         ),
         (
             "ControlPointStartTouch",
-            std::mem::size_of::<ControlPointStartTouchEvent>(),
+            size_of::<ControlPointStartTouchEvent>(),
         ),
         (
             "ControlPointEndTouch",
-            std::mem::size_of::<ControlPointEndTouchEvent>(),
+            size_of::<ControlPointEndTouchEvent>(),
         ),
         (
             "ControlPointPulseElement",
-            std::mem::size_of::<ControlPointPulseElementEvent>(),
+            size_of::<ControlPointPulseElementEvent>(),
         ),
         (
             "ControlPointFakeCapture",
-            std::mem::size_of::<ControlPointFakeCaptureEvent>(),
+            size_of::<ControlPointFakeCaptureEvent>(),
         ),
         (
             "ControlPointFakeCaptureMultiplier",
-            std::mem::size_of::<ControlPointFakeCaptureMultiplierEvent>(),
+            size_of::<ControlPointFakeCaptureMultiplierEvent>(),
         ),
         (
             "TeamPlayRoundSelected",
-            std::mem::size_of::<TeamPlayRoundSelectedEvent>(),
+            size_of::<TeamPlayRoundSelectedEvent>(),
         ),
-        (
-            "TeamPlayRoundStart",
-            std::mem::size_of::<TeamPlayRoundStartEvent>(),
-        ),
-        (
-            "TeamPlayRoundActive",
-            std::mem::size_of::<TeamPlayRoundActiveEvent>(),
-        ),
+        ("TeamPlayRoundStart", size_of::<TeamPlayRoundStartEvent>()),
+        ("TeamPlayRoundActive", size_of::<TeamPlayRoundActiveEvent>()),
         (
             "TeamPlayWaitingBegins",
-            std::mem::size_of::<TeamPlayWaitingBeginsEvent>(),
+            size_of::<TeamPlayWaitingBeginsEvent>(),
         ),
-        (
-            "TeamPlayWaitingEnds",
-            std::mem::size_of::<TeamPlayWaitingEndsEvent>(),
-        ),
+        ("TeamPlayWaitingEnds", size_of::<TeamPlayWaitingEndsEvent>()),
         (
             "TeamPlayWaitingAboutToEnd",
-            std::mem::size_of::<TeamPlayWaitingAboutToEndEvent>(),
+            size_of::<TeamPlayWaitingAboutToEndEvent>(),
         ),
         (
             "TeamPlayRestartRound",
-            std::mem::size_of::<TeamPlayRestartRoundEvent>(),
+            size_of::<TeamPlayRestartRoundEvent>(),
         ),
         (
             "TeamPlayReadyRestart",
-            std::mem::size_of::<TeamPlayReadyRestartEvent>(),
+            size_of::<TeamPlayReadyRestartEvent>(),
         ),
         (
             "TeamPlayRoundRestartSeconds",
-            std::mem::size_of::<TeamPlayRoundRestartSecondsEvent>(),
+            size_of::<TeamPlayRoundRestartSecondsEvent>(),
         ),
-        (
-            "TeamPlayTeamReady",
-            std::mem::size_of::<TeamPlayTeamReadyEvent>(),
-        ),
-        (
-            "TeamPlayRoundWin",
-            std::mem::size_of::<TeamPlayRoundWinEvent>(),
-        ),
-        (
-            "TeamPlayUpdateTimer",
-            std::mem::size_of::<TeamPlayUpdateTimerEvent>(),
-        ),
+        ("TeamPlayTeamReady", size_of::<TeamPlayTeamReadyEvent>()),
+        ("TeamPlayRoundWin", size_of::<TeamPlayRoundWinEvent>()),
+        ("TeamPlayUpdateTimer", size_of::<TeamPlayUpdateTimerEvent>()),
         (
             "TeamPlayRoundStalemate",
-            std::mem::size_of::<TeamPlayRoundStalemateEvent>(),
+            size_of::<TeamPlayRoundStalemateEvent>(),
         ),
         (
             "TeamPlayOvertimeBegin",
-            std::mem::size_of::<TeamPlayOvertimeBeginEvent>(),
+            size_of::<TeamPlayOvertimeBeginEvent>(),
         ),
-        (
-            "TeamPlayOvertimeEnd",
-            std::mem::size_of::<TeamPlayOvertimeEndEvent>(),
-        ),
+        ("TeamPlayOvertimeEnd", size_of::<TeamPlayOvertimeEndEvent>()),
         (
             "TeamPlaySuddenDeathBegin",
-            std::mem::size_of::<TeamPlaySuddenDeathBeginEvent>(),
+            size_of::<TeamPlaySuddenDeathBeginEvent>(),
         ),
         (
             "TeamPlaySuddenDeathEnd",
-            std::mem::size_of::<TeamPlaySuddenDeathEndEvent>(),
+            size_of::<TeamPlaySuddenDeathEndEvent>(),
         ),
-        (
-            "TeamPlayGameOver",
-            std::mem::size_of::<TeamPlayGameOverEvent>(),
-        ),
+        ("TeamPlayGameOver", size_of::<TeamPlayGameOverEvent>()),
         (
             "TeamPlayMapTimeRemaining",
-            std::mem::size_of::<TeamPlayMapTimeRemainingEvent>(),
+            size_of::<TeamPlayMapTimeRemainingEvent>(),
         ),
-        (
-            "TeamPlayTimerFlash",
-            std::mem::size_of::<TeamPlayTimerFlashEvent>(),
-        ),
+        ("TeamPlayTimerFlash", size_of::<TeamPlayTimerFlashEvent>()),
         (
             "TeamPlayTimerTimeAdded",
-            std::mem::size_of::<TeamPlayTimerTimeAddedEvent>(),
+            size_of::<TeamPlayTimerTimeAddedEvent>(),
         ),
         (
             "TeamPlayPointStartCapture",
-            std::mem::size_of::<TeamPlayPointStartCaptureEvent>(),
+            size_of::<TeamPlayPointStartCaptureEvent>(),
         ),
         (
             "TeamPlayPointCaptured",
-            std::mem::size_of::<TeamPlayPointCapturedEvent>(),
+            size_of::<TeamPlayPointCapturedEvent>(),
         ),
-        (
-            "TeamPlayPointLocked",
-            std::mem::size_of::<TeamPlayPointLockedEvent>(),
-        ),
+        ("TeamPlayPointLocked", size_of::<TeamPlayPointLockedEvent>()),
         (
             "TeamPlayPointUnlocked",
-            std::mem::size_of::<TeamPlayPointUnlockedEvent>(),
+            size_of::<TeamPlayPointUnlockedEvent>(),
         ),
         (
             "TeamPlayCaptureBroken",
-            std::mem::size_of::<TeamPlayCaptureBrokenEvent>(),
+            size_of::<TeamPlayCaptureBrokenEvent>(),
         ),
         (
             "TeamPlayCaptureBlocked",
-            std::mem::size_of::<TeamPlayCaptureBlockedEvent>(),
+            size_of::<TeamPlayCaptureBlockedEvent>(),
         ),
-        (
-            "TeamPlayFlagEvent",
-            std::mem::size_of::<TeamPlayFlagEventEvent>(),
-        ),
-        (
-            "TeamPlayWinPanel",
-            std::mem::size_of::<TeamPlayWinPanelEvent>(),
-        ),
+        ("TeamPlayFlagEvent", size_of::<TeamPlayFlagEventEvent>()),
+        ("TeamPlayWinPanel", size_of::<TeamPlayWinPanelEvent>()),
         (
             "TeamPlayTeamBalancedPlayer",
-            std::mem::size_of::<TeamPlayTeamBalancedPlayerEvent>(),
+            size_of::<TeamPlayTeamBalancedPlayerEvent>(),
         ),
         (
             "TeamPlaySetupFinished",
-            std::mem::size_of::<TeamPlaySetupFinishedEvent>(),
+            size_of::<TeamPlaySetupFinishedEvent>(),
         ),
-        ("TeamPlayAlert", std::mem::size_of::<TeamPlayAlertEvent>()),
-        (
-            "TrainingComplete",
-            std::mem::size_of::<TrainingCompleteEvent>(),
-        ),
-        (
-            "ShowFreezePanel",
-            std::mem::size_of::<ShowFreezePanelEvent>(),
-        ),
-        (
-            "HideFreezePanel",
-            std::mem::size_of::<HideFreezePanelEvent>(),
-        ),
-        (
-            "FreezeCamStarted",
-            std::mem::size_of::<FreezeCamStartedEvent>(),
-        ),
+        ("TeamPlayAlert", size_of::<TeamPlayAlertEvent>()),
+        ("TrainingComplete", size_of::<TrainingCompleteEvent>()),
+        ("ShowFreezePanel", size_of::<ShowFreezePanelEvent>()),
+        ("HideFreezePanel", size_of::<HideFreezePanelEvent>()),
+        ("FreezeCamStarted", size_of::<FreezeCamStartedEvent>()),
         (
             "LocalPlayerChangeTeam",
-            std::mem::size_of::<LocalPlayerChangeTeamEvent>(),
+            size_of::<LocalPlayerChangeTeamEvent>(),
         ),
         (
             "LocalPlayerScoreChanged",
-            std::mem::size_of::<LocalPlayerScoreChangedEvent>(),
+            size_of::<LocalPlayerScoreChangedEvent>(),
         ),
         (
             "LocalPlayerChangeClass",
-            std::mem::size_of::<LocalPlayerChangeClassEvent>(),
+            size_of::<LocalPlayerChangeClassEvent>(),
         ),
-        (
-            "LocalPlayerRespawn",
-            std::mem::size_of::<LocalPlayerRespawnEvent>(),
-        ),
-        (
-            "BuildingInfoChanged",
-            std::mem::size_of::<BuildingInfoChangedEvent>(),
-        ),
+        ("LocalPlayerRespawn", size_of::<LocalPlayerRespawnEvent>()),
+        ("BuildingInfoChanged", size_of::<BuildingInfoChangedEvent>()),
         (
             "LocalPlayerChangeDisguise",
-            std::mem::size_of::<LocalPlayerChangeDisguiseEvent>(),
+            size_of::<LocalPlayerChangeDisguiseEvent>(),
         ),
         (
             "PlayerAccountChanged",
-            std::mem::size_of::<PlayerAccountChangedEvent>(),
+            size_of::<PlayerAccountChangedEvent>(),
         ),
-        ("SpyPdaReset", std::mem::size_of::<SpyPdaResetEvent>()),
-        (
-            "FlagStatusUpdate",
-            std::mem::size_of::<FlagStatusUpdateEvent>(),
-        ),
-        (
-            "PlayerStatsUpdated",
-            std::mem::size_of::<PlayerStatsUpdatedEvent>(),
-        ),
-        (
-            "PlayingCommentary",
-            std::mem::size_of::<PlayingCommentaryEvent>(),
-        ),
+        ("SpyPdaReset", size_of::<SpyPdaResetEvent>()),
+        ("FlagStatusUpdate", size_of::<FlagStatusUpdateEvent>()),
+        ("PlayerStatsUpdated", size_of::<PlayerStatsUpdatedEvent>()),
+        ("PlayingCommentary", size_of::<PlayingCommentaryEvent>()),
         (
             "PlayerChargeDeployed",
-            std::mem::size_of::<PlayerChargeDeployedEvent>(),
+            size_of::<PlayerChargeDeployedEvent>(),
         ),
-        (
-            "PlayerBuiltObject",
-            std::mem::size_of::<PlayerBuiltObjectEvent>(),
-        ),
+        ("PlayerBuiltObject", size_of::<PlayerBuiltObjectEvent>()),
         (
             "PlayerUpgradedObject",
-            std::mem::size_of::<PlayerUpgradedObjectEvent>(),
+            size_of::<PlayerUpgradedObjectEvent>(),
         ),
-        (
-            "PlayerCarryObject",
-            std::mem::size_of::<PlayerCarryObjectEvent>(),
-        ),
-        (
-            "PlayerDropObject",
-            std::mem::size_of::<PlayerDropObjectEvent>(),
-        ),
-        ("ObjectRemoved", std::mem::size_of::<ObjectRemovedEvent>()),
-        (
-            "ObjectDestroyed",
-            std::mem::size_of::<ObjectDestroyedEvent>(),
-        ),
-        (
-            "ObjectDetonated",
-            std::mem::size_of::<ObjectDetonatedEvent>(),
-        ),
-        (
-            "AchievementEarned",
-            std::mem::size_of::<AchievementEarnedEvent>(),
-        ),
-        (
-            "SpecTargetUpdated",
-            std::mem::size_of::<SpecTargetUpdatedEvent>(),
-        ),
+        ("PlayerCarryObject", size_of::<PlayerCarryObjectEvent>()),
+        ("PlayerDropObject", size_of::<PlayerDropObjectEvent>()),
+        ("ObjectRemoved", size_of::<ObjectRemovedEvent>()),
+        ("ObjectDestroyed", size_of::<ObjectDestroyedEvent>()),
+        ("ObjectDetonated", size_of::<ObjectDetonatedEvent>()),
+        ("AchievementEarned", size_of::<AchievementEarnedEvent>()),
+        ("SpecTargetUpdated", size_of::<SpecTargetUpdatedEvent>()),
         (
             "TournamentStateUpdate",
-            std::mem::size_of::<TournamentStateUpdateEvent>(),
+            size_of::<TournamentStateUpdateEvent>(),
         ),
         (
             "TournamentEnableCountdown",
-            std::mem::size_of::<TournamentEnableCountdownEvent>(),
+            size_of::<TournamentEnableCountdownEvent>(),
         ),
         (
             "PlayerCalledForMedic",
-            std::mem::size_of::<PlayerCalledForMedicEvent>(),
+            size_of::<PlayerCalledForMedicEvent>(),
         ),
-        (
-            "PlayerAskedForBall",
-            std::mem::size_of::<PlayerAskedForBallEvent>(),
-        ),
+        ("PlayerAskedForBall", size_of::<PlayerAskedForBallEvent>()),
         (
             "LocalPlayerBecameObserver",
-            std::mem::size_of::<LocalPlayerBecameObserverEvent>(),
+            size_of::<LocalPlayerBecameObserverEvent>(),
         ),
-        (
-            "PlayerIgnitedInv",
-            std::mem::size_of::<PlayerIgnitedInvEvent>(),
-        ),
-        ("PlayerIgnited", std::mem::size_of::<PlayerIgnitedEvent>()),
-        (
-            "PlayerExtinguished",
-            std::mem::size_of::<PlayerExtinguishedEvent>(),
-        ),
-        (
-            "PlayerTeleported",
-            std::mem::size_of::<PlayerTeleportedEvent>(),
-        ),
+        ("PlayerIgnitedInv", size_of::<PlayerIgnitedInvEvent>()),
+        ("PlayerIgnited", size_of::<PlayerIgnitedEvent>()),
+        ("PlayerExtinguished", size_of::<PlayerExtinguishedEvent>()),
+        ("PlayerTeleported", size_of::<PlayerTeleportedEvent>()),
         (
             "PlayerHealedMedicCall",
-            std::mem::size_of::<PlayerHealedMedicCallEvent>(),
+            size_of::<PlayerHealedMedicCallEvent>(),
         ),
         (
             "LocalPlayerChargeReady",
-            std::mem::size_of::<LocalPlayerChargeReadyEvent>(),
+            size_of::<LocalPlayerChargeReadyEvent>(),
         ),
-        (
-            "LocalPlayerWindDown",
-            std::mem::size_of::<LocalPlayerWindDownEvent>(),
-        ),
-        ("PlayerInvulned", std::mem::size_of::<PlayerInvulnedEvent>()),
-        ("EscortSpeed", std::mem::size_of::<EscortSpeedEvent>()),
-        ("EscortProgress", std::mem::size_of::<EscortProgressEvent>()),
-        ("EscortRecede", std::mem::size_of::<EscortRecedeEvent>()),
-        (
-            "GameUIActivated",
-            std::mem::size_of::<GameUIActivatedEvent>(),
-        ),
-        ("GameUIHidden", std::mem::size_of::<GameUIHiddenEvent>()),
-        (
-            "PlayerEscortScore",
-            std::mem::size_of::<PlayerEscortScoreEvent>(),
-        ),
-        (
-            "PlayerHealOnHit",
-            std::mem::size_of::<PlayerHealOnHitEvent>(),
-        ),
-        (
-            "PlayerStealSandvich",
-            std::mem::size_of::<PlayerStealSandvichEvent>(),
-        ),
-        (
-            "ShowClassLayout",
-            std::mem::size_of::<ShowClassLayoutEvent>(),
-        ),
-        ("ShowVsPanel", std::mem::size_of::<ShowVsPanelEvent>()),
-        ("PlayerDamaged", std::mem::size_of::<PlayerDamagedEvent>()),
+        ("LocalPlayerWindDown", size_of::<LocalPlayerWindDownEvent>()),
+        ("PlayerInvulned", size_of::<PlayerInvulnedEvent>()),
+        ("EscortSpeed", size_of::<EscortSpeedEvent>()),
+        ("EscortProgress", size_of::<EscortProgressEvent>()),
+        ("EscortRecede", size_of::<EscortRecedeEvent>()),
+        ("GameUIActivated", size_of::<GameUIActivatedEvent>()),
+        ("GameUIHidden", size_of::<GameUIHiddenEvent>()),
+        ("PlayerEscortScore", size_of::<PlayerEscortScoreEvent>()),
+        ("PlayerHealOnHit", size_of::<PlayerHealOnHitEvent>()),
+        ("PlayerStealSandvich", size_of::<PlayerStealSandvichEvent>()),
+        ("ShowClassLayout", size_of::<ShowClassLayoutEvent>()),
+        ("ShowVsPanel", size_of::<ShowVsPanelEvent>()),
+        ("PlayerDamaged", size_of::<PlayerDamagedEvent>()),
         (
             "ArenaPlayerNotification",
-            std::mem::size_of::<ArenaPlayerNotificationEvent>(),
+            size_of::<ArenaPlayerNotificationEvent>(),
         ),
-        (
-            "ArenaMatchMaxStreak",
-            std::mem::size_of::<ArenaMatchMaxStreakEvent>(),
-        ),
-        (
-            "ArenaRoundStart",
-            std::mem::size_of::<ArenaRoundStartEvent>(),
-        ),
-        ("ArenaWinPanel", std::mem::size_of::<ArenaWinPanelEvent>()),
-        ("PveWinPanel", std::mem::size_of::<PveWinPanelEvent>()),
-        ("AirDash", std::mem::size_of::<AirDashEvent>()),
-        ("Landed", std::mem::size_of::<LandedEvent>()),
-        (
-            "PlayerDamageDodged",
-            std::mem::size_of::<PlayerDamageDodgedEvent>(),
-        ),
-        ("PlayerStunned", std::mem::size_of::<PlayerStunnedEvent>()),
-        ("ScoutGrandSlam", std::mem::size_of::<ScoutGrandSlamEvent>()),
-        (
-            "ScoutSlamdollLanded",
-            std::mem::size_of::<ScoutSlamdollLandedEvent>(),
-        ),
-        ("ArrowImpact", std::mem::size_of::<ArrowImpactEvent>()),
-        ("PlayerJarated", std::mem::size_of::<PlayerJaratedEvent>()),
-        (
-            "PlayerJaratedFade",
-            std::mem::size_of::<PlayerJaratedFadeEvent>(),
-        ),
-        (
-            "PlayerShieldBlocked",
-            std::mem::size_of::<PlayerShieldBlockedEvent>(),
-        ),
-        ("PlayerPinned", std::mem::size_of::<PlayerPinnedEvent>()),
-        (
-            "PlayerHealedByMedic",
-            std::mem::size_of::<PlayerHealedByMedicEvent>(),
-        ),
-        (
-            "PlayerSappedObject",
-            std::mem::size_of::<PlayerSappedObjectEvent>(),
-        ),
-        ("ItemFound", std::mem::size_of::<ItemFoundEvent>()),
-        ("ShowAnnotation", std::mem::size_of::<ShowAnnotationEvent>()),
-        ("HideAnnotation", std::mem::size_of::<HideAnnotationEvent>()),
+        ("ArenaMatchMaxStreak", size_of::<ArenaMatchMaxStreakEvent>()),
+        ("ArenaRoundStart", size_of::<ArenaRoundStartEvent>()),
+        ("ArenaWinPanel", size_of::<ArenaWinPanelEvent>()),
+        ("PveWinPanel", size_of::<PveWinPanelEvent>()),
+        ("AirDash", size_of::<AirDashEvent>()),
+        ("Landed", size_of::<LandedEvent>()),
+        ("PlayerDamageDodged", size_of::<PlayerDamageDodgedEvent>()),
+        ("PlayerStunned", size_of::<PlayerStunnedEvent>()),
+        ("ScoutGrandSlam", size_of::<ScoutGrandSlamEvent>()),
+        ("ScoutSlamdollLanded", size_of::<ScoutSlamdollLandedEvent>()),
+        ("ArrowImpact", size_of::<ArrowImpactEvent>()),
+        ("PlayerJarated", size_of::<PlayerJaratedEvent>()),
+        ("PlayerJaratedFade", size_of::<PlayerJaratedFadeEvent>()),
+        ("PlayerShieldBlocked", size_of::<PlayerShieldBlockedEvent>()),
+        ("PlayerPinned", size_of::<PlayerPinnedEvent>()),
+        ("PlayerHealedByMedic", size_of::<PlayerHealedByMedicEvent>()),
+        ("PlayerSappedObject", size_of::<PlayerSappedObjectEvent>()),
+        ("ItemFound", size_of::<ItemFoundEvent>()),
+        ("ShowAnnotation", size_of::<ShowAnnotationEvent>()),
+        ("HideAnnotation", size_of::<HideAnnotationEvent>()),
         (
             "PostInventoryApplication",
-            std::mem::size_of::<PostInventoryApplicationEvent>(),
+            size_of::<PostInventoryApplicationEvent>(),
         ),
         (
             "ControlPointUnlockUpdated",
-            std::mem::size_of::<ControlPointUnlockUpdatedEvent>(),
+            size_of::<ControlPointUnlockUpdatedEvent>(),
         ),
-        (
-            "DeployBuffBanner",
-            std::mem::size_of::<DeployBuffBannerEvent>(),
-        ),
-        ("PlayerBuff", std::mem::size_of::<PlayerBuffEvent>()),
-        ("MedicDeath", std::mem::size_of::<MedicDeathEvent>()),
-        ("OvertimeNag", std::mem::size_of::<OvertimeNagEvent>()),
-        ("TeamsChanged", std::mem::size_of::<TeamsChangedEvent>()),
+        ("DeployBuffBanner", size_of::<DeployBuffBannerEvent>()),
+        ("PlayerBuff", size_of::<PlayerBuffEvent>()),
+        ("MedicDeath", size_of::<MedicDeathEvent>()),
+        ("OvertimeNag", size_of::<OvertimeNagEvent>()),
+        ("TeamsChanged", size_of::<TeamsChangedEvent>()),
         (
             "HalloweenPumpkinGrab",
-            std::mem::size_of::<HalloweenPumpkinGrabEvent>(),
+            size_of::<HalloweenPumpkinGrabEvent>(),
         ),
-        ("RocketJump", std::mem::size_of::<RocketJumpEvent>()),
-        (
-            "RocketJumpLanded",
-            std::mem::size_of::<RocketJumpLandedEvent>(),
-        ),
-        ("StickyJump", std::mem::size_of::<StickyJumpEvent>()),
-        (
-            "StickyJumpLanded",
-            std::mem::size_of::<StickyJumpLandedEvent>(),
-        ),
-        (
-            "RocketPackLaunch",
-            std::mem::size_of::<RocketPackLaunchEvent>(),
-        ),
-        (
-            "RocketPackLanded",
-            std::mem::size_of::<RocketPackLandedEvent>(),
-        ),
-        ("MedicDefended", std::mem::size_of::<MedicDefendedEvent>()),
-        (
-            "LocalPlayerHealed",
-            std::mem::size_of::<LocalPlayerHealedEvent>(),
-        ),
+        ("RocketJump", size_of::<RocketJumpEvent>()),
+        ("RocketJumpLanded", size_of::<RocketJumpLandedEvent>()),
+        ("StickyJump", size_of::<StickyJumpEvent>()),
+        ("StickyJumpLanded", size_of::<StickyJumpLandedEvent>()),
+        ("RocketPackLaunch", size_of::<RocketPackLaunchEvent>()),
+        ("RocketPackLanded", size_of::<RocketPackLandedEvent>()),
+        ("MedicDefended", size_of::<MedicDefendedEvent>()),
+        ("LocalPlayerHealed", size_of::<LocalPlayerHealedEvent>()),
         (
             "PlayerDestroyedPipeBomb",
-            std::mem::size_of::<PlayerDestroyedPipeBombEvent>(),
+            size_of::<PlayerDestroyedPipeBombEvent>(),
         ),
-        (
-            "ObjectDeflected",
-            std::mem::size_of::<ObjectDeflectedEvent>(),
-        ),
-        ("PlayerMvp", std::mem::size_of::<PlayerMvpEvent>()),
-        ("RaidSpawnMob", std::mem::size_of::<RaidSpawnMobEvent>()),
-        ("RaidSpawnSquad", std::mem::size_of::<RaidSpawnSquadEvent>()),
-        ("NavBlocked", std::mem::size_of::<NavBlockedEvent>()),
-        (
-            "PathTrackPassed",
-            std::mem::size_of::<PathTrackPassedEvent>(),
-        ),
-        (
-            "NumCappersChanged",
-            std::mem::size_of::<NumCappersChangedEvent>(),
-        ),
-        (
-            "PlayerRegenerate",
-            std::mem::size_of::<PlayerRegenerateEvent>(),
-        ),
-        (
-            "UpdateStatusItem",
-            std::mem::size_of::<UpdateStatusItemEvent>(),
-        ),
-        (
-            "StatsResetRound",
-            std::mem::size_of::<StatsResetRoundEvent>(),
-        ),
+        ("ObjectDeflected", size_of::<ObjectDeflectedEvent>()),
+        ("PlayerMvp", size_of::<PlayerMvpEvent>()),
+        ("RaidSpawnMob", size_of::<RaidSpawnMobEvent>()),
+        ("RaidSpawnSquad", size_of::<RaidSpawnSquadEvent>()),
+        ("NavBlocked", size_of::<NavBlockedEvent>()),
+        ("PathTrackPassed", size_of::<PathTrackPassedEvent>()),
+        ("NumCappersChanged", size_of::<NumCappersChangedEvent>()),
+        ("PlayerRegenerate", size_of::<PlayerRegenerateEvent>()),
+        ("UpdateStatusItem", size_of::<UpdateStatusItemEvent>()),
+        ("StatsResetRound", size_of::<StatsResetRoundEvent>()),
         (
             "ScoreStatsAccumulatedUpdate",
-            std::mem::size_of::<ScoreStatsAccumulatedUpdateEvent>(),
+            size_of::<ScoreStatsAccumulatedUpdateEvent>(),
         ),
         (
             "ScoreStatsAccumulatedReset",
-            std::mem::size_of::<ScoreStatsAccumulatedResetEvent>(),
+            size_of::<ScoreStatsAccumulatedResetEvent>(),
         ),
         (
             "AchievementEarnedLocal",
-            std::mem::size_of::<AchievementEarnedLocalEvent>(),
+            size_of::<AchievementEarnedLocalEvent>(),
         ),
-        ("PlayerHealed", std::mem::size_of::<PlayerHealedEvent>()),
-        ("BuildingHealed", std::mem::size_of::<BuildingHealedEvent>()),
-        ("ItemPickup", std::mem::size_of::<ItemPickupEvent>()),
-        ("DuelStatus", std::mem::size_of::<DuelStatusEvent>()),
-        ("FishNotice", std::mem::size_of::<FishNoticeEvent>()),
-        ("FishNoticeArm", std::mem::size_of::<FishNoticeArmEvent>()),
-        ("SlapNotice", std::mem::size_of::<SlapNoticeEvent>()),
-        ("ThrowableHit", std::mem::size_of::<ThrowableHitEvent>()),
-        (
-            "PumpkinLordSummoned",
-            std::mem::size_of::<PumpkinLordSummonedEvent>(),
-        ),
-        (
-            "PumpkinLordKilled",
-            std::mem::size_of::<PumpkinLordKilledEvent>(),
-        ),
-        (
-            "MerasmusSummoned",
-            std::mem::size_of::<MerasmusSummonedEvent>(),
-        ),
-        ("MerasmusKilled", std::mem::size_of::<MerasmusKilledEvent>()),
+        ("PlayerHealed", size_of::<PlayerHealedEvent>()),
+        ("BuildingHealed", size_of::<BuildingHealedEvent>()),
+        ("ItemPickup", size_of::<ItemPickupEvent>()),
+        ("DuelStatus", size_of::<DuelStatusEvent>()),
+        ("FishNotice", size_of::<FishNoticeEvent>()),
+        ("FishNoticeArm", size_of::<FishNoticeArmEvent>()),
+        ("SlapNotice", size_of::<SlapNoticeEvent>()),
+        ("ThrowableHit", size_of::<ThrowableHitEvent>()),
+        ("PumpkinLordSummoned", size_of::<PumpkinLordSummonedEvent>()),
+        ("PumpkinLordKilled", size_of::<PumpkinLordKilledEvent>()),
+        ("MerasmusSummoned", size_of::<MerasmusSummonedEvent>()),
+        ("MerasmusKilled", size_of::<MerasmusKilledEvent>()),
         (
             "MerasmusEscapeWarning",
-            std::mem::size_of::<MerasmusEscapeWarningEvent>(),
+            size_of::<MerasmusEscapeWarningEvent>(),
         ),
-        (
-            "MerasmusEscaped",
-            std::mem::size_of::<MerasmusEscapedEvent>(),
-        ),
-        (
-            "EyeballBossSummoned",
-            std::mem::size_of::<EyeballBossSummonedEvent>(),
-        ),
-        (
-            "EyeballBossStunned",
-            std::mem::size_of::<EyeballBossStunnedEvent>(),
-        ),
-        (
-            "EyeballBossKilled",
-            std::mem::size_of::<EyeballBossKilledEvent>(),
-        ),
-        (
-            "EyeballBossKiller",
-            std::mem::size_of::<EyeballBossKillerEvent>(),
-        ),
+        ("MerasmusEscaped", size_of::<MerasmusEscapedEvent>()),
+        ("EyeballBossSummoned", size_of::<EyeballBossSummonedEvent>()),
+        ("EyeballBossStunned", size_of::<EyeballBossStunnedEvent>()),
+        ("EyeballBossKilled", size_of::<EyeballBossKilledEvent>()),
+        ("EyeballBossKiller", size_of::<EyeballBossKillerEvent>()),
         (
             "EyeballBossEscapeImminent",
-            std::mem::size_of::<EyeballBossEscapeImminentEvent>(),
+            size_of::<EyeballBossEscapeImminentEvent>(),
         ),
-        (
-            "EyeballBossEscaped",
-            std::mem::size_of::<EyeballBossEscapedEvent>(),
-        ),
-        ("NpcHurt", std::mem::size_of::<NpcHurtEvent>()),
+        ("EyeballBossEscaped", size_of::<EyeballBossEscapedEvent>()),
+        ("NpcHurt", size_of::<NpcHurtEvent>()),
         (
             "ControlPointTimerUpdated",
-            std::mem::size_of::<ControlPointTimerUpdatedEvent>(),
+            size_of::<ControlPointTimerUpdatedEvent>(),
         ),
-        (
-            "PlayerHighFiveStart",
-            std::mem::size_of::<PlayerHighFiveStartEvent>(),
-        ),
+        ("PlayerHighFiveStart", size_of::<PlayerHighFiveStartEvent>()),
         (
             "PlayerHighFiveCancel",
-            std::mem::size_of::<PlayerHighFiveCancelEvent>(),
+            size_of::<PlayerHighFiveCancelEvent>(),
         ),
         (
             "PlayerHighFiveSuccess",
-            std::mem::size_of::<PlayerHighFiveSuccessEvent>(),
+            size_of::<PlayerHighFiveSuccessEvent>(),
         ),
-        (
-            "PlayerBonusPoints",
-            std::mem::size_of::<PlayerBonusPointsEvent>(),
-        ),
-        ("PlayerUpgraded", std::mem::size_of::<PlayerUpgradedEvent>()),
-        ("PlayerBuyback", std::mem::size_of::<PlayerBuybackEvent>()),
+        ("PlayerBonusPoints", size_of::<PlayerBonusPointsEvent>()),
+        ("PlayerUpgraded", size_of::<PlayerUpgradedEvent>()),
+        ("PlayerBuyback", size_of::<PlayerBuybackEvent>()),
         (
             "PlayerUsedPowerUpBottle",
-            std::mem::size_of::<PlayerUsedPowerUpBottleEvent>(),
+            size_of::<PlayerUsedPowerUpBottleEvent>(),
         ),
-        (
-            "ChristmasGiftGrab",
-            std::mem::size_of::<ChristmasGiftGrabEvent>(),
-        ),
+        ("ChristmasGiftGrab", size_of::<ChristmasGiftGrabEvent>()),
         (
             "PlayerKilledAchievementZone",
-            std::mem::size_of::<PlayerKilledAchievementZoneEvent>(),
+            size_of::<PlayerKilledAchievementZoneEvent>(),
         ),
-        ("PartyUpdated", std::mem::size_of::<PartyUpdatedEvent>()),
-        (
-            "PartyPrefChanged",
-            std::mem::size_of::<PartyPrefChangedEvent>(),
-        ),
+        ("PartyUpdated", size_of::<PartyUpdatedEvent>()),
+        ("PartyPrefChanged", size_of::<PartyPrefChangedEvent>()),
         (
             "PartyCriteriaChanged",
-            std::mem::size_of::<PartyCriteriaChangedEvent>(),
+            size_of::<PartyCriteriaChangedEvent>(),
         ),
-        (
-            "PartyInvitesChanged",
-            std::mem::size_of::<PartyInvitesChangedEvent>(),
-        ),
+        ("PartyInvitesChanged", size_of::<PartyInvitesChangedEvent>()),
         (
             "PartyQueueStateChanged",
-            std::mem::size_of::<PartyQueueStateChangedEvent>(),
+            size_of::<PartyQueueStateChangedEvent>(),
         ),
-        ("PartyChat", std::mem::size_of::<PartyChatEvent>()),
-        (
-            "PartyMemberJoin",
-            std::mem::size_of::<PartyMemberJoinEvent>(),
-        ),
-        (
-            "PartyMemberLeave",
-            std::mem::size_of::<PartyMemberLeaveEvent>(),
-        ),
-        (
-            "MatchInvitesUpdated",
-            std::mem::size_of::<MatchInvitesUpdatedEvent>(),
-        ),
-        ("LobbyUpdated", std::mem::size_of::<LobbyUpdatedEvent>()),
-        (
-            "MvmMissionUpdate",
-            std::mem::size_of::<MvmMissionUpdateEvent>(),
-        ),
-        (
-            "RecalculateHolidays",
-            std::mem::size_of::<RecalculateHolidaysEvent>(),
-        ),
+        ("PartyChat", size_of::<PartyChatEvent>()),
+        ("PartyMemberJoin", size_of::<PartyMemberJoinEvent>()),
+        ("PartyMemberLeave", size_of::<PartyMemberLeaveEvent>()),
+        ("MatchInvitesUpdated", size_of::<MatchInvitesUpdatedEvent>()),
+        ("LobbyUpdated", size_of::<LobbyUpdatedEvent>()),
+        ("MvmMissionUpdate", size_of::<MvmMissionUpdateEvent>()),
+        ("RecalculateHolidays", size_of::<RecalculateHolidaysEvent>()),
         (
             "PlayerCurrencyChanged",
-            std::mem::size_of::<PlayerCurrencyChangedEvent>(),
+            size_of::<PlayerCurrencyChangedEvent>(),
         ),
-        (
-            "DoomsdayRocketOpen",
-            std::mem::size_of::<DoomsdayRocketOpenEvent>(),
-        ),
+        ("DoomsdayRocketOpen", size_of::<DoomsdayRocketOpenEvent>()),
         (
             "RemoveNemesisRelationships",
-            std::mem::size_of::<RemoveNemesisRelationshipsEvent>(),
+            size_of::<RemoveNemesisRelationshipsEvent>(),
         ),
-        (
-            "MvmCreditBonusWave",
-            std::mem::size_of::<MvmCreditBonusWaveEvent>(),
-        ),
-        (
-            "MvmCreditBonusAll",
-            std::mem::size_of::<MvmCreditBonusAllEvent>(),
-        ),
+        ("MvmCreditBonusWave", size_of::<MvmCreditBonusWaveEvent>()),
+        ("MvmCreditBonusAll", size_of::<MvmCreditBonusAllEvent>()),
         (
             "MvmCreditBonusAllAdvanced",
-            std::mem::size_of::<MvmCreditBonusAllAdvancedEvent>(),
+            size_of::<MvmCreditBonusAllAdvancedEvent>(),
         ),
         (
             "MvmQuickSentryUpgrade",
-            std::mem::size_of::<MvmQuickSentryUpgradeEvent>(),
+            size_of::<MvmQuickSentryUpgradeEvent>(),
         ),
         (
             "MvmTankDestroyedByPlayers",
-            std::mem::size_of::<MvmTankDestroyedByPlayersEvent>(),
+            size_of::<MvmTankDestroyedByPlayersEvent>(),
         ),
         (
             "MvmKillRobotDeliveringBomb",
-            std::mem::size_of::<MvmKillRobotDeliveringBombEvent>(),
+            size_of::<MvmKillRobotDeliveringBombEvent>(),
         ),
-        (
-            "MvmPickupCurrency",
-            std::mem::size_of::<MvmPickupCurrencyEvent>(),
-        ),
+        ("MvmPickupCurrency", size_of::<MvmPickupCurrencyEvent>()),
         (
             "MvmBombCarrierKilled",
-            std::mem::size_of::<MvmBombCarrierKilledEvent>(),
+            size_of::<MvmBombCarrierKilledEvent>(),
         ),
         (
             "MvmSentryBusterDetonate",
-            std::mem::size_of::<MvmSentryBusterDetonateEvent>(),
+            size_of::<MvmSentryBusterDetonateEvent>(),
         ),
         (
             "MvmScoutMarkedForDeath",
-            std::mem::size_of::<MvmScoutMarkedForDeathEvent>(),
+            size_of::<MvmScoutMarkedForDeathEvent>(),
         ),
         (
             "MvmMedicPowerUpShared",
-            std::mem::size_of::<MvmMedicPowerUpSharedEvent>(),
+            size_of::<MvmMedicPowerUpSharedEvent>(),
         ),
-        ("MvmBeginWave", std::mem::size_of::<MvmBeginWaveEvent>()),
-        (
-            "MvmWaveComplete",
-            std::mem::size_of::<MvmWaveCompleteEvent>(),
-        ),
-        (
-            "MvmMissionComplete",
-            std::mem::size_of::<MvmMissionCompleteEvent>(),
-        ),
+        ("MvmBeginWave", size_of::<MvmBeginWaveEvent>()),
+        ("MvmWaveComplete", size_of::<MvmWaveCompleteEvent>()),
+        ("MvmMissionComplete", size_of::<MvmMissionCompleteEvent>()),
         (
             "MvmBombResetByPlayer",
-            std::mem::size_of::<MvmBombResetByPlayerEvent>(),
+            size_of::<MvmBombResetByPlayerEvent>(),
         ),
         (
             "MvmBombAlarmTriggered",
-            std::mem::size_of::<MvmBombAlarmTriggeredEvent>(),
+            size_of::<MvmBombAlarmTriggeredEvent>(),
         ),
         (
             "MvmBombDeployResetByPlayer",
-            std::mem::size_of::<MvmBombDeployResetByPlayerEvent>(),
+            size_of::<MvmBombDeployResetByPlayerEvent>(),
         ),
-        ("MvmWaveFailed", std::mem::size_of::<MvmWaveFailedEvent>()),
-        ("MvmResetStats", std::mem::size_of::<MvmResetStatsEvent>()),
-        ("DamageResisted", std::mem::size_of::<DamageResistedEvent>()),
-        (
-            "RevivePlayerNotify",
-            std::mem::size_of::<RevivePlayerNotifyEvent>(),
-        ),
-        (
-            "RevivePlayerStopped",
-            std::mem::size_of::<RevivePlayerStoppedEvent>(),
-        ),
+        ("MvmWaveFailed", size_of::<MvmWaveFailedEvent>()),
+        ("MvmResetStats", size_of::<MvmResetStatsEvent>()),
+        ("DamageResisted", size_of::<DamageResistedEvent>()),
+        ("RevivePlayerNotify", size_of::<RevivePlayerNotifyEvent>()),
+        ("RevivePlayerStopped", size_of::<RevivePlayerStoppedEvent>()),
         (
             "RevivePlayerComplete",
-            std::mem::size_of::<RevivePlayerCompleteEvent>(),
+            size_of::<RevivePlayerCompleteEvent>(),
         ),
-        (
-            "PlayerTurnedToGhost",
-            std::mem::size_of::<PlayerTurnedToGhostEvent>(),
-        ),
+        ("PlayerTurnedToGhost", size_of::<PlayerTurnedToGhostEvent>()),
         (
             "MedigunShieldBlockedDamage",
-            std::mem::size_of::<MedigunShieldBlockedDamageEvent>(),
+            size_of::<MedigunShieldBlockedDamageEvent>(),
         ),
         (
             "MvmAdvWaveCompleteNoGates",
-            std::mem::size_of::<MvmAdvWaveCompleteNoGatesEvent>(),
+            size_of::<MvmAdvWaveCompleteNoGatesEvent>(),
         ),
         (
             "MvmSniperHeadshotCurrency",
-            std::mem::size_of::<MvmSniperHeadshotCurrencyEvent>(),
+            size_of::<MvmSniperHeadshotCurrencyEvent>(),
         ),
-        (
-            "MvmMannhattanPit",
-            std::mem::size_of::<MvmMannhattanPitEvent>(),
-        ),
+        ("MvmMannhattanPit", size_of::<MvmMannhattanPitEvent>()),
         (
             "FlagCarriedInDetectionZone",
-            std::mem::size_of::<FlagCarriedInDetectionZoneEvent>(),
+            size_of::<FlagCarriedInDetectionZoneEvent>(),
         ),
         (
             "MvmAdvWaveKilledStunRadio",
-            std::mem::size_of::<MvmAdvWaveKilledStunRadioEvent>(),
+            size_of::<MvmAdvWaveKilledStunRadioEvent>(),
         ),
-        (
-            "PlayerDirectHitStun",
-            std::mem::size_of::<PlayerDirectHitStunEvent>(),
-        ),
+        ("PlayerDirectHitStun", size_of::<PlayerDirectHitStunEvent>()),
         (
             "MvmSentryBusterKilled",
-            std::mem::size_of::<MvmSentryBusterKilledEvent>(),
+            size_of::<MvmSentryBusterKilledEvent>(),
         ),
-        (
-            "UpgradesFileChanged",
-            std::mem::size_of::<UpgradesFileChangedEvent>(),
-        ),
-        (
-            "RdTeamPointsChanged",
-            std::mem::size_of::<RdTeamPointsChangedEvent>(),
-        ),
-        (
-            "RdRulesStateChanged",
-            std::mem::size_of::<RdRulesStateChangedEvent>(),
-        ),
-        ("RdRobotKilled", std::mem::size_of::<RdRobotKilledEvent>()),
-        ("RdRobotImpact", std::mem::size_of::<RdRobotImpactEvent>()),
+        ("UpgradesFileChanged", size_of::<UpgradesFileChangedEvent>()),
+        ("RdTeamPointsChanged", size_of::<RdTeamPointsChangedEvent>()),
+        ("RdRulesStateChanged", size_of::<RdRulesStateChangedEvent>()),
+        ("RdRobotKilled", size_of::<RdRobotKilledEvent>()),
+        ("RdRobotImpact", size_of::<RdRobotImpactEvent>()),
         (
             "TeamPlayPreRoundTimeLeft",
-            std::mem::size_of::<TeamPlayPreRoundTimeLeftEvent>(),
+            size_of::<TeamPlayPreRoundTimeLeftEvent>(),
         ),
-        (
-            "ParachuteDeploy",
-            std::mem::size_of::<ParachuteDeployEvent>(),
-        ),
-        (
-            "ParachuteHolster",
-            std::mem::size_of::<ParachuteHolsterEvent>(),
-        ),
-        (
-            "KillRefillsMeter",
-            std::mem::size_of::<KillRefillsMeterEvent>(),
-        ),
-        ("RpsTauntEvent", std::mem::size_of::<RpsTauntEventEvent>()),
-        ("CongaKill", std::mem::size_of::<CongaKillEvent>()),
-        (
-            "PlayerInitialSpawn",
-            std::mem::size_of::<PlayerInitialSpawnEvent>(),
-        ),
-        (
-            "CompetitiveVictory",
-            std::mem::size_of::<CompetitiveVictoryEvent>(),
-        ),
+        ("ParachuteDeploy", size_of::<ParachuteDeployEvent>()),
+        ("ParachuteHolster", size_of::<ParachuteHolsterEvent>()),
+        ("KillRefillsMeter", size_of::<KillRefillsMeterEvent>()),
+        ("RpsTauntEvent", size_of::<RpsTauntEventEvent>()),
+        ("CongaKill", size_of::<CongaKillEvent>()),
+        ("PlayerInitialSpawn", size_of::<PlayerInitialSpawnEvent>()),
+        ("CompetitiveVictory", size_of::<CompetitiveVictoryEvent>()),
         (
             "CompetitiveStatsUpdate",
-            std::mem::size_of::<CompetitiveStatsUpdateEvent>(),
+            size_of::<CompetitiveStatsUpdateEvent>(),
         ),
-        ("MiniGameWin", std::mem::size_of::<MiniGameWinEvent>()),
-        (
-            "SentryOnGoActive",
-            std::mem::size_of::<SentryOnGoActiveEvent>(),
-        ),
-        ("DuckXpLevelUp", std::mem::size_of::<DuckXpLevelUpEvent>()),
-        ("QuestLogOpened", std::mem::size_of::<QuestLogOpenedEvent>()),
-        ("SchemaUpdated", std::mem::size_of::<SchemaUpdatedEvent>()),
+        ("MiniGameWin", size_of::<MiniGameWinEvent>()),
+        ("SentryOnGoActive", size_of::<SentryOnGoActiveEvent>()),
+        ("DuckXpLevelUp", size_of::<DuckXpLevelUpEvent>()),
+        ("QuestLogOpened", size_of::<QuestLogOpenedEvent>()),
+        ("SchemaUpdated", size_of::<SchemaUpdatedEvent>()),
         (
             "LocalPlayerPickupWeapon",
-            std::mem::size_of::<LocalPlayerPickupWeaponEvent>(),
+            size_of::<LocalPlayerPickupWeaponEvent>(),
         ),
-        (
-            "RdPlayerScorePoints",
-            std::mem::size_of::<RdPlayerScorePointsEvent>(),
-        ),
-        (
-            "DemomanDetStickies",
-            std::mem::size_of::<DemomanDetStickiesEvent>(),
-        ),
+        ("RdPlayerScorePoints", size_of::<RdPlayerScorePointsEvent>()),
+        ("DemomanDetStickies", size_of::<DemomanDetStickiesEvent>()),
         (
             "QuestObjectiveCompleted",
-            std::mem::size_of::<QuestObjectiveCompletedEvent>(),
+            size_of::<QuestObjectiveCompletedEvent>(),
         ),
-        (
-            "PlayerScoreChanged",
-            std::mem::size_of::<PlayerScoreChangedEvent>(),
-        ),
-        (
-            "KilledCappingPlayer",
-            std::mem::size_of::<KilledCappingPlayerEvent>(),
-        ),
-        (
-            "EnvironmentalDeath",
-            std::mem::size_of::<EnvironmentalDeathEvent>(),
-        ),
-        (
-            "ProjectileDirectHit",
-            std::mem::size_of::<ProjectileDirectHitEvent>(),
-        ),
-        ("PassGet", std::mem::size_of::<PassGetEvent>()),
-        ("PassScore", std::mem::size_of::<PassScoreEvent>()),
-        ("PassFree", std::mem::size_of::<PassFreeEvent>()),
-        ("PassPassCaught", std::mem::size_of::<PassPassCaughtEvent>()),
-        ("PassBallStolen", std::mem::size_of::<PassBallStolenEvent>()),
-        (
-            "PassBallBlocked",
-            std::mem::size_of::<PassBallBlockedEvent>(),
-        ),
-        (
-            "DamagePrevented",
-            std::mem::size_of::<DamagePreventedEvent>(),
-        ),
-        (
-            "HalloweenBossKilled",
-            std::mem::size_of::<HalloweenBossKilledEvent>(),
-        ),
-        (
-            "EscapedLootIsland",
-            std::mem::size_of::<EscapedLootIslandEvent>(),
-        ),
-        (
-            "TaggedPlayerAsIt",
-            std::mem::size_of::<TaggedPlayerAsItEvent>(),
-        ),
-        (
-            "MerasmusStunned",
-            std::mem::size_of::<MerasmusStunnedEvent>(),
-        ),
-        (
-            "MerasmusPropFound",
-            std::mem::size_of::<MerasmusPropFoundEvent>(),
-        ),
+        ("PlayerScoreChanged", size_of::<PlayerScoreChangedEvent>()),
+        ("KilledCappingPlayer", size_of::<KilledCappingPlayerEvent>()),
+        ("EnvironmentalDeath", size_of::<EnvironmentalDeathEvent>()),
+        ("ProjectileDirectHit", size_of::<ProjectileDirectHitEvent>()),
+        ("PassGet", size_of::<PassGetEvent>()),
+        ("PassScore", size_of::<PassScoreEvent>()),
+        ("PassFree", size_of::<PassFreeEvent>()),
+        ("PassPassCaught", size_of::<PassPassCaughtEvent>()),
+        ("PassBallStolen", size_of::<PassBallStolenEvent>()),
+        ("PassBallBlocked", size_of::<PassBallBlockedEvent>()),
+        ("DamagePrevented", size_of::<DamagePreventedEvent>()),
+        ("HalloweenBossKilled", size_of::<HalloweenBossKilledEvent>()),
+        ("EscapedLootIsland", size_of::<EscapedLootIslandEvent>()),
+        ("TaggedPlayerAsIt", size_of::<TaggedPlayerAsItEvent>()),
+        ("MerasmusStunned", size_of::<MerasmusStunnedEvent>()),
+        ("MerasmusPropFound", size_of::<MerasmusPropFoundEvent>()),
         (
             "HalloweenSkeletonKilled",
-            std::mem::size_of::<HalloweenSkeletonKilledEvent>(),
+            size_of::<HalloweenSkeletonKilledEvent>(),
         ),
-        (
-            "SkeletonKilledQuest",
-            std::mem::size_of::<SkeletonKilledQuestEvent>(),
-        ),
+        ("SkeletonKilledQuest", size_of::<SkeletonKilledQuestEvent>()),
         (
             "SkeletonKingKilledQuest",
-            std::mem::size_of::<SkeletonKingKilledQuestEvent>(),
+            size_of::<SkeletonKingKilledQuestEvent>(),
         ),
-        ("EscapeHell", std::mem::size_of::<EscapeHellEvent>()),
-        (
-            "CrossSpectralBridge",
-            std::mem::size_of::<CrossSpectralBridgeEvent>(),
-        ),
-        ("MiniGameWon", std::mem::size_of::<MiniGameWonEvent>()),
-        ("RespawnGhost", std::mem::size_of::<RespawnGhostEvent>()),
-        ("KillInHell", std::mem::size_of::<KillInHellEvent>()),
+        ("EscapeHell", size_of::<EscapeHellEvent>()),
+        ("CrossSpectralBridge", size_of::<CrossSpectralBridgeEvent>()),
+        ("MiniGameWon", size_of::<MiniGameWonEvent>()),
+        ("RespawnGhost", size_of::<RespawnGhostEvent>()),
+        ("KillInHell", size_of::<KillInHellEvent>()),
         (
             "HalloweenDuckCollected",
-            std::mem::size_of::<HalloweenDuckCollectedEvent>(),
+            size_of::<HalloweenDuckCollectedEvent>(),
         ),
-        ("SpecialScore", std::mem::size_of::<SpecialScoreEvent>()),
-        (
-            "TeamLeaderKilled",
-            std::mem::size_of::<TeamLeaderKilledEvent>(),
-        ),
+        ("SpecialScore", size_of::<SpecialScoreEvent>()),
+        ("TeamLeaderKilled", size_of::<TeamLeaderKilledEvent>()),
         (
             "HalloweenSoulCollected",
-            std::mem::size_of::<HalloweenSoulCollectedEvent>(),
+            size_of::<HalloweenSoulCollectedEvent>(),
         ),
-        (
-            "RecalculateTruce",
-            std::mem::size_of::<RecalculateTruceEvent>(),
-        ),
+        ("RecalculateTruce", size_of::<RecalculateTruceEvent>()),
         (
             "DeadRingerCheatDeath",
-            std::mem::size_of::<DeadRingerCheatDeathEvent>(),
+            size_of::<DeadRingerCheatDeathEvent>(),
         ),
-        ("CrossbowHeal", std::mem::size_of::<CrossbowHealEvent>()),
-        (
-            "DamageMitigated",
-            std::mem::size_of::<DamageMitigatedEvent>(),
-        ),
-        ("PayloadPushed", std::mem::size_of::<PayloadPushedEvent>()),
+        ("CrossbowHeal", size_of::<CrossbowHealEvent>()),
+        ("DamageMitigated", size_of::<DamageMitigatedEvent>()),
+        ("PayloadPushed", size_of::<PayloadPushedEvent>()),
         (
             "PlayerAbandonedMatch",
-            std::mem::size_of::<PlayerAbandonedMatchEvent>(),
+            size_of::<PlayerAbandonedMatchEvent>(),
         ),
-        ("ClDrawline", std::mem::size_of::<ClDrawlineEvent>()),
-        (
-            "RestartTimerTime",
-            std::mem::size_of::<RestartTimerTimeEvent>(),
-        ),
-        (
-            "WinLimitChanged",
-            std::mem::size_of::<WinLimitChangedEvent>(),
-        ),
-        (
-            "WinPanelShowScores",
-            std::mem::size_of::<WinPanelShowScoresEvent>(),
-        ),
+        ("ClDrawline", size_of::<ClDrawlineEvent>()),
+        ("RestartTimerTime", size_of::<RestartTimerTimeEvent>()),
+        ("WinLimitChanged", size_of::<WinLimitChangedEvent>()),
+        ("WinPanelShowScores", size_of::<WinPanelShowScoresEvent>()),
         (
             "TopStreamsRequestFinished",
-            std::mem::size_of::<TopStreamsRequestFinishedEvent>(),
+            size_of::<TopStreamsRequestFinishedEvent>(),
         ),
         (
             "CompetitiveStateChanged",
-            std::mem::size_of::<CompetitiveStateChangedEvent>(),
+            size_of::<CompetitiveStateChangedEvent>(),
         ),
         (
             "GlobalWarDataUpdated",
-            std::mem::size_of::<GlobalWarDataUpdatedEvent>(),
+            size_of::<GlobalWarDataUpdatedEvent>(),
         ),
-        (
-            "StopWatchChanged",
-            std::mem::size_of::<StopWatchChangedEvent>(),
-        ),
-        ("DsStop", std::mem::size_of::<DsStopEvent>()),
-        ("DsScreenshot", std::mem::size_of::<DsScreenshotEvent>()),
-        (
-            "ShowMatchSummary",
-            std::mem::size_of::<ShowMatchSummaryEvent>(),
-        ),
-        (
-            "ExperienceChanged",
-            std::mem::size_of::<ExperienceChangedEvent>(),
-        ),
-        ("BeginXpLerp", std::mem::size_of::<BeginXpLerpEvent>()),
+        ("StopWatchChanged", size_of::<StopWatchChangedEvent>()),
+        ("DsStop", size_of::<DsStopEvent>()),
+        ("DsScreenshot", size_of::<DsScreenshotEvent>()),
+        ("ShowMatchSummary", size_of::<ShowMatchSummaryEvent>()),
+        ("ExperienceChanged", size_of::<ExperienceChangedEvent>()),
+        ("BeginXpLerp", size_of::<BeginXpLerpEvent>()),
         (
             "MatchmakerStatsUpdated",
-            std::mem::size_of::<MatchmakerStatsUpdatedEvent>(),
+            size_of::<MatchmakerStatsUpdatedEvent>(),
         ),
         (
             "RematchVotePeriodOver",
-            std::mem::size_of::<RematchVotePeriodOverEvent>(),
+            size_of::<RematchVotePeriodOverEvent>(),
         ),
         (
             "RematchFailedToCreate",
-            std::mem::size_of::<RematchFailedToCreateEvent>(),
+            size_of::<RematchFailedToCreateEvent>(),
         ),
-        (
-            "PlayerRematchChange",
-            std::mem::size_of::<PlayerRematchChangeEvent>(),
-        ),
-        ("PingUpdated", std::mem::size_of::<PingUpdatedEvent>()),
-        ("MMStatsUpdated", std::mem::size_of::<MMStatsUpdatedEvent>()),
+        ("PlayerRematchChange", size_of::<PlayerRematchChangeEvent>()),
+        ("PingUpdated", size_of::<PingUpdatedEvent>()),
+        ("MMStatsUpdated", size_of::<MMStatsUpdatedEvent>()),
         (
             "PlayerNextMapVoteChange",
-            std::mem::size_of::<PlayerNextMapVoteChangeEvent>(),
+            size_of::<PlayerNextMapVoteChangeEvent>(),
         ),
-        (
-            "VoteMapsChanged",
-            std::mem::size_of::<VoteMapsChangedEvent>(),
-        ),
-        (
-            "ProtoDefChanged",
-            std::mem::size_of::<ProtoDefChangedEvent>(),
-        ),
-        (
-            "PlayerDomination",
-            std::mem::size_of::<PlayerDominationEvent>(),
-        ),
+        ("VoteMapsChanged", size_of::<VoteMapsChangedEvent>()),
+        ("ProtoDefChanged", size_of::<ProtoDefChangedEvent>()),
+        ("PlayerDomination", size_of::<PlayerDominationEvent>()),
         (
             "PlayerRocketPackPushed",
-            std::mem::size_of::<PlayerRocketPackPushedEvent>(),
+            size_of::<PlayerRocketPackPushedEvent>(),
         ),
-        ("QuestRequest", std::mem::size_of::<QuestRequestEvent>()),
-        ("QuestResponse", std::mem::size_of::<QuestResponseEvent>()),
-        ("QuestProgress", std::mem::size_of::<QuestProgressEvent>()),
-        (
-            "ProjectileRemoved",
-            std::mem::size_of::<ProjectileRemovedEvent>(),
-        ),
-        (
-            "QuestMapDataChanged",
-            std::mem::size_of::<QuestMapDataChangedEvent>(),
-        ),
+        ("QuestRequest", size_of::<QuestRequestEvent>()),
+        ("QuestResponse", size_of::<QuestResponseEvent>()),
+        ("QuestProgress", size_of::<QuestProgressEvent>()),
+        ("ProjectileRemoved", size_of::<ProjectileRemovedEvent>()),
+        ("QuestMapDataChanged", size_of::<QuestMapDataChangedEvent>()),
         (
             "GasDousedPlayerIgnited",
-            std::mem::size_of::<GasDousedPlayerIgnitedEvent>(),
+            size_of::<GasDousedPlayerIgnitedEvent>(),
         ),
-        (
-            "QuestTurnInState",
-            std::mem::size_of::<QuestTurnInStateEvent>(),
-        ),
-        (
-            "ItemsAcknowledged",
-            std::mem::size_of::<ItemsAcknowledgedEvent>(),
-        ),
-        ("CapperKilled", std::mem::size_of::<CapperKilledEvent>()),
-        (
-            "MainMenuStabilized",
-            std::mem::size_of::<MainMenuStabilizedEvent>(),
-        ),
-        (
-            "WorldStatusChanged",
-            std::mem::size_of::<WorldStatusChangedEvent>(),
-        ),
-        ("HLTVStatus", std::mem::size_of::<HLTVStatusEvent>()),
-        ("HLTVCameraman", std::mem::size_of::<HLTVCameramanEvent>()),
-        ("HLTVRankCamera", std::mem::size_of::<HLTVRankCameraEvent>()),
-        ("HLTVRankEntity", std::mem::size_of::<HLTVRankEntityEvent>()),
-        ("HLTVFixed", std::mem::size_of::<HLTVFixedEvent>()),
-        ("HLTVChase", std::mem::size_of::<HLTVChaseEvent>()),
-        ("HLTVMessage", std::mem::size_of::<HLTVMessageEvent>()),
-        ("HLTVTitle", std::mem::size_of::<HLTVTitleEvent>()),
-        ("HLTVChat", std::mem::size_of::<HLTVChatEvent>()),
-        (
-            "ReplayStartRecord",
-            std::mem::size_of::<ReplayStartRecordEvent>(),
-        ),
-        (
-            "ReplaySessionInfo",
-            std::mem::size_of::<ReplaySessionInfoEvent>(),
-        ),
-        (
-            "ReplayEndRecord",
-            std::mem::size_of::<ReplayEndRecordEvent>(),
-        ),
+        ("QuestTurnInState", size_of::<QuestTurnInStateEvent>()),
+        ("ItemsAcknowledged", size_of::<ItemsAcknowledgedEvent>()),
+        ("CapperKilled", size_of::<CapperKilledEvent>()),
+        ("MainMenuStabilized", size_of::<MainMenuStabilizedEvent>()),
+        ("WorldStatusChanged", size_of::<WorldStatusChangedEvent>()),
+        ("HLTVStatus", size_of::<HLTVStatusEvent>()),
+        ("HLTVCameraman", size_of::<HLTVCameramanEvent>()),
+        ("HLTVRankCamera", size_of::<HLTVRankCameraEvent>()),
+        ("HLTVRankEntity", size_of::<HLTVRankEntityEvent>()),
+        ("HLTVFixed", size_of::<HLTVFixedEvent>()),
+        ("HLTVChase", size_of::<HLTVChaseEvent>()),
+        ("HLTVMessage", size_of::<HLTVMessageEvent>()),
+        ("HLTVTitle", size_of::<HLTVTitleEvent>()),
+        ("HLTVChat", size_of::<HLTVChatEvent>()),
+        ("ReplayStartRecord", size_of::<ReplayStartRecordEvent>()),
+        ("ReplaySessionInfo", size_of::<ReplaySessionInfoEvent>()),
+        ("ReplayEndRecord", size_of::<ReplayEndRecordEvent>()),
         (
             "ReplayReplaysAvailable",
-            std::mem::size_of::<ReplayReplaysAvailableEvent>(),
+            size_of::<ReplayReplaysAvailableEvent>(),
         ),
-        (
-            "ReplayServerError",
-            std::mem::size_of::<ReplayServerErrorEvent>(),
-        ),
+        ("ReplayServerError", size_of::<ReplayServerErrorEvent>()),
     ]
     .iter()
     .copied()

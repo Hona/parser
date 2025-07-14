@@ -20,7 +20,7 @@ pub(crate) mod consthash;
 pub mod demo;
 pub(crate) mod nullhasher;
 
-#[cfg(test)]
+#[cfg(all(test, feature = "write"))]
 #[track_caller]
 fn test_roundtrip_write<
     'a,
@@ -54,7 +54,7 @@ fn test_roundtrip_write<
     );
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "write"))]
 #[track_caller]
 fn test_roundtrip_encode<
     'a,

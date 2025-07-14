@@ -1,11 +1,19 @@
-use bitbuffer::{BitReadBuffer, BitReadStream, BitWriteStream, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::BitWriteStream;
+use bitbuffer::{BitReadBuffer, BitReadStream, LittleEndian};
 use std::fs;
 use test_case::test_case;
+#[cfg(feature = "write")]
+use tf_demo_parser::demo::message::stringtable::StringTableMeta;
+#[cfg(feature = "write")]
 use tf_demo_parser::demo::message::stringtable::{
-    parse_string_table_update, write_string_table_update, StringTableMeta,
+    parse_string_table_update, write_string_table_update,
 };
-use tf_demo_parser::demo::packet::stringtable::{FixedUserDataSize, StringTable};
+#[cfg(feature = "write")]
+use tf_demo_parser::demo::packet::stringtable::FixedUserDataSize;
+use tf_demo_parser::demo::packet::stringtable::StringTable;
 
+#[cfg(feature = "write")]
 #[test_case("test_data/string_tables/decalprecache.bin", "test_data/string_tables/decalprecache_meta.json"; "decalprecache")]
 #[test_case("test_data/string_tables/downloadables.bin", "test_data/string_tables/downloadables_meta.json"; "downloadables")]
 #[test_case("test_data/string_tables/DynamicModels.bin", "test_data/string_tables/DynamicModels_meta.json"; "DynamicModels")]

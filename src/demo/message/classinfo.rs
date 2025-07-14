@@ -1,4 +1,6 @@
-use bitbuffer::{BitRead, BitReadSized, BitWrite, BitWriteSized, BitWriteStream, LittleEndian};
+use bitbuffer::{BitRead, BitReadSized, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteSized, BitWriteStream};
 use serde::{Deserialize, Serialize};
 
 use crate::demo::message::stringtable::log_base2;
@@ -6,7 +8,8 @@ use crate::{ReadResult, Stream};
 use std::cmp::min;
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitReadSized, BitWriteSized, Debug, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(BitReadSized, Debug, PartialEq, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "write", derive(BitWriteSized))]
 pub struct ClassInfoEntry {
     #[size = "input_size"]
     class_id: u16,
@@ -45,6 +48,7 @@ impl BitRead<'_, LittleEndian> for ClassInfoMessage {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for ClassInfoMessage {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         self.count.write(stream)?;
@@ -61,6 +65,7 @@ impl BitWrite<LittleEndian> for ClassInfoMessage {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_class_info_roundtrip() {
     crate::test_roundtrip_write(ClassInfoMessage {
         count: 8,

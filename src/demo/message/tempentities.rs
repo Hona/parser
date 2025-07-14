@@ -1,11 +1,15 @@
 use super::stringtable::read_var_int;
 use crate::demo::message::packetentities::PacketEntitiesMessage;
-use crate::demo::message::stringtable::{encode_var_int_fixed};
+#[cfg(feature = "write")]
+use crate::demo::message::stringtable::encode_var_int_fixed;
 use crate::demo::packet::datatable::ClassId;
-use crate::demo::parser::{Encode, ParseBitSkip};
+#[cfg(feature = "write")]
+use crate::demo::parser::Encode;
+use crate::demo::parser::ParseBitSkip;
 use crate::demo::sendprop::SendProp;
 use crate::Result;
 use crate::{Parse, ParseError, ParserState, Stream};
+#[cfg(feature = "write")]
 use bitbuffer::{BitWrite, BitWriteSized, BitWriteStream, LittleEndian};
 use serde::{Deserialize, Serialize};
 
@@ -95,6 +99,7 @@ impl ParseBitSkip<'_> for TempEntitiesMessage {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for TempEntitiesMessage {
     fn encode(&self, stream: &mut BitWriteStream<LittleEndian>, state: &ParserState) -> Result<()> {
         let count = match (self.events.len(), self.events.first()) {

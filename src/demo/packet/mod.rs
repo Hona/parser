@@ -1,4 +1,6 @@
-use bitbuffer::{BitRead, BitWrite, BitWriteStream, LittleEndian};
+use bitbuffer::BitRead;
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteStream, LittleEndian};
 
 use crate::{Parse, ParserState, Result, Stream};
 
@@ -10,6 +12,7 @@ use self::stringtable::StringTablePacket;
 use self::synctick::SyncTickPacket;
 use self::usercmd::UserCmdPacket;
 use crate::demo::data::DemoTick;
+#[cfg(feature = "write")]
 use crate::demo::parser::Encode;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "trace")]
@@ -67,7 +70,8 @@ impl Packet<'_> {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(BitRead, Debug, Clone, Copy, Eq, PartialEq)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 #[discriminant_bits = 8]
 #[repr(u8)]
 pub enum PacketType {
@@ -123,6 +127,7 @@ impl<'a> Parse<'a> for Packet<'a> {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for Packet<'_> {
     fn encode(&self, stream: &mut BitWriteStream<LittleEndian>, state: &ParserState) -> Result<()> {
         #[cfg(feature = "trace")]

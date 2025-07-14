@@ -1,16 +1,28 @@
+#[cfg(feature = "write")]
 use std::fs;
+#[cfg(feature = "write")]
 use test_case::test_case;
 
+#[cfg(feature = "write")]
 use bitbuffer::{BitRead, BitReadBuffer, BitReadStream, BitWrite, BitWriteStream, LittleEndian};
+#[cfg(feature = "write")]
 use std::collections::HashMap;
+#[cfg(feature = "write")]
 use tf_demo_parser::demo::header::Header;
+#[cfg(feature = "write")]
 use tf_demo_parser::demo::message::Message;
+#[cfg(feature = "write")]
 use tf_demo_parser::demo::packet::datatable::SendTableName;
+#[cfg(feature = "write")]
 use tf_demo_parser::demo::packet::Packet;
+#[cfg(feature = "write")]
 use tf_demo_parser::demo::parser::{DemoHandler, Encode, NullHandler, RawPacketStream};
+#[cfg(feature = "write")]
 use tf_demo_parser::demo::sendprop::{RawSendPropDefinition, SendPropIdentifier, SendPropName};
+#[cfg(feature = "write")]
 use tf_demo_parser::{Demo, Parse};
 
+#[cfg(feature = "write")]
 #[test_case("test_data/small.dem"; "small.dem")]
 #[test_case("test_data/gully.dem"; "gully.dem")]
 #[test_case("test_data/comp.dem"; "comp.dem")]

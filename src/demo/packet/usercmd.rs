@@ -1,5 +1,7 @@
 use crate::demo::data::DemoTick;
-use bitbuffer::{BitRead, BitReadStream, BitWrite, BitWriteStream, LittleEndian};
+use bitbuffer::{BitRead, BitReadStream, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteStream};
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -25,6 +27,7 @@ impl<'a> BitRead<'a, LittleEndian> for UserCmdPacket {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for UserCmdPacket {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> bitbuffer::Result<()> {
         self.tick.write(stream)?;
@@ -34,7 +37,8 @@ impl BitWrite<LittleEndian> for UserCmdPacket {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, PartialEq, BitRead, BitWrite, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, BitRead, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct UserCmd {
     pub command_number: Option<u32>,
     pub tick_count: Option<u32>,
@@ -48,7 +52,8 @@ pub struct UserCmd {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, PartialEq, BitRead, BitWrite, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, BitRead, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct WeaponSelect {
     #[size = 11]
     select: u16,
