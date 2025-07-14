@@ -6,6 +6,7 @@ use bitbuffer::{BitRead, BitWrite, BitWriteStream, LittleEndian};
 use parse_display::Display;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
+use const_fnv1a_hash::fnv1a_hash_str_64;
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -17,7 +18,8 @@ pub struct GameEventDefinition {
 
 impl GameEventDefinition {
     pub fn get_entry(&self, name: &str) -> Option<&GameEventEntry> {
-        self.entries.iter().find(|entry| entry.name == name)
+        let hash = fnv1a_hash_str_64(name);
+        self.entries.iter().find(|entry| entry.hash == hash)
     }
 }
 
@@ -45,7 +47,19 @@ impl Ord for GameEventDefinition {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GameEventEntry {
     pub name: String,
+    pub hash: u64,
     pub kind: GameEventValueType,
+}
+
+impl GameEventEntry {
+    pub fn new<S: Into<String>>(name: S, kind: GameEventValueType) -> Self {
+        let name = name.into();
+        GameEventEntry {
+            hash: fnv1a_hash_str_64(&name),
+            name: name.into(),
+            kind,
+        }
+    }
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

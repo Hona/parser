@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::borrow::Cow;
 
-use crate::demo::message::stringtable::log_base2;
 use crate::demo::packet::datatable::{ClassId, SendTable};
 use crate::demo::parser::{Encode, ParseBitSkip};
 use crate::demo::sendprop::{SendProp, SendPropIdentifier, SendPropValue};
@@ -352,10 +351,21 @@ impl Parse<'_> for PacketEntitiesMessage {
     fn parse(stream: &mut Stream, state: &ParserState) -> Result<Self> {
         let max_entries = stream.read_sized(11)?;
         let delta: Option<ServerTick> = stream.read()?;
-        let base_line = stream.read()?;
-        let updated_entries: u16 = stream.read_sized(11)?;
-        let length: u32 = stream.read_sized(20)?;
-        let updated_base_line = stream.read()?;
+        #[derive(BitRead)]
+        struct Header {
+            base_line: BaselineIndex,
+            #[bitbuffer(size = 11)]
+            updated_entries: u16,
+            #[bitbuffer(size = 20)]
+            length: u32,
+            updated_base_line: bool,
+        }
+        let Header {
+            base_line,
+            updated_entries,
+            length,
+            updated_base_line,
+        } = stream.read()?;
 
         let mut data = stream.read_bits(length as usize)?;
 
@@ -486,10 +496,16 @@ impl PacketEntitiesMessage {
         baseline_index: BaselineIndex,
         delta: Option<ServerTick>,
     ) -> Result<PacketEntity> {
-        let bits = log_base2(state.server_classes.len()) + 1;
-        let class_index: ClassId = stream.read_sized::<u16>(bits as usize)?.into();
-
-        let serial = stream.read_sized(10)?;
+        let bits = state.server_class_bits;
+        #[derive(BitReadSized)]
+        struct Data {
+            #[bitbuffer(size = "input_size")]
+            raw_index: u16,
+            #[bitbuffer(size = 10)]
+            serial: u32,
+        }
+        let Data { raw_index, serial } = stream.read_sized(bits)?;
+        let class_index: ClassId = raw_index.into();
 
         Ok(PacketEntity {
             server_class: class_index,
@@ -509,8 +525,7 @@ impl PacketEntitiesMessage {
         stream: &mut BitWriteStream<LittleEndian>,
         state: &ParserState,
     ) -> Result<()> {
-        let bits = log_base2(state.server_classes.len()) + 1;
-        u16::from(entity.server_class).write_sized(stream, bits as usize)?;
+        u16::from(entity.server_class).write_sized(stream, state.server_class_bits)?;
         entity.serial_number.write_sized(stream, 10)?;
 
         Ok(())
@@ -613,12 +628,12 @@ impl ParseBitSkip<'_> for PacketEntitiesMessage {
 }
 
 #[test]
-fn test_packet_entitier_message_roundtrip() {
+fn test_packet_entity_message_roundtrip() {
     use crate::demo::packet::datatable::{SendTable, SendTableName, ServerClass, ServerClassName};
     use crate::demo::sendprop::{FloatDefinition, SendPropDefinition, SendPropParseDefinition};
 
     let mut state = ParserState::new(24, |_| false, false);
-    state.server_classes = vec![
+    state.set_server_classes(vec![
         ServerClass {
             id: ClassId::from(0),
             name: ServerClassName::from("class1"),
@@ -629,7 +644,7 @@ fn test_packet_entitier_message_roundtrip() {
             name: ServerClassName::from("class2"),
             data_table: SendTableName::from("table2"),
         },
-    ];
+    ]);
     state.send_tables = vec![
         SendTable {
             name: SendTableName::from("table1"),

@@ -4,9 +4,7 @@ use crate::demo::sendprop::{
     RawSendPropDefinition, SendPropDefinition, SendPropFlag, SendPropIdentifier, SendPropType,
 };
 use crate::{Parse, ParseError, ParserState, Result, Stream};
-use bitbuffer::{
-    BitRead, BitReadStream, BitWrite, BitWriteSized, BitWriteStream, Endianness, LittleEndian,
-};
+use bitbuffer::{BitRead, BitReadStream, BitWrite, BitWriteSized, BitWriteStream, Endianness, LittleEndian};
 use parse_display::{Display, FromStr};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -133,7 +131,7 @@ impl SendTableName {
 
 impl<E: Endianness> BitRead<'_, E> for SendTableName {
     fn read(stream: &mut BitReadStream<'_, E>) -> bitbuffer::Result<Self> {
-        String::read(stream).map(SendTableName::from)
+        <String as BitRead<'_, E>>::read(stream).map(SendTableName::from)
     }
 }
 

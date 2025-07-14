@@ -1,6 +1,7 @@
 use bitbuffer::{BitRead, BitWrite, BitWriteSized, BitWriteStream, LittleEndian};
 use parse_display::Display;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 
 use crate::demo::gameevent_gen::GameEventType;
 use crate::demo::gamevent::{
@@ -75,18 +76,15 @@ fn test_game_event_roundtrip() {
         GameEventDefinition {
             id: GameEventTypeId(0),
             event_type: GameEventType::ServerShutdown,
-            entries: vec![GameEventEntry {
-                name: "reason".to_string(),
-                kind: GameEventValueType::String,
-            }],
+            entries: vec![GameEventEntry::new("reason", GameEventValueType::String)],
         },
         GameEventDefinition {
             id: GameEventTypeId(1),
             event_type: GameEventType::ServerChangeLevelFailed,
-            entries: vec![GameEventEntry {
-                name: "level_name".to_string(),
-                kind: GameEventValueType::String,
-            }],
+            entries: vec![GameEventEntry::new(
+                "level_name",
+                GameEventValueType::String,
+            )],
         },
         GameEventDefinition {
             id: GameEventTypeId(2),
@@ -168,11 +166,8 @@ impl BitRead<'_, LittleEndian> for GameEventDefinition {
 
         let mut entry_type = stream.read()?;
         while entry_type != GameEventValueType::None {
-            let entry_name = stream.read()?;
-            entries.push(GameEventEntry {
-                name: entry_name,
-                kind: entry_type,
-            });
+            let entry_name: Cow<str> = stream.read()?;
+            entries.push(GameEventEntry::new(entry_name, entry_type));
             entry_type = stream.read()?;
         }
 
@@ -207,10 +202,10 @@ fn test_event_definition_roundtrip() {
     crate::test_roundtrip_write(GameEventDefinition {
         id: GameEventTypeId(0),
         event_type: GameEventType::ServerChangeLevelFailed,
-        entries: vec![GameEventEntry {
-            name: "level_name".to_string(),
-            kind: GameEventValueType::String,
-        }],
+        entries: vec![GameEventEntry::new(
+            "level_name",
+            GameEventValueType::String,
+        )],
     });
 }
 
@@ -244,10 +239,7 @@ fn test_event_list_roundtrip() {
         event_list: vec![GameEventDefinition {
             id: GameEventTypeId(0),
             event_type: GameEventType::ServerChangeLevelFailed,
-            entries: vec![GameEventEntry {
-                name: "level_name".to_string(),
-                kind: GameEventValueType::String,
-            }],
+            entries: vec![GameEventEntry::new("level_name", GameEventValueType::String)],
         }],
     });
     crate::test_roundtrip_write(GameEventListMessage {
@@ -256,55 +248,25 @@ fn test_event_list_roundtrip() {
                 id: GameEventTypeId(0),
                 event_type: GameEventType::ServerSpawn,
                 entries: vec![
-                    GameEventEntry {
-                        name: "hostname".to_string(),
-                        kind: GameEventValueType::String,
-                    },
-                    GameEventEntry {
-                        name: "address".to_string(),
-                        kind: GameEventValueType::String,
-                    },
-                    GameEventEntry {
-                        name: "ip".to_string(),
-                        kind: GameEventValueType::Long,
-                    },
-                    GameEventEntry {
-                        name: "port".to_string(),
-                        kind: GameEventValueType::Short,
-                    },
-                    GameEventEntry {
-                        name: "game".to_string(),
-                        kind: GameEventValueType::String,
-                    },
-                    GameEventEntry {
-                        name: "map_name".to_string(),
-                        kind: GameEventValueType::String,
-                    },
-                    GameEventEntry {
-                        name: "max_players".to_string(),
-                        kind: GameEventValueType::Long,
-                    },
-                    GameEventEntry {
-                        name: "os".to_string(),
-                        kind: GameEventValueType::String,
-                    },
-                    GameEventEntry {
-                        name: "dedicated".to_string(),
-                        kind: GameEventValueType::Boolean,
-                    },
-                    GameEventEntry {
-                        name: "password".to_string(),
-                        kind: GameEventValueType::Boolean,
-                    },
+                    GameEventEntry::new("hostname", GameEventValueType::String),
+                    GameEventEntry::new("address", GameEventValueType::String),
+                    GameEventEntry::new("ip", GameEventValueType::Long),
+                    GameEventEntry::new("port", GameEventValueType::Short),
+                    GameEventEntry::new("game", GameEventValueType::String),
+                    GameEventEntry::new("map_name", GameEventValueType::String),
+                    GameEventEntry::new("max_players", GameEventValueType::Long),
+                    GameEventEntry::new("os", GameEventValueType::String),
+                    GameEventEntry::new("dedicated", GameEventValueType::Boolean),
+                    GameEventEntry::new("password", GameEventValueType::Boolean),
                 ],
             },
             GameEventDefinition {
                 id: GameEventTypeId(1),
                 event_type: GameEventType::ServerChangeLevelFailed,
-                entries: vec![GameEventEntry {
-                    name: "level_name".to_string(),
-                    kind: GameEventValueType::String,
-                }],
+                entries: vec![GameEventEntry::new(
+                    "level_name",
+                    GameEventValueType::String,
+                )],
             },
             GameEventDefinition {
                 id: GameEventTypeId(2),

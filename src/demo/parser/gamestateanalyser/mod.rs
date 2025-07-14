@@ -185,6 +185,11 @@ impl GameStateAnalyser {
     }
 
     pub fn handle_world_entity(&mut self, entity: &PacketEntity, parser_state: &ParserState) {
+        const MINS: SendPropIdentifier =
+            SendPropIdentifier::new("DT_WORLD", "m_WorldMins");
+        const MAXS: SendPropIdentifier =
+            SendPropIdentifier::new("DT_WORLD", "m_WorldMaxs");
+
         if let (
             Some(SendProp {
                 value: SendPropValue::Vector(boundary_min),
@@ -195,8 +200,8 @@ impl GameStateAnalyser {
                 ..
             }),
         ) = (
-            entity.get_prop_by_name("DT_WORLD", "m_WorldMins", parser_state),
-            entity.get_prop_by_name("DT_WORLD", "m_WorldMaxs", parser_state),
+            entity.get_prop_by_identifier(&MINS, parser_state),
+            entity.get_prop_by_identifier(&MAXS, parser_state),
         ) {
             self.state.world = Some(World {
                 boundary_min,
