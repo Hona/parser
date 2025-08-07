@@ -108,6 +108,7 @@ pub enum PlayerClassData {
         charge: u8,
         medigun: MedigunType,
         target: Option<EntityId>,
+        last_target: Option<EntityId>,
     },
     Spy {
         disguise_team: Team,
@@ -123,6 +124,7 @@ impl PlayerClassData {
                 charge: 0,
                 medigun: MedigunType::Uber,
                 target: None,
+                last_target: None,
             },
             Class::Spy => PlayerClassData::Spy {
                 disguise_team: Team::Other,

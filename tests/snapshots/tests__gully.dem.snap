@@ -46,7 +46,7 @@ expression: state
         268979,
         316089
       ],
-      "handle": 0,
+      "handle": 1599490,
       "conditions": [
         0,
         0,
@@ -112,7 +112,7 @@ expression: state
         1182437,
         2097151
       ],
-      "handle": 0,
+      "handle": 1718275,
       "conditions": [
         0,
         0,
@@ -161,7 +161,8 @@ expression: state
         "Medic": {
           "charge": 0,
           "medigun": "uber",
-          "target": null
+          "target": 8,
+          "last_target": 8
         }
       },
       "simulation_time": 80,
@@ -184,7 +185,7 @@ expression: state
         1958250,
         1315401
       ],
-      "handle": 0,
+      "handle": 1583108,
       "conditions": [
         0,
         0,
@@ -250,7 +251,7 @@ expression: state
         1917551,
         31344
       ],
-      "handle": 0,
+      "handle": 311301,
       "conditions": [
         0,
         0,
@@ -316,7 +317,7 @@ expression: state
         1278549,
         1200734
       ],
-      "handle": 0,
+      "handle": 962566,
       "conditions": [
         0,
         0,
@@ -365,7 +366,8 @@ expression: state
         "Medic": {
           "charge": 0,
           "medigun": "uber",
-          "target": null
+          "target": null,
+          "last_target": 11
         }
       },
       "simulation_time": 87,
@@ -388,7 +390,7 @@ expression: state
         14930,
         1096287
       ],
-      "handle": 0,
+      "handle": 696327,
       "conditions": [
         0,
         0,
@@ -454,7 +456,7 @@ expression: state
         447062,
         1856087
       ],
-      "handle": 0,
+      "handle": 1476616,
       "conditions": [
         0,
         0,
@@ -520,7 +522,7 @@ expression: state
         1476987,
         330275
       ],
-      "handle": 0,
+      "handle": 571401,
       "conditions": [
         0,
         0,
@@ -586,7 +588,7 @@ expression: state
         240229,
         1909366
       ],
-      "handle": 0,
+      "handle": 1884170,
       "conditions": [
         0,
         0,
@@ -652,7 +654,7 @@ expression: state
         1640708,
         1423621
       ],
-      "handle": 0,
+      "handle": 24587,
       "conditions": [
         0,
         0,
@@ -718,7 +720,7 @@ expression: state
         381314,
         194959
       ],
-      "handle": 0,
+      "handle": 677900,
       "conditions": [
         0,
         0,
@@ -784,7 +786,7 @@ expression: state
         260770,
         1403555
       ],
-      "handle": 0,
+      "handle": 174093,
       "conditions": [
         0,
         0,

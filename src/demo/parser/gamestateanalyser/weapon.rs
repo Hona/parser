@@ -48,8 +48,11 @@ pub fn handle_medigun_entity(
             .and_then(|self_handle| state.get_player_by_weapon_handle(self_handle));
 
         if let Some(medic) = medic {
-            if let PlayerClassData::Medic { target, .. } = &mut medic.class_data {
+            if let PlayerClassData::Medic { target, last_target, .. } = &mut medic.class_data {
                 *target = target_id;
+                if target_id.is_some() {
+                    *last_target = target_id;
+                }
             }
         }
     }
