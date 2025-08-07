@@ -14,6 +14,8 @@ pub fn handle_player_entity(
     let player = state.get_or_create_player(entity.entity_index);
 
     const OUTER: SendPropIdentifier = SendPropIdentifier::new("DT_AttributeContainer", "m_hOuter");
+    const OUTER2: SendPropIdentifier =
+        SendPropIdentifier::new("DT_AttributeManager", "m_hOuter");
 
     const HEALTH_PROP: SendPropIdentifier = SendPropIdentifier::new("DT_BasePlayer", "m_iHealth");
     const MAX_HEALTH_PROP: SendPropIdentifier =
@@ -70,7 +72,7 @@ pub fn handle_player_entity(
 
     for prop in entity.props(parser_state) {
         match prop.identifier {
-            OUTER => {
+            OUTER | OUTER2 => {
                 player.handle = Handle::try_from(&prop.value).unwrap_or_default();
             }
             HEALTH_PROP => player.health = i64::try_from(&prop.value).unwrap_or_default() as u16,
