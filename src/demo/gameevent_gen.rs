@@ -121,7 +121,7 @@ impl ServerSpawnEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -163,7 +163,7 @@ impl ServerChangeLevelFailedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -205,7 +205,7 @@ impl ServerShutdownEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -254,7 +254,7 @@ impl ServerCvarEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -296,7 +296,7 @@ impl ServerMessageEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -380,7 +380,7 @@ impl ServerAddBanEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -436,7 +436,7 @@ impl ServerRemoveBanEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -509,7 +509,7 @@ impl PlayerConnectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -575,7 +575,7 @@ impl PlayerConnectClientEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -641,7 +641,7 @@ impl PlayerInfoEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -707,7 +707,7 @@ impl PlayerDisconnectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -749,7 +749,7 @@ impl PlayerActivateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -798,7 +798,7 @@ impl PlayerSayEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -840,7 +840,7 @@ impl ClientDisconnectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -899,7 +899,7 @@ impl ClientBeginConnectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -951,7 +951,7 @@ impl ClientConnectedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1003,7 +1003,7 @@ impl ClientFullConnectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1036,7 +1036,7 @@ impl HostQuitEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1085,7 +1085,7 @@ impl TeamInfoEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1134,7 +1134,7 @@ impl TeamScoreEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1197,7 +1197,7 @@ impl TeamPlayBroadcastAudioEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1281,7 +1281,7 @@ impl PlayerTeamEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1330,7 +1330,7 @@ impl PlayerClassEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1547,7 +1547,7 @@ impl PlayerDeathEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1655,7 +1655,7 @@ impl PlayerHurtEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1711,7 +1711,7 @@ impl PlayerChatEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1774,7 +1774,7 @@ impl PlayerScoreEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1830,7 +1830,7 @@ impl PlayerSpawnEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1882,7 +1882,7 @@ impl PlayerShootEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1931,7 +1931,7 @@ impl PlayerUseEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -1987,7 +1987,7 @@ impl PlayerChangeNameEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2029,7 +2029,7 @@ impl PlayerHintMessageEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2071,7 +2071,7 @@ impl BasePlayerTeleportedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2104,7 +2104,7 @@ impl GameInitEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2146,7 +2146,7 @@ impl GameNewMapEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2209,7 +2209,7 @@ impl GameStartEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2251,7 +2251,7 @@ impl GameEndEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2307,7 +2307,7 @@ impl RoundStartEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2363,7 +2363,7 @@ impl RoundEndEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2412,7 +2412,7 @@ impl GameMessageEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2468,7 +2468,7 @@ impl BreakBreakableEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2517,7 +2517,7 @@ impl BreakPropEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2580,7 +2580,7 @@ impl EntityKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2643,7 +2643,7 @@ impl BonusUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2699,7 +2699,7 @@ impl AchievementEventEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2755,7 +2755,7 @@ impl AchievementIncrementEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2797,7 +2797,7 @@ impl PhysgunPickupEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2839,7 +2839,7 @@ impl FlareIgniteNpcEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2872,7 +2872,7 @@ impl HelicopterGrenadePuntMissEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2905,7 +2905,7 @@ impl UserDataDownloadedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -2947,7 +2947,7 @@ impl RagdollDissolvedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3003,7 +3003,7 @@ impl HLTVChangedModeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3055,7 +3055,7 @@ impl HLTVChangedTargetEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3088,7 +3088,7 @@ impl VoteEndedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3158,7 +3158,7 @@ impl VoteStartedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3242,7 +3242,7 @@ impl VoteChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3305,7 +3305,7 @@ impl VotePassedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3354,7 +3354,7 @@ impl VoteFailedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3417,7 +3417,7 @@ impl VoteCastEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3501,7 +3501,7 @@ impl VoteOptionsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3534,7 +3534,7 @@ impl ReplaySavedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3567,7 +3567,7 @@ impl EnteredPerformanceModeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3600,7 +3600,7 @@ impl BrowseReplaysEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3656,7 +3656,7 @@ impl ReplayYoutubeStatsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3689,7 +3689,7 @@ impl InventoryUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3722,7 +3722,7 @@ impl CartUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3755,7 +3755,7 @@ impl StorePriceSheetUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3788,7 +3788,7 @@ impl EconInventoryConnectedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3821,7 +3821,7 @@ impl ItemSchemaInitializedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3854,7 +3854,7 @@ impl GcNewSessionEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3887,7 +3887,7 @@ impl GcLostSessionEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3929,7 +3929,7 @@ impl IntroFinishEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -3971,7 +3971,7 @@ impl IntroNextCameraEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4020,7 +4020,7 @@ impl PlayerChangeClassEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4062,7 +4062,7 @@ impl TfMapTimeRemainingEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4104,7 +4104,7 @@ impl TfGameOverEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4153,7 +4153,7 @@ impl CtfFlagCapturedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4186,7 +4186,7 @@ impl ControlPointInitializedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4228,7 +4228,7 @@ impl ControlPointUpdateImagesEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4270,7 +4270,7 @@ impl ControlPointUpdateLayoutEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4312,7 +4312,7 @@ impl ControlPointUpdateCappingEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4354,7 +4354,7 @@ impl ControlPointUpdateOwnerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4399,7 +4399,7 @@ impl ControlPointStartTouchEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4444,7 +4444,7 @@ impl ControlPointEndTouchEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4486,7 +4486,7 @@ impl ControlPointPulseElementEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4535,7 +4535,7 @@ impl ControlPointFakeCaptureEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4584,7 +4584,7 @@ impl ControlPointFakeCaptureMultiplierEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4626,7 +4626,7 @@ impl TeamPlayRoundSelectedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4668,7 +4668,7 @@ impl TeamPlayRoundStartEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4701,7 +4701,7 @@ impl TeamPlayRoundActiveEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4734,7 +4734,7 @@ impl TeamPlayWaitingBeginsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4767,7 +4767,7 @@ impl TeamPlayWaitingEndsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4800,7 +4800,7 @@ impl TeamPlayWaitingAboutToEndEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4833,7 +4833,7 @@ impl TeamPlayRestartRoundEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4866,7 +4866,7 @@ impl TeamPlayReadyRestartEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4908,7 +4908,7 @@ impl TeamPlayRoundRestartSecondsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -4950,7 +4950,7 @@ impl TeamPlayTeamReadyEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5034,7 +5034,7 @@ impl TeamPlayRoundWinEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5067,7 +5067,7 @@ impl TeamPlayUpdateTimerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5109,7 +5109,7 @@ impl TeamPlayRoundStalemateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5142,7 +5142,7 @@ impl TeamPlayOvertimeBeginEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5175,7 +5175,7 @@ impl TeamPlayOvertimeEndEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5208,7 +5208,7 @@ impl TeamPlaySuddenDeathBeginEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5241,7 +5241,7 @@ impl TeamPlaySuddenDeathEndEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5283,7 +5283,7 @@ impl TeamPlayGameOverEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5325,7 +5325,7 @@ impl TeamPlayMapTimeRemainingEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5367,7 +5367,7 @@ impl TeamPlayTimerFlashEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5416,7 +5416,7 @@ impl TeamPlayTimerTimeAddedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5489,7 +5489,7 @@ impl TeamPlayPointStartCaptureEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5548,7 +5548,7 @@ impl TeamPlayPointCapturedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5600,7 +5600,7 @@ impl TeamPlayPointLockedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5652,7 +5652,7 @@ impl TeamPlayPointUnlockedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5704,7 +5704,7 @@ impl TeamPlayCaptureBrokenEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5763,7 +5763,7 @@ impl TeamPlayCaptureBlockedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -5829,7 +5829,7 @@ impl TeamPlayFlagEventEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6004,7 +6004,7 @@ impl TeamPlayWinPanelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6053,7 +6053,7 @@ impl TeamPlayTeamBalancedPlayerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6086,7 +6086,7 @@ impl TeamPlaySetupFinishedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6128,7 +6128,7 @@ impl TeamPlayAlertEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6184,7 +6184,7 @@ impl TrainingCompleteEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6226,7 +6226,7 @@ impl ShowFreezePanelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6259,7 +6259,7 @@ impl HideFreezePanelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6292,7 +6292,7 @@ impl FreezeCamStartedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6325,7 +6325,7 @@ impl LocalPlayerChangeTeamEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6367,7 +6367,7 @@ impl LocalPlayerScoreChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6400,7 +6400,7 @@ impl LocalPlayerChangeClassEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6433,7 +6433,7 @@ impl LocalPlayerRespawnEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6489,7 +6489,7 @@ impl BuildingInfoChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6531,7 +6531,7 @@ impl LocalPlayerChangeDisguiseEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6580,7 +6580,7 @@ impl PlayerAccountChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6613,7 +6613,7 @@ impl SpyPdaResetEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6662,7 +6662,7 @@ impl FlagStatusUpdateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6704,7 +6704,7 @@ impl PlayerStatsUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6737,7 +6737,7 @@ impl PlayingCommentaryEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6786,7 +6786,7 @@ impl PlayerChargeDeployedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6842,7 +6842,7 @@ impl PlayerBuiltObjectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6905,7 +6905,7 @@ impl PlayerUpgradedObjectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -6961,7 +6961,7 @@ impl PlayerCarryObjectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7017,7 +7017,7 @@ impl PlayerDropObjectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7073,7 +7073,7 @@ impl ObjectRemovedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7164,7 +7164,7 @@ impl ObjectDestroyedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7220,7 +7220,7 @@ impl ObjectDetonatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7269,7 +7269,7 @@ impl AchievementEarnedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7302,7 +7302,7 @@ impl SpecTargetUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7365,7 +7365,7 @@ impl TournamentStateUpdateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7398,7 +7398,7 @@ impl TournamentEnableCountdownEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7440,7 +7440,7 @@ impl PlayerCalledForMedicEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7482,7 +7482,7 @@ impl PlayerAskedForBallEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7515,7 +7515,7 @@ impl LocalPlayerBecameObserverEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7571,7 +7571,7 @@ impl PlayerIgnitedInvEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7627,7 +7627,7 @@ impl PlayerIgnitedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7683,7 +7683,7 @@ impl PlayerExtinguishedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7739,7 +7739,7 @@ impl PlayerTeleportedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7781,7 +7781,7 @@ impl PlayerHealedMedicCallEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7814,7 +7814,7 @@ impl LocalPlayerChargeReadyEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7847,7 +7847,7 @@ impl LocalPlayerWindDownEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7896,7 +7896,7 @@ impl PlayerInvulnedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -7952,7 +7952,7 @@ impl EscortSpeedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8008,7 +8008,7 @@ impl EscortProgressEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8057,7 +8057,7 @@ impl EscortRecedeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8090,7 +8090,7 @@ impl GameUIActivatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8123,7 +8123,7 @@ impl GameUIHiddenEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8172,7 +8172,7 @@ impl PlayerEscortScoreEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8228,7 +8228,7 @@ impl PlayerHealOnHitEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8277,7 +8277,7 @@ impl PlayerStealSandvichEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8315,7 +8315,7 @@ impl ShowClassLayoutEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8353,7 +8353,7 @@ impl ShowVsPanelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8402,7 +8402,7 @@ impl PlayerDamagedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8451,7 +8451,7 @@ impl ArenaPlayerNotificationEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8500,7 +8500,7 @@ impl ArenaMatchMaxStreakEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8533,7 +8533,7 @@ impl ArenaRoundStartEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8848,7 +8848,7 @@ impl ArenaWinPanelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8904,7 +8904,7 @@ impl PveWinPanelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8946,7 +8946,7 @@ impl AirDashEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -8988,7 +8988,7 @@ impl LandedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9030,7 +9030,7 @@ impl PlayerDamageDodgedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9093,7 +9093,7 @@ impl PlayerStunnedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9142,7 +9142,7 @@ impl ScoutGrandSlamEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9193,7 +9193,7 @@ impl ScoutSlamdollLandedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9305,7 +9305,7 @@ impl ArrowImpactEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9354,7 +9354,7 @@ impl PlayerJaratedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9403,7 +9403,7 @@ impl PlayerJaratedFadeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9452,7 +9452,7 @@ impl PlayerShieldBlockedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9494,7 +9494,7 @@ impl PlayerPinnedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9536,7 +9536,7 @@ impl PlayerHealedByMedicEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9599,7 +9599,7 @@ impl PlayerSappedObjectEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9679,7 +9679,7 @@ impl ItemFoundEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9808,7 +9808,7 @@ impl ShowAnnotationEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9846,7 +9846,7 @@ impl HideAnnotationEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9888,7 +9888,7 @@ impl PostInventoryApplicationEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9933,7 +9933,7 @@ impl ControlPointUnlockUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -9982,7 +9982,7 @@ impl DeployBuffBannerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10038,7 +10038,7 @@ impl PlayerBuffEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10101,7 +10101,7 @@ impl MedicDeathEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10134,7 +10134,7 @@ impl OvertimeNagEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10167,7 +10167,7 @@ impl TeamsChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10209,7 +10209,7 @@ impl HalloweenPumpkinGrabEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10258,7 +10258,7 @@ impl RocketJumpEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10300,7 +10300,7 @@ impl RocketJumpLandedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10349,7 +10349,7 @@ impl StickyJumpEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10391,7 +10391,7 @@ impl StickyJumpLandedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10440,7 +10440,7 @@ impl RocketPackLaunchEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10482,7 +10482,7 @@ impl RocketPackLandedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10531,7 +10531,7 @@ impl MedicDefendedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10573,7 +10573,7 @@ impl LocalPlayerHealedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10615,7 +10615,7 @@ impl PlayerDestroyedPipeBombEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10678,7 +10678,7 @@ impl ObjectDeflectedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10720,7 +10720,7 @@ impl PlayerMvpEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10753,7 +10753,7 @@ impl RaidSpawnMobEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10786,7 +10786,7 @@ impl RaidSpawnSquadEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10831,7 +10831,7 @@ impl NavBlockedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10873,7 +10873,7 @@ impl PathTrackPassedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10922,7 +10922,7 @@ impl NumCappersChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -10955,7 +10955,7 @@ impl PlayerRegenerateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11004,7 +11004,7 @@ impl UpdateStatusItemEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11037,7 +11037,7 @@ impl StatsResetRoundEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11070,7 +11070,7 @@ impl ScoreStatsAccumulatedUpdateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11103,7 +11103,7 @@ impl ScoreStatsAccumulatedResetEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11145,7 +11145,7 @@ impl AchievementEarnedLocalEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11201,7 +11201,7 @@ impl PlayerHealedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11257,7 +11257,7 @@ impl BuildingHealedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11306,7 +11306,7 @@ impl ItemPickupEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11383,7 +11383,7 @@ impl DuelStatusEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11516,7 +11516,7 @@ impl FishNoticeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11649,7 +11649,7 @@ impl FishNoticeArmEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11782,7 +11782,7 @@ impl SlapNoticeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11922,7 +11922,7 @@ impl ThrowableHitEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11955,7 +11955,7 @@ impl PumpkinLordSummonedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -11988,7 +11988,7 @@ impl PumpkinLordKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12030,7 +12030,7 @@ impl MerasmusSummonedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12072,7 +12072,7 @@ impl MerasmusKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12121,7 +12121,7 @@ impl MerasmusEscapeWarningEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12163,7 +12163,7 @@ impl MerasmusEscapedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12205,7 +12205,7 @@ impl EyeballBossSummonedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12254,7 +12254,7 @@ impl EyeballBossStunnedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12296,7 +12296,7 @@ impl EyeballBossKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12345,7 +12345,7 @@ impl EyeballBossKillerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12394,7 +12394,7 @@ impl EyeballBossEscapeImminentEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12436,7 +12436,7 @@ impl EyeballBossEscapedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12516,7 +12516,7 @@ impl NpcHurtEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12561,7 +12561,7 @@ impl ControlPointTimerUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12603,7 +12603,7 @@ impl PlayerHighFiveStartEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12645,7 +12645,7 @@ impl PlayerHighFiveCancelEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12694,7 +12694,7 @@ impl PlayerHighFiveSuccessEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12750,7 +12750,7 @@ impl PlayerBonusPointsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12783,7 +12783,7 @@ impl PlayerUpgradedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12828,7 +12828,7 @@ impl PlayerBuybackEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12880,7 +12880,7 @@ impl PlayerUsedPowerUpBottleEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12922,7 +12922,7 @@ impl ChristmasGiftGrabEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -12978,7 +12978,7 @@ impl PlayerKilledAchievementZoneEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13011,7 +13011,7 @@ impl PartyUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13044,7 +13044,7 @@ impl PartyPrefChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13077,7 +13077,7 @@ impl PartyCriteriaChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13110,7 +13110,7 @@ impl PartyInvitesChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13152,7 +13152,7 @@ impl PartyQueueStateChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13208,7 +13208,7 @@ impl PartyChatEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13250,7 +13250,7 @@ impl PartyMemberJoinEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13292,7 +13292,7 @@ impl PartyMemberLeaveEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13325,7 +13325,7 @@ impl MatchInvitesUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13358,7 +13358,7 @@ impl LobbyUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13407,7 +13407,7 @@ impl MvmMissionUpdateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13440,7 +13440,7 @@ impl RecalculateHolidaysEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13482,7 +13482,7 @@ impl PlayerCurrencyChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13524,7 +13524,7 @@ impl DoomsdayRocketOpenEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13566,7 +13566,7 @@ impl RemoveNemesisRelationshipsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13599,7 +13599,7 @@ impl MvmCreditBonusWaveEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13632,7 +13632,7 @@ impl MvmCreditBonusAllEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13665,7 +13665,7 @@ impl MvmCreditBonusAllAdvancedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13707,7 +13707,7 @@ impl MvmQuickSentryUpgradeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13740,7 +13740,7 @@ impl MvmTankDestroyedByPlayersEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13782,7 +13782,7 @@ impl MvmKillRobotDeliveringBombEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13831,7 +13831,7 @@ impl MvmPickupCurrencyEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13873,7 +13873,7 @@ impl MvmBombCarrierKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13936,7 +13936,7 @@ impl MvmSentryBusterDetonateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -13978,7 +13978,7 @@ impl MvmScoutMarkedForDeathEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14020,7 +14020,7 @@ impl MvmMedicPowerUpSharedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14076,7 +14076,7 @@ impl MvmBeginWaveEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14118,7 +14118,7 @@ impl MvmWaveCompleteEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14160,7 +14160,7 @@ impl MvmMissionCompleteEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14202,7 +14202,7 @@ impl MvmBombResetByPlayerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14235,7 +14235,7 @@ impl MvmBombAlarmTriggeredEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14277,7 +14277,7 @@ impl MvmBombDeployResetByPlayerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14310,7 +14310,7 @@ impl MvmWaveFailedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14343,7 +14343,7 @@ impl MvmResetStatsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14385,7 +14385,7 @@ impl DamageResistedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14434,7 +14434,7 @@ impl RevivePlayerNotifyEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14476,7 +14476,7 @@ impl RevivePlayerStoppedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14518,7 +14518,7 @@ impl RevivePlayerCompleteEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14560,7 +14560,7 @@ impl PlayerTurnedToGhostEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14609,7 +14609,7 @@ impl MedigunShieldBlockedDamageEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14651,7 +14651,7 @@ impl MvmAdvWaveCompleteNoGatesEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14700,7 +14700,7 @@ impl MvmSniperHeadshotCurrencyEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14733,7 +14733,7 @@ impl MvmMannhattanPitEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14766,7 +14766,7 @@ impl FlagCarriedInDetectionZoneEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14799,7 +14799,7 @@ impl MvmAdvWaveKilledStunRadioEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14848,7 +14848,7 @@ impl PlayerDirectHitStunEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14890,7 +14890,7 @@ impl MvmSentryBusterKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14932,7 +14932,7 @@ impl UpgradesFileChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -14988,7 +14988,7 @@ impl RdTeamPointsChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15021,7 +15021,7 @@ impl RdRulesStateChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15119,7 +15119,7 @@ impl RdRobotKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15182,7 +15182,7 @@ impl RdRobotImpactEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15220,7 +15220,7 @@ impl TeamPlayPreRoundTimeLeftEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15262,7 +15262,7 @@ impl ParachuteDeployEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15304,7 +15304,7 @@ impl ParachuteHolsterEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15346,7 +15346,7 @@ impl KillRefillsMeterEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15409,7 +15409,7 @@ impl RpsTauntEventEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15451,7 +15451,7 @@ impl CongaKillEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15493,7 +15493,7 @@ impl PlayerInitialSpawnEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15526,7 +15526,7 @@ impl CompetitiveVictoryEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15603,7 +15603,7 @@ impl CompetitiveStatsUpdateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15652,7 +15652,7 @@ impl MiniGameWinEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15694,7 +15694,7 @@ impl SentryOnGoActiveEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15736,7 +15736,7 @@ impl DuckXpLevelUpEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15769,7 +15769,7 @@ impl QuestLogOpenedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15802,7 +15802,7 @@ impl SchemaUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15835,7 +15835,7 @@ impl LocalPlayerPickupWeaponEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15891,7 +15891,7 @@ impl RdPlayerScorePointsEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15933,7 +15933,7 @@ impl DemomanDetStickiesEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -15996,7 +15996,7 @@ impl QuestObjectiveCompletedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16045,7 +16045,7 @@ impl PlayerScoreChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16104,7 +16104,7 @@ impl KilledCappingPlayerEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16153,7 +16153,7 @@ impl EnvironmentalDeathEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16209,7 +16209,7 @@ impl ProjectileDirectHitEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16251,7 +16251,7 @@ impl PassGetEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16307,7 +16307,7 @@ impl PassScoreEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16356,7 +16356,7 @@ impl PassFreeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16419,7 +16419,7 @@ impl PassPassCaughtEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16468,7 +16468,7 @@ impl PassBallStolenEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16517,7 +16517,7 @@ impl PassBallBlockedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16580,7 +16580,7 @@ impl DamagePreventedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16629,7 +16629,7 @@ impl HalloweenBossKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16671,7 +16671,7 @@ impl EscapedLootIslandEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16713,7 +16713,7 @@ impl TaggedPlayerAsItEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16755,7 +16755,7 @@ impl MerasmusStunnedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16797,7 +16797,7 @@ impl MerasmusPropFoundEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16839,7 +16839,7 @@ impl HalloweenSkeletonKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16881,7 +16881,7 @@ impl SkeletonKilledQuestEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16923,7 +16923,7 @@ impl SkeletonKingKilledQuestEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -16965,7 +16965,7 @@ impl EscapeHellEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17007,7 +17007,7 @@ impl CrossSpectralBridgeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17056,7 +17056,7 @@ impl MiniGameWonEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17105,7 +17105,7 @@ impl RespawnGhostEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17154,7 +17154,7 @@ impl KillInHellEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17196,7 +17196,7 @@ impl HalloweenDuckCollectedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17238,7 +17238,7 @@ impl SpecialScoreEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17287,7 +17287,7 @@ impl TeamLeaderKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17343,7 +17343,7 @@ impl HalloweenSoulCollectedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17376,7 +17376,7 @@ impl RecalculateTruceEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17421,7 +17421,7 @@ impl DeadRingerCheatDeathEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17477,7 +17477,7 @@ impl CrossbowHealEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17540,7 +17540,7 @@ impl DamageMitigatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17589,7 +17589,7 @@ impl PayloadPushedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17631,7 +17631,7 @@ impl PlayerAbandonedMatchEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17693,7 +17693,7 @@ impl ClDrawlineEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17731,7 +17731,7 @@ impl RestartTimerTimeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17764,7 +17764,7 @@ impl WinLimitChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17797,7 +17797,7 @@ impl WinPanelShowScoresEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17830,7 +17830,7 @@ impl TopStreamsRequestFinishedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17863,7 +17863,7 @@ impl CompetitiveStateChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17896,7 +17896,7 @@ impl GlobalWarDataUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17929,7 +17929,7 @@ impl StopWatchChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -17962,7 +17962,7 @@ impl DsStopEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18004,7 +18004,7 @@ impl DsScreenshotEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18037,7 +18037,7 @@ impl ShowMatchSummaryEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18070,7 +18070,7 @@ impl ExperienceChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18103,7 +18103,7 @@ impl BeginXpLerpEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18136,7 +18136,7 @@ impl MatchmakerStatsUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18178,7 +18178,7 @@ impl RematchVotePeriodOverEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18211,7 +18211,7 @@ impl RematchFailedToCreateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18244,7 +18244,7 @@ impl PlayerRematchChangeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18277,7 +18277,7 @@ impl PingUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18310,7 +18310,7 @@ impl MMStatsUpdatedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18355,7 +18355,7 @@ impl PlayerNextMapVoteChangeEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18388,7 +18388,7 @@ impl VoteMapsChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18458,7 +18458,7 @@ impl ProtoDefChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18514,7 +18514,7 @@ impl PlayerDominationEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18563,7 +18563,7 @@ impl PlayerRocketPackPushedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18612,7 +18612,7 @@ impl QuestRequestEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18668,7 +18668,7 @@ impl QuestResponseEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18738,7 +18738,7 @@ impl QuestProgressEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18801,7 +18801,7 @@ impl ProjectileRemovedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18834,7 +18834,7 @@ impl QuestMapDataChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18890,7 +18890,7 @@ impl GasDousedPlayerIgnitedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18932,7 +18932,7 @@ impl QuestTurnInStateEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -18965,7 +18965,7 @@ impl ItemsAcknowledgedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19014,7 +19014,7 @@ impl CapperKilledEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19047,7 +19047,7 @@ impl MainMenuStabilizedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19080,7 +19080,7 @@ impl WorldStatusChangedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19143,7 +19143,7 @@ impl HLTVStatusEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19185,7 +19185,7 @@ impl HLTVCameramanEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19237,7 +19237,7 @@ impl HLTVRankCameraEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19289,7 +19289,7 @@ impl HLTVRankEntityEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19372,7 +19372,7 @@ impl HLTVFixedEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19452,7 +19452,7 @@ impl HLTVChaseEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19494,7 +19494,7 @@ impl HLTVMessageEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19536,7 +19536,7 @@ impl HLTVTitleEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19578,7 +19578,7 @@ impl HLTVChatEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19611,7 +19611,7 @@ impl ReplayStartRecordEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19662,7 +19662,7 @@ impl ReplaySessionInfoEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19695,7 +19695,7 @@ impl ReplayEndRecordEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19728,7 +19728,7 @@ impl ReplayReplaysAvailableEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }
@@ -19770,7 +19770,7 @@ impl ReplayServerErrorEvent {
     ) -> Result<()> {
         for entry in &definition.entries {
             let value = self
-                .get_field(&entry)
+                .get_field(entry)
                 .unwrap_or_else(|_| entry.kind.default_value());
             stream.write(&value)?;
         }

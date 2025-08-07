@@ -297,7 +297,7 @@ pub fn generate_game_events(demo: Demo) -> TokenStream {
                 #[allow(unused_variables)]
                 fn write(&self, stream: &mut BitWriteStream<LittleEndian>, definition: &GameEventDefinition) -> Result<()> {
                     for entry in &definition.entries {
-                        let value = self.get_field(&entry).unwrap_or_else(|_| entry.kind.default_value());
+                        let value = self.get_field(entry).unwrap_or_else(|_| entry.kind.default_value());
                         stream.write(&value)?;
                     }
                     Ok(())
