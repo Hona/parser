@@ -12,7 +12,7 @@ use crate::demo::gameevent_gen::ObjectDestroyedEvent;
 use crate::demo::gamevent::GameEvent;
 use crate::demo::message::gameevent::GameEventMessage;
 use crate::demo::message::packetentities::{EntityId, PacketEntity};
-use crate::demo::message::Message;
+use crate::demo::message::{Message, UpdateType};
 use crate::demo::packet::datatable::{ParseSendTable, ServerClass, ServerClassName};
 use crate::demo::packet::message::MessagePacketMeta;
 use crate::demo::packet::stringtable::StringTableEntry;
@@ -158,11 +158,15 @@ impl GameStateAnalyser {
             return;
         };
 
-        for prop in &entity.props {
-            if prop.identifier == OUTER || prop.identifier == OUTER2 {
-                let outer = Handle::try_from(&prop.value).unwrap_or_default();
-                self.outer_map.insert(outer, entity.entity_index);
-                self.outer_map_rev.insert(entity.entity_index, outer);
+        if entity.update_type == UpdateType::Enter {
+            if let Some(prop) = entity
+                .get_prop_by_identifier(&OUTER, parser_state)
+                .or_else(|| entity.get_prop_by_identifier(&OUTER2, parser_state))
+            {
+                if let Ok(outer) = Handle::try_from(&prop.value) {
+                    self.outer_map.insert(outer, entity.entity_index);
+                    self.outer_map_rev.insert(entity.entity_index, outer);
+                }
             }
         }
 

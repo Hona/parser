@@ -25,12 +25,8 @@ pub fn handle_medigun_entity(
             ty = MedigunType::Vaccinator;
         }
 
-        if let Some(handle) = entity.get_own_prop_value_by_identifier(OUTER) {
-            if let Some(player) = state
-                .players
-                .iter_mut()
-                .find(|player| player.weapons.contains(&handle))
-            {
+        if let Some(handle) = entity.get_own_prop_value_by_identifier::<Handle>(OUTER) {
+            if let Some(player) = state.get_player_by_weapon_handle(handle) {
                 if let PlayerClassData::Medic { medigun, .. } = &mut player.class_data {
                     *medigun = ty;
                 }
