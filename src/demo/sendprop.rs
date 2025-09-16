@@ -654,7 +654,13 @@ impl SendPropValue {
             SendPropParseDefinition::NormalVarInt { unsigned, .. } => {
                 read_var_int(stream, !*unsigned)
                     .map_err(ParseError::from)
-                    .map(|int| int as i64)
+                    .map(|int| {
+                        if *unsigned {
+                            int as u32 as i64
+                        } else {
+                            int as i64
+                        }
+                    })
                     .map(SendPropValue::from)
             }
             SendPropParseDefinition::UnsignedInt { bit_count, .. } => {
