@@ -332,11 +332,11 @@ pub struct SendPropFlags(BitFlags<SendPropFlag>);
 
 #[cfg(feature = "schemars")]
 impl schemars::JsonSchema for SendPropFlags {
-    fn schema_name() -> String {
+    fn schema_name() -> std::borrow::Cow<'static, str> {
         "SendPropFlags".into()
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         u16::json_schema(gen)
     }
 }
@@ -1240,11 +1240,11 @@ impl Serialize for SendPropIdentifier {
 
 #[cfg(feature = "schema")]
 impl schemars::JsonSchema for SendPropIdentifier {
-    fn schema_name() -> String {
+    fn schema_name() -> std::borrow::Cow<'static, str> {
         "SendPropIdentifier".into()
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         <String as schemars::JsonSchema>::json_schema(gen)
     }
 }
