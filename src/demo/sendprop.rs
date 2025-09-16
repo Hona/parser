@@ -903,7 +903,7 @@ fn test_send_prop_value_roundtrip() {
         SendPropValue::Integer(-12),
         SendPropParseDefinition::NormalVarInt {
             changes_often: false,
-            unsigned: true,
+            unsigned: false,
         },
     );
     send_prop_value_roundtrip(
