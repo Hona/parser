@@ -1,5 +1,9 @@
+pub use crate::demo::data::game_state::{
+    Building, BuildingClass, Dispenser, GameState, Kill, PlayerState, Sentry, Teleporter, World,
+};
+use crate::demo::data::game_state::{Handle, PipeType, Projectile, ProjectileType};
 use crate::demo::data::DemoTick;
-use crate::demo::gameevent_gen::{ObjectDestroyedEvent, PlayerDeathEvent};
+use crate::demo::gameevent_gen::ObjectDestroyedEvent;
 use crate::demo::gamevent::GameEvent;
 use crate::demo::message::gameevent::GameEventMessage;
 use crate::demo::message::packetentities::{EntityId, PacketEntity, UpdateType};
@@ -7,298 +11,16 @@ use crate::demo::message::Message;
 use crate::demo::packet::datatable::{ParseSendTable, ServerClass, ServerClassName};
 use crate::demo::packet::message::MessagePacketMeta;
 use crate::demo::packet::stringtable::StringTableEntry;
-use crate::demo::parser::analyser::UserInfo;
 pub use crate::demo::parser::analyser::{Class, Team, UserId};
 use crate::demo::parser::handler::BorrowMessageHandler;
 use crate::demo::parser::MessageHandler;
 use crate::demo::sendprop::{SendProp, SendPropIdentifier, SendPropValue};
 use crate::demo::vector::{Vector, VectorXY};
 use crate::{MessageType, ParserState, ReadResult, Stream};
-use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::str::FromStr;
 
 pub struct CachedEntities {}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Default)]
-pub enum PlayerState {
-    #[default]
-    Alive = 0,
-    Dying = 1,
-    Death = 2,
-    Respawnable = 3,
-}
-
-impl PlayerState {
-    pub fn new(number: i64) -> Self {
-        match number {
-            1 => PlayerState::Dying,
-            2 => PlayerState::Death,
-            3 => PlayerState::Respawnable,
-            _ => PlayerState::Alive,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct Player {
-    entity: EntityId,
-    pub position: Vector,
-    pub health: u16,
-    pub max_health: u16,
-    pub class: Class,
-    pub team: Team,
-    pub view_angle: f32,
-    pub pitch_angle: f32,
-    pub state: PlayerState,
-    pub info: Option<UserInfo>,
-    pub charge: u8,
-    pub simtime: u16,
-    pub ping: u16,
-    pub in_pvs: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct Sentry {
-    pub entity: EntityId,
-    pub builder: UserId,
-    pub position: Vector,
-    pub level: u8,
-    pub max_health: u16,
-    pub health: u16,
-    pub building: bool,
-    pub sapped: bool,
-    pub team: Team,
-    pub angle: f32,
-    pub player_controlled: bool,
-    pub auto_aim_target: UserId,
-    pub shells: u16,
-    pub rockets: u16,
-    pub is_mini: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct Dispenser {
-    pub entity: EntityId,
-    pub builder: UserId,
-    pub position: Vector,
-    pub level: u8,
-    pub max_health: u16,
-    pub health: u16,
-    pub building: bool,
-    pub sapped: bool,
-    pub team: Team,
-    pub angle: f32,
-    pub healing: Vec<UserId>,
-    pub metal: u16,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-pub struct Teleporter {
-    pub entity: EntityId,
-    pub builder: UserId,
-    pub position: Vector,
-    pub level: u8,
-    pub max_health: u16,
-    pub health: u16,
-    pub building: bool,
-    pub sapped: bool,
-    pub team: Team,
-    pub angle: f32,
-    pub is_entrance: bool,
-    pub other_end: EntityId,
-    pub recharge_time: f32,
-    pub recharge_duration: f32,
-    pub times_used: u16,
-    pub yaw_to_exit: f32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum Building {
-    Sentry(Sentry),
-    Dispenser(Dispenser),
-    Teleporter(Teleporter),
-}
-
-impl Building {
-    pub fn new(entity_id: EntityId, class: BuildingClass) -> Building {
-        match class {
-            BuildingClass::Sentry => Building::Sentry(Sentry {
-                entity: entity_id,
-                ..Sentry::default()
-            }),
-            BuildingClass::Dispenser => Building::Dispenser(Dispenser {
-                entity: entity_id,
-                ..Dispenser::default()
-            }),
-            BuildingClass::Teleporter => Building::Teleporter(Teleporter {
-                entity: entity_id,
-                ..Teleporter::default()
-            }),
-        }
-    }
-
-    pub fn entity_id(&self) -> EntityId {
-        match self {
-            Building::Sentry(Sentry { entity, .. })
-            | Building::Dispenser(Dispenser { entity, .. })
-            | Building::Teleporter(Teleporter { entity, .. }) => *entity,
-        }
-    }
-
-    pub fn level(&self) -> u8 {
-        match self {
-            Building::Sentry(Sentry { level, .. })
-            | Building::Dispenser(Dispenser { level, .. })
-            | Building::Teleporter(Teleporter { level, .. }) => *level,
-        }
-    }
-
-    pub fn position(&self) -> Vector {
-        match self {
-            Building::Sentry(Sentry { position, .. })
-            | Building::Dispenser(Dispenser { position, .. })
-            | Building::Teleporter(Teleporter { position, .. }) => *position,
-        }
-    }
-
-    pub fn builder(&self) -> UserId {
-        match self {
-            Building::Sentry(Sentry { builder, .. })
-            | Building::Dispenser(Dispenser { builder, .. })
-            | Building::Teleporter(Teleporter { builder, .. }) => *builder,
-        }
-    }
-
-    pub fn angle(&self) -> f32 {
-        match self {
-            Building::Sentry(Sentry { angle, .. })
-            | Building::Dispenser(Dispenser { angle, .. })
-            | Building::Teleporter(Teleporter { angle, .. }) => *angle,
-        }
-    }
-
-    pub fn max_health(&self) -> u16 {
-        match self {
-            Building::Sentry(Sentry { max_health, .. })
-            | Building::Dispenser(Dispenser { max_health, .. })
-            | Building::Teleporter(Teleporter { max_health, .. }) => *max_health,
-        }
-    }
-
-    pub fn health(&self) -> u16 {
-        match self {
-            Building::Sentry(Sentry { health, .. })
-            | Building::Dispenser(Dispenser { health, .. })
-            | Building::Teleporter(Teleporter { health, .. }) => *health,
-        }
-    }
-
-    pub fn sapped(&self) -> bool {
-        match self {
-            Building::Sentry(Sentry { sapped, .. })
-            | Building::Dispenser(Dispenser { sapped, .. })
-            | Building::Teleporter(Teleporter { sapped, .. }) => *sapped,
-        }
-    }
-
-    pub fn team(&self) -> Team {
-        match self {
-            Building::Sentry(Sentry { team, .. })
-            | Building::Dispenser(Dispenser { team, .. })
-            | Building::Teleporter(Teleporter { team, .. }) => *team,
-        }
-    }
-
-    pub fn class(&self) -> BuildingClass {
-        match self {
-            Building::Sentry(_) => BuildingClass::Sentry,
-            Building::Dispenser(_) => BuildingClass::Sentry,
-            Building::Teleporter(_) => BuildingClass::Teleporter,
-        }
-    }
-}
-
-pub enum BuildingClass {
-    Sentry,
-    Dispenser,
-    Teleporter,
-}
-
-#[derive(Default, Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub struct World {
-    pub boundary_min: Vector,
-    pub boundary_max: Vector,
-}
-
-#[derive(Default, Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub struct Kill {
-    pub attacker_id: u16,
-    pub assister_id: u16,
-    pub victim_id: u16,
-    pub weapon: String,
-    pub tick: DemoTick,
-}
-
-impl Kill {
-    fn new(tick: DemoTick, death: &PlayerDeathEvent) -> Self {
-        Kill {
-            attacker_id: death.attacker,
-            assister_id: death.assister,
-            victim_id: death.user_id,
-            weapon: death.weapon.to_string(),
-            tick,
-        }
-    }
-}
-
-#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
-pub struct GameState {
-    pub players: Vec<Player>,
-    pub buildings: BTreeMap<EntityId, Building>,
-    pub world: Option<World>,
-    pub kills: Vec<Kill>,
-    pub tick: DemoTick,
-}
-
-impl GameState {
-    pub fn get_or_create_player(&mut self, entity_id: EntityId) -> &mut Player {
-        let index = match self
-            .players
-            .iter()
-            .enumerate()
-            .find(|(_index, player)| player.entity == entity_id)
-            .map(|(index, _)| index)
-        {
-            Some(index) => index,
-            None => {
-                let index = self.players.len();
-                self.players.push(Player {
-                    entity: entity_id,
-                    ..Player::default()
-                });
-                index
-            }
-        };
-
-        #[allow(clippy::indexing_slicing)]
-        &mut self.players[index]
-    }
-    pub fn get_or_create_building(
-        &mut self,
-        entity_id: EntityId,
-        class: BuildingClass,
-    ) -> &mut Building {
-        self.buildings
-            .entry(entity_id)
-            .or_insert_with(|| Building::new(entity_id, class))
-    }
-
-    pub fn remove_building(&mut self, entity_id: EntityId) {
-        self.buildings.remove(&entity_id);
-    }
-}
 
 #[derive(Default, Debug)]
 pub struct GameStateAnalyser {
@@ -313,7 +35,7 @@ impl MessageHandler for GameStateAnalyser {
     fn does_handle(message_type: MessageType) -> bool {
         matches!(
             message_type,
-            MessageType::PacketEntities | MessageType::GameEvent
+            MessageType::PacketEntities | MessageType::GameEvent | MessageType::ServerInfo
         )
     }
 
@@ -323,22 +45,34 @@ impl MessageHandler for GameStateAnalyser {
                 for entity in &message.entities {
                     self.handle_entity(entity, parser_state);
                 }
+                for id in &message.removed_entities {
+                    self.state.projectile_destroy(*id);
+                    self.state.remove_building(*id);
+                }
             }
-            Message::GameEvent(GameEventMessage { event, .. }) => match event {
-                GameEvent::PlayerDeath(death) => {
-                    self.state.kills.push(Kill::new(self.tick, death.as_ref()))
+            Message::ServerInfo(message) => {
+                self.state.interval_per_tick = message.interval_per_tick
+            }
+            Message::GameEvent(GameEventMessage { event, .. }) => {
+                self.state.events.push((self.tick, event.clone()));
+                match event {
+                    GameEvent::PlayerDeath(death) => {
+                        self.state.kills.push(Kill::new(self.tick, death.as_ref()))
+                    }
+                    GameEvent::RoundStart(_) => {
+                        self.state.buildings.clear();
+                        self.state.projectiles.clear();
+                    }
+                    GameEvent::TeamPlayRoundStart(_) => {
+                        self.state.buildings.clear();
+                        self.state.projectiles.clear();
+                    }
+                    GameEvent::ObjectDestroyed(ObjectDestroyedEvent { index, .. }) => {
+                        self.state.remove_building((*index as u32).into());
+                    }
+                    _ => {}
                 }
-                GameEvent::RoundStart(_) => {
-                    self.state.buildings.clear();
-                }
-                GameEvent::TeamPlayRoundStart(_) => {
-                    self.state.buildings.clear();
-                }
-                GameEvent::ObjectDestroyed(ObjectDestroyedEvent { index, .. }) => {
-                    self.state.remove_building((*index as u32).into());
-                }
-                _ => {}
-            },
+            }
             _ => {}
         }
     }
@@ -382,7 +116,8 @@ impl MessageHandler for GameStateAnalyser {
         self.tick = tick;
     }
 
-    fn into_output(self, _state: &ParserState) -> Self::Output {
+    fn into_output(mut self, state: &ParserState) -> Self::Output {
+        self.state.server_classes = state.server_classes.clone();
         self.state
     }
 }
@@ -399,18 +134,34 @@ impl GameStateAnalyser {
     }
 
     pub fn handle_entity(&mut self, entity: &PacketEntity, parser_state: &ParserState) {
-        let class_name: &str = self
-            .class_names
-            .get(usize::from(entity.server_class))
-            .map(|class_name| class_name.as_str())
-            .unwrap_or("");
-        match class_name {
+        const OUTER: SendPropIdentifier =
+            SendPropIdentifier::new("DT_AttributeContainer", "m_hOuter");
+
+        let Some(class_name) = self.class_names.get(usize::from(entity.server_class)) else {
+            return;
+        };
+
+        for prop in &entity.props {
+            if prop.identifier == OUTER {
+                let outer = i64::try_from(&prop.value).unwrap_or_default();
+                self.state
+                    .outer_map
+                    .insert(Handle(outer), entity.entity_index);
+            }
+        }
+
+        match class_name.as_str() {
             "CTFPlayer" => self.handle_player_entity(entity, parser_state),
             "CTFPlayerResource" => self.handle_player_resource(entity, parser_state),
             "CWorld" => self.handle_world_entity(entity, parser_state),
             "CObjectSentrygun" => self.handle_sentry_entity(entity, parser_state),
             "CObjectDispenser" => self.handle_dispenser_entity(entity, parser_state),
             "CObjectTeleporter" => self.handle_teleporter_entity(entity, parser_state),
+            _ if class_name.starts_with("CTFProjectile_")
+                || class_name.as_str() == "CTFGrenadePipebombProjectile" =>
+            {
+                self.handle_projectile_entity(entity, parser_state)
+            }
             _ => {}
         }
     }
@@ -482,6 +233,12 @@ impl GameStateAnalyser {
 
         const SIMTIME_PROP: SendPropIdentifier =
             SendPropIdentifier::new("DT_BaseEntity", "m_flSimulationTime");
+        const PROP_BB_MAX: SendPropIdentifier =
+            SendPropIdentifier::new("DT_CollisionProperty", "m_vecMaxsPreScaled");
+
+        const WEAPON_0: SendPropIdentifier = SendPropIdentifier::new("m_hMyWeapons", "000");
+        const WEAPON_1: SendPropIdentifier = SendPropIdentifier::new("m_hMyWeapons", "001");
+        const WEAPON_2: SendPropIdentifier = SendPropIdentifier::new("m_hMyWeapons", "002");
 
         player.in_pvs = entity.in_pvs;
 
@@ -512,6 +269,22 @@ impl GameStateAnalyser {
                 }
                 SIMTIME_PROP => {
                     player.simtime = i64::try_from(&prop.value).unwrap_or_default() as u16
+                }
+                PROP_BB_MAX => {
+                    let max = Vector::try_from(&prop.value).unwrap_or_default();
+                    player.bounds.max = max;
+                }
+                WEAPON_0 => {
+                    let handle = Handle(i64::try_from(&prop.value).unwrap_or_default());
+                    player.weapons[0] = handle;
+                }
+                WEAPON_1 => {
+                    let handle = Handle(i64::try_from(&prop.value).unwrap_or_default());
+                    player.weapons[1] = handle;
+                }
+                WEAPON_2 => {
+                    let handle = Handle(i64::try_from(&prop.value).unwrap_or_default());
+                    player.weapons[2] = handle;
                 }
                 _ => {}
             }
@@ -762,6 +535,78 @@ impl GameStateAnalyser {
                         _ => {}
                     }
                 }
+            }
+        }
+    }
+
+    pub fn handle_projectile_entity(&mut self, entity: &PacketEntity, parser_state: &ParserState) {
+        let Some(class_name) = self.class_names.get(usize::from(entity.server_class)) else {
+            return;
+        };
+
+        const ROCKET_ORIGIN: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFBaseRocket", "m_vecOrigin"); // rockets, arrows, more?
+        const GRENADE_ORIGIN: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFWeaponBaseGrenadeProj", "m_vecOrigin");
+        // todo: flares?
+        const TEAM: SendPropIdentifier = SendPropIdentifier::new("DT_BaseEntity", "m_iTeamNum");
+        const INITIAL_SPEED: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFBaseRocket", "m_vInitialVelocity");
+        const LAUNCHER: SendPropIdentifier =
+            SendPropIdentifier::new("DT_BaseProjectile", "m_hOriginalLauncher");
+        const PIPE_TYPE: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFProjectile_Pipebomb", "m_iType");
+        const ROCKET_ROTATION: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFBaseRocket", "m_angRotation");
+        const GRENADE_ROTATION: SendPropIdentifier =
+            SendPropIdentifier::new("DT_TFWeaponBaseGrenadeProj", "m_angRotation");
+
+        if entity.update_type == UpdateType::Delete {
+            self.state.projectile_destroy(entity.entity_index);
+            return;
+        }
+
+        let projectile = self
+            .state
+            .projectiles
+            .entry(entity.entity_index)
+            .or_insert_with(|| {
+                Projectile::new(entity.entity_index, entity.server_class, class_name)
+            });
+
+        // todo: bounds for grenades
+
+        for prop in entity.props(parser_state) {
+            match prop.identifier {
+                ROCKET_ORIGIN | GRENADE_ORIGIN => {
+                    let pos = Vector::try_from(&prop.value).unwrap_or_default();
+                    projectile.position = pos
+                }
+                TEAM => {
+                    let team = Team::new(i64::try_from(&prop.value).unwrap_or_default());
+                    projectile.team = team;
+                }
+                INITIAL_SPEED => {
+                    let speed = Vector::try_from(&prop.value).unwrap_or_default();
+                    projectile.initial_speed = speed;
+                }
+                LAUNCHER => {
+                    let launcher = Handle(i64::try_from(&prop.value).unwrap_or_default());
+                    projectile.launcher = launcher;
+                }
+                PIPE_TYPE => {
+                    let pipe_type = PipeType::new(i64::try_from(&prop.value).unwrap_or_default());
+                    if let Some(class_name) = self.class_names.get(usize::from(entity.server_class))
+                    {
+                        let ty = ProjectileType::new(class_name, Some(pipe_type));
+                        projectile.ty = ty;
+                    }
+                }
+                ROCKET_ROTATION | GRENADE_ROTATION => {
+                    let rotation = Vector::try_from(&prop.value).unwrap_or_default();
+                    projectile.rotation = rotation;
+                }
+                _ => {}
             }
         }
     }

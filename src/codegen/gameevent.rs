@@ -216,6 +216,7 @@ fn get_event_name(name: &str) -> String {
 }
 
 pub fn generate_game_events(demo: Demo) -> TokenStream {
+    #[allow(clippy::unwrap_used)]
     let (_, mut events) = DemoParser::new_with_analyser(demo.get_stream(), GameEventAnalyser)
         .parse()
         .unwrap();
@@ -282,6 +283,7 @@ pub fn generate_game_events(demo: Demo) -> TokenStream {
 
                 #[allow(unused_variables)]
                 fn get_field(&self, field: &str) -> Result<GameEventValue> {
+                    #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
                     match field {
                         #(#field_getters,)*
                         _ => Err(ParseError::MissingGameEventValue {
@@ -328,14 +330,14 @@ pub fn generate_game_events(demo: Demo) -> TokenStream {
 
     let type_from_names = events.iter().map(|event| {
         let name_str = event.event_type.as_str();
-        let variant_name = Ident::new(&get_event_name(&name_str), span);
+        let variant_name = Ident::new(&get_event_name(name_str), span);
 
         quote!(#name_str => GameEventType::#variant_name,)
     });
 
     let type_to_names = events.iter().map(|event| {
         let name_str = event.event_type.as_str();
-        let variant_name = Ident::new(&get_event_name(&name_str), span);
+        let variant_name = Ident::new(&get_event_name(name_str), span);
 
         quote!(GameEventType::#variant_name => #name_str,)
     });
