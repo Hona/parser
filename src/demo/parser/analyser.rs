@@ -25,6 +25,7 @@ pub struct ChatMessage {
     pub from: String,
     pub text: String,
     pub tick: DemoTick,
+    pub client: Option<EntityId>,
 }
 
 impl ChatMessage {
@@ -38,6 +39,7 @@ impl ChatMessage {
                 .unwrap_or_default(),
             text: message.plain_text(),
             tick,
+            client: Some(message.client),
         }
     }
 
@@ -47,6 +49,7 @@ impl ChatMessage {
             from: String::new(),
             text: message.plain_text(),
             tick,
+            client: None,
         }
     }
 }
@@ -299,9 +302,21 @@ pub struct UserInfo {
     pub name: String,
     pub user_id: UserId,
     pub steam_id: String,
-    #[serde(skip)]
     pub entity_id: EntityId,
     pub team: Team,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct TeamChange {
+    pub user: UserId,
+    pub team: Team,
+    pub old_team: Team,
+    pub disconnect: bool,
+    pub auto_team: bool,
+    pub silent: bool,
+    pub name: String,
+    pub tick: DemoTick,
 }
 
 impl From<crate::demo::data::UserInfo> for UserInfo {
@@ -499,10 +514,23 @@ impl Analyser {
             GameEvent::PlayerDeath(event) => self.state.deaths.push(Death::from_event(event, tick)),
             GameEvent::PlayerSpawn(event) => {
                 let spawn = Spawn::from_event(event, tick);
+                self.state.spawns.push(spawn.clone());
                 if let Some(user_state) = self.state.users.get_mut(&spawn.user) {
                     *user_state.classes.get_mut(spawn.class) += 1;
                     user_state.team = spawn.team;
                 }
+            }
+            GameEvent::PlayerTeam(event) => {
+                self.state.team_changes.push(TeamChange {
+                    user: UserId::from(event.user_id),
+                    team: Team::new(event.team),
+                    old_team: Team::new(event.old_team),
+                    disconnect: event.disconnect,
+                    auto_team: event.auto_team,
+                    silent: event.silent,
+                    name: event.name.to_string(),
+                    tick,
+                });
             }
             GameEvent::TeamPlayRoundWin(event) => {
                 if event.win_reason != WIN_REASON_TIME_LIMIT {
@@ -540,6 +568,8 @@ impl Analyser {
 pub struct MatchState {
     pub chat: Vec<ChatMessage>,
     pub users: BTreeMap<UserId, UserInfo>,
+    pub spawns: Vec<Spawn>,
+    pub team_changes: Vec<TeamChange>,
     pub deaths: Vec<Death>,
     pub rounds: Vec<Round>,
     pub start_tick: ServerTick,
