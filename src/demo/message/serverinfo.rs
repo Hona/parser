@@ -1,6 +1,10 @@
-use crate::demo::parser::{Encode, ParseBitSkip};
+#[cfg(feature = "write")]
+use crate::demo::parser::Encode;
+use crate::demo::parser::ParseBitSkip;
 use crate::{Parse, ParserState, Result, Stream};
-use bitbuffer::{BitRead, BitWrite, BitWriteStream, LittleEndian};
+use bitbuffer::{BitRead, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteStream};
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -65,11 +69,12 @@ impl<'a> Parse<'a> for ServerInfoMessage {
 impl<'a> ParseBitSkip<'a> for ServerInfoMessage {
     fn parse_skip(stream: &mut Stream<'a>, state: &ParserState) -> Result<()> {
         let version_dependent_size = match state.protocol_version {
-            0..=15 => 4 * 8, // only the 4 byte crc
+            0..=15 => 4 * 8,      // only the 4 byte crc
             16..=17 => 4 * 8 + 1, // adds the 1 bit replay flag
-            18.. => 16 * 8 + 1, // replaces 4 byte crc with an 16 byte hash
+            18.. => 16 * 8 + 1,   // replaces 4 byte crc with an 16 byte hash
         };
-        let size = <ServerInfoMessagePart1 as BitRead<LittleEndian>>::bit_size().unwrap_or_default()
+        let size = <ServerInfoMessagePart1 as BitRead<LittleEndian>>::bit_size()
+            .unwrap_or_default()
             + <ServerInfoMessagePart2 as BitRead<LittleEndian>>::bit_size().unwrap_or_default()
             + version_dependent_size;
         stream.skip_bits(size)?;
@@ -77,6 +82,7 @@ impl<'a> ParseBitSkip<'a> for ServerInfoMessage {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for ServerInfoMessage {
     fn encode(&self, stream: &mut BitWriteStream<LittleEndian>, state: &ParserState) -> Result<()> {
         let part1 = ServerInfoMessagePart1 {
@@ -117,7 +123,8 @@ impl Encode for ServerInfoMessage {
     }
 }
 
-#[derive(BitRead, BitWrite)]
+#[derive(BitRead)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct ServerInfoMessagePart1 {
     pub version: u16,
     pub server_count: u32,
@@ -127,7 +134,8 @@ pub struct ServerInfoMessagePart1 {
     pub max_classes: u16,
 }
 
-#[derive(BitRead, BitWrite)]
+#[derive(BitRead)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct ServerInfoMessagePart2 {
     pub player_slot: u8,
     pub max_player_count: u8,

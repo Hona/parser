@@ -1,11 +1,15 @@
 use super::stringtable::read_var_int;
 use crate::demo::message::packetentities::PacketEntitiesMessage;
-use crate::demo::message::stringtable::{encode_var_int_fixed, log_base2};
+#[cfg(feature = "write")]
+use crate::demo::message::stringtable::encode_var_int_fixed;
 use crate::demo::packet::datatable::ClassId;
-use crate::demo::parser::{Encode, ParseBitSkip};
+#[cfg(feature = "write")]
+use crate::demo::parser::Encode;
+use crate::demo::parser::ParseBitSkip;
 use crate::demo::sendprop::SendProp;
 use crate::Result;
 use crate::{Parse, ParseError, ParserState, Stream};
+#[cfg(feature = "write")]
 use bitbuffer::{BitWrite, BitWriteSized, BitWriteStream, LittleEndian};
 use serde::{Deserialize, Serialize};
 
@@ -53,8 +57,8 @@ impl Parse<'_> for TempEntitiesMessage {
             };
 
             let class_id = if stream.read()? {
-                let bits = log_base2(state.server_classes.len()) + 1;
-                (stream.read_sized::<u16>(bits as usize)?.saturating_sub(1)).into()
+                let bits = state.server_class_bits;
+                (stream.read_sized::<u16>(bits)?.saturating_sub(1)).into()
             } else {
                 let last = events.last().ok_or(ParseError::InvalidDemo(
                     "temp entity update without previous",
@@ -95,6 +99,7 @@ impl ParseBitSkip<'_> for TempEntitiesMessage {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for TempEntitiesMessage {
     fn encode(&self, stream: &mut BitWriteStream<LittleEndian>, state: &ParserState) -> Result<()> {
         let count = match (self.events.len(), self.events.first()) {
@@ -118,9 +123,9 @@ impl Encode for TempEntitiesMessage {
 
                 if event.class_id != last_class_id {
                     true.write(stream)?;
-                    let bits = log_base2(state.server_classes.len()) + 1;
+                    let bits = state.server_class_bits;
                     let id: u16 = event.class_id.into();
-                    (id + 1).write_sized(stream, bits as usize)?;
+                    (id + 1).write_sized(stream, bits)?;
                 } else {
                     false.write(stream)?;
                 }

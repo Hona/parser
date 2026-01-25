@@ -15,7 +15,7 @@ use tf_demo_parser::{Demo, DemoParser};
 #[test_case("emptysaytext.dem")]
 #[test_case("protocol23.dem")]
 fn snapshot_test(input_file: &str) {
-    let file = fs::read(format!("test_data/{}", input_file)).expect("Unable to read file");
+    let file = fs::read(format!("test_data/{input_file}")).expect("Unable to read file");
     let demo = Demo::new(&file);
     let (_, state) = DemoParser::new(demo.get_stream()).parse().unwrap();
 
@@ -28,7 +28,7 @@ fn snapshot_test(input_file: &str) {
 #[test_case("small.dem")]
 #[test_case("gully.dem")]
 fn game_state_test(input_file: &str) {
-    let file = fs::read(format!("test_data/{}", input_file)).expect("Unable to read file");
+    let file = fs::read(format!("test_data/{input_file}")).expect("Unable to read file");
     let demo = Demo::new(&file);
     let (_, mut state) = DemoParser::new_with_analyser(demo.get_stream(), GameStateAnalyser::new())
         .parse()

@@ -25,7 +25,7 @@ fn main() -> Result<(), MainError> {
     let parser = DemoParser::new_with_analyser(demo.get_stream(), PropAnalyzer::default());
     let (_, state) = parser.parse()?;
     for prop in state {
-        println!("{}", prop);
+        println!("{prop}");
     }
     Ok(())
 }
@@ -76,7 +76,7 @@ impl MessageHandler for PropAnalyzer {
             .into_iter()
             .map(|prop| {
                 let (table, name) = names.get(&prop).unwrap();
-                format!("{}.{}", table, name)
+                format!("{table}.{name}")
             })
             .collect::<Vec<_>>();
         props.sort();

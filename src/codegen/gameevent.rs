@@ -234,6 +234,7 @@ pub fn generate_game_events(demo: Demo) -> TokenStream {
         use bitbuffer::{BitRead, LittleEndian, BitWrite, BitWriteStream};
         use serde::{Deserialize, Serialize};
         use crate::demo::data::MaybeUtf8String;
+        use std::mem::size_of;
     );
 
     let event_definitions = events.iter().map(|event| {
@@ -245,24 +246,24 @@ pub fn generate_game_events(demo: Demo) -> TokenStream {
         });
 
         let field_getters = event.entries.iter().map(|entry| {
-            let raw_name = &entry.name;
+            let name_hash = entry.hash;
             let name = get_entry_name(&entry.name);
             let ident = Ident::new(name.as_str(), span);
 
-            quote!(#raw_name => Ok(self.#ident.clone().into()))
+            quote!(#name_hash => Ok(self.#ident.clone().into()))
         });
 
         let event_name = get_event_name(event.event_type.as_str());
         let name = Ident::new(&format!("{event_name}Event"), span);
 
         let entry_readers = event.entries.iter().map(|entry| {
-            let raw_name = &entry.name;
+            let name_hash = entry.hash;
             let name_str = get_entry_name(&entry.name);
             let name = Ident::new(&name_str, span);
             let ty = Ident::new(get_type_name(entry.kind), span);
 
             quote!(
-                #name: read_value::<#ty>(stream, definition.get_entry(#raw_name), #name_str)?,
+                #name: read_value::<#ty>(stream, definition.get_entry(#name_hash), #name_str)?,
             )
         });
 
@@ -282,13 +283,13 @@ pub fn generate_game_events(demo: Demo) -> TokenStream {
                 }
 
                 #[allow(unused_variables)]
-                fn get_field(&self, field: &str) -> Result<GameEventValue> {
+                fn get_field(&self, field: &GameEventEntry) -> Result<GameEventValue> {
                     #[allow(clippy::clone_on_copy, clippy::match_single_binding)]
-                    match field {
+                    match field.hash {
                         #(#field_getters,)*
                         _ => Err(ParseError::MissingGameEventValue {
                             ty: #event_name,
-                            field: field.into(),
+                            field: "todo".into(),
                         }),
                     }
                 }
@@ -296,7 +297,7 @@ pub fn generate_game_events(demo: Demo) -> TokenStream {
                 #[allow(unused_variables)]
                 fn write(&self, stream: &mut BitWriteStream<LittleEndian>, definition: &GameEventDefinition) -> Result<()> {
                     for entry in &definition.entries {
-                        let value = self.get_field(&entry.name).unwrap_or_else(|_| entry.kind.default_value());
+                        let value = self.get_field(entry).unwrap_or_else(|_| entry.kind.default_value());
                         stream.write(&value)?;
                     }
                     Ok(())
@@ -308,7 +309,7 @@ pub fn generate_game_events(demo: Demo) -> TokenStream {
     let event_variants = events.iter().map(|event| {
         let name_str = get_event_name(event.event_type.as_str());
         let name = Ident::new(&name_str, span);
-        let struct_name = Ident::new(&format!("{}Event", name_str), span);
+        let struct_name = Ident::new(&format!("{name_str}Event"), span);
 
         if should_box_event(&name_str) {
             quote!(#name(Box<#struct_name>),)
@@ -352,7 +353,7 @@ pub fn generate_game_events(demo: Demo) -> TokenStream {
     let read_events = events.iter().map(|event| {
         let name = get_event_name(event.event_type.as_str());
         let variant_name = Ident::new(&name, span);
-        let struct_name = Ident::new(&format!("{}Event", name), span);
+        let struct_name = Ident::new(&format!("{name}Event"), span);
 
         if should_box_event(&name) {
             quote!(
@@ -380,10 +381,10 @@ pub fn generate_game_events(demo: Demo) -> TokenStream {
 
     let sizes = events.iter().map(|event| {
         let name = get_event_name(event.event_type.as_str());
-        let struct_name = Ident::new(&format!("{}Event", name), span);
+        let struct_name = Ident::new(&format!("{name}Event"), span);
 
         quote!(
-            (#name, std::mem::size_of::<#struct_name>())
+            (#name, size_of::<#struct_name>())
         )
     });
 

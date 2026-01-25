@@ -1,6 +1,8 @@
 use crate::demo::data::DemoTick;
 use crate::{ReadResult, Stream};
-use bitbuffer::{BitRead, BitWrite, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::BitWrite;
+use bitbuffer::{BitRead, LittleEndian};
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -20,6 +22,7 @@ impl BitRead<'_, LittleEndian> for ConsoleCmdPacket {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for ConsoleCmdPacket {
     fn write(&self, stream: &mut bitbuffer::BitWriteStream<LittleEndian>) -> ReadResult<()> {
         self.tick.write(stream)?;

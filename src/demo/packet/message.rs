@@ -1,8 +1,11 @@
-use bitbuffer::{BitRead, BitWrite, BitWriteStream, LittleEndian};
+use bitbuffer::BitRead;
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteStream, LittleEndian};
 use serde::{Deserialize, Serialize};
 
 use crate::demo::data::DemoTick;
 use crate::demo::message::{Message, MessageType};
+#[cfg(feature = "write")]
 use crate::demo::parser::Encode;
 use crate::demo::vector::Vector;
 use crate::{Parse, ParserState, Result, Stream};
@@ -10,7 +13,8 @@ use crate::{Parse, ParserState, Result, Stream};
 use tracing::{event, span, Level};
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Debug, BitRead, BitWrite, PartialEq, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, BitRead, PartialEq, Serialize, Deserialize, Clone, Default)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct MessagePacketMeta {
     pub flags: u32, // TODO
     pub view_angles: [ViewAngles; 2],
@@ -28,7 +32,8 @@ pub struct MessagePacket<'a> {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize, BitRead, BitWrite)]
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize, BitRead)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct ViewAngles {
     pub origin: Vector,
     pub angles: Vector,
@@ -36,6 +41,7 @@ pub struct ViewAngles {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_view_angles_roundtrip() {
     crate::test_roundtrip_write(ViewAngles::default());
     crate::test_roundtrip_write(ViewAngles {
@@ -94,6 +100,7 @@ impl<'a> Parse<'a> for MessagePacket<'a> {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for MessagePacket<'_> {
     fn encode(&self, stream: &mut BitWriteStream<LittleEndian>, state: &ParserState) -> Result<()> {
         self.tick.write(stream)?;

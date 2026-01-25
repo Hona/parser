@@ -25,8 +25,8 @@ expression: state
         "steamId": "[U:1:64229260]",
         "team": "other"
       },
-      "charge": 0,
-      "simtime": 78,
+      "class_data": "None",
+      "simulation_time": 78,
       "ping": 5,
       "in_pvs": true,
       "bounds": {
@@ -45,6 +45,29 @@ expression: state
         1606276,
         1587845,
         1211014
+      ],
+      "handle": 1972225,
+      "conditions": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
       ]
     }
   ],
@@ -1748,9 +1771,6 @@ expression: state
     }
   ],
   "interval_per_tick": 0.015,
-  "outer_map": {
-    "1645192": 648,
-    "1688201": 649
-  },
-  "events": []
+  "events": [],
+  "objectives": {}
 }

@@ -1,6 +1,6 @@
-use bitbuffer::{
-    BitError, BitReadBuffer, BitReadStream, BitWrite, BitWriteSized, BitWriteStream, LittleEndian,
-};
+#[cfg(feature = "write")]
+use bitbuffer::{BitError, BitWrite, BitWriteSized, BitWriteStream};
+use bitbuffer::{BitReadBuffer, BitReadStream, LittleEndian};
 use num_traits::{PrimInt, Unsigned};
 use serde::{Deserialize, Serialize};
 use snap::raw::{decompress_len, Decoder};
@@ -9,7 +9,9 @@ use crate::demo::lzss::decompress;
 use crate::demo::packet::stringtable::{
     ExtraData, FixedUserDataSize, StringTable, StringTableEntry,
 };
-use crate::demo::parser::{Encode, ParseBitSkip};
+#[cfg(feature = "write")]
+use crate::demo::parser::Encode;
+use crate::demo::parser::ParseBitSkip;
 use crate::{Parse, ParseError, ParserState, ReadResult, Result, Stream};
 use std::borrow::Cow;
 use std::cmp::min;
@@ -71,10 +73,10 @@ impl<'a> Parse<'a> for CreateStringTableMessage<'a> {
                 ));
             }
 
-            let magic = table_data.read_string(Some(4))?;
+            let magic: [u8; 4] = table_data.read()?;
 
             match magic.as_ref() {
-                "SNAP" => {
+                b"SNAP" => {
                     let compressed_data = table_data.read_bytes(compressed_size as usize - 4)?;
 
                     let mut decoder = Decoder::new();
@@ -96,7 +98,7 @@ impl<'a> Parse<'a> for CreateStringTableMessage<'a> {
                     let buffer = BitReadBuffer::new_owned(decompressed_data, LittleEndian);
                     table_data = BitReadStream::new(buffer);
                 }
-                "LZSS" => {
+                b"LZSS" => {
                     let compressed_data = table_data.read_bytes(compressed_size as usize - 4)?;
                     let mut decompressed_data = Vec::with_capacity(decompressed_size as usize);
                     decompress(&compressed_data, &mut decompressed_data);
@@ -112,7 +114,8 @@ impl<'a> Parse<'a> for CreateStringTableMessage<'a> {
                     table_data = BitReadStream::new(buffer);
                 }
                 _ => {
-                    return Err(ParseError::UnexpectedCompressionType(magic.into_owned()));
+                    let magic_str = String::from_utf8(magic.to_ascii_uppercase())?;
+                    return Err(ParseError::UnexpectedCompressionType(magic_str));
                 }
             }
         }
@@ -156,6 +159,7 @@ impl<'a> ParseBitSkip<'a> for CreateStringTableMessage<'a> {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for CreateStringTableMessage<'_> {
     fn encode(
         &self,
@@ -192,6 +196,7 @@ impl Encode for CreateStringTableMessage<'_> {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_create_string_table_roundtrip() {
     let state = ParserState::new(24, |_| false, false);
     crate::test_roundtrip_encode(
@@ -273,6 +278,7 @@ impl<'a> ParseBitSkip<'a> for UpdateStringTableMessage<'a> {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for UpdateStringTableMessage<'_> {
     fn encode(&self, stream: &mut BitWriteStream<LittleEndian>, state: &ParserState) -> Result<()> {
         self.table_id.write_sized(stream, 5)?;
@@ -293,6 +299,7 @@ impl Encode for UpdateStringTableMessage<'_> {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_update_string_table_roundtrip() {
     let mut state = ParserState::new(24, |_| false, false);
     state.string_tables = vec![StringTableMeta {
@@ -376,6 +383,7 @@ impl<'a> TableEntries<'a> {
         self.entries
     }
 
+    #[cfg(feature = "write")]
     pub fn find_best_history(&self, text: &str) -> Option<(usize, usize)> {
         let mut best_index = None;
         let mut best_count = 0;
@@ -393,6 +401,7 @@ impl<'a> TableEntries<'a> {
     }
 }
 
+#[cfg(feature = "write")]
 fn count_similar_characters(a: &str, b: &str) -> usize {
     for (i, (a, b)) in a.bytes().zip(b.bytes()).enumerate() {
         if a != b {
@@ -428,6 +437,7 @@ pub fn parse_string_table_update<'a>(
     Ok(entries.into_entries())
 }
 
+#[cfg(feature = "write")]
 pub fn write_string_table_update(
     entries: &[(u16, StringTableEntry)],
     stream: &mut BitWriteStream<LittleEndian>,
@@ -456,6 +466,7 @@ pub fn write_string_table_update(
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_table_update_roundtrip() {
     fn entry_roundtrip(
         entries: Vec<(u16, StringTableEntry)>,
@@ -600,6 +611,7 @@ fn read_table_entry<'a>(
     Ok(StringTableEntry { text, extra_data })
 }
 
+#[cfg(feature = "write")]
 fn write_table_entry(
     entry: &StringTableEntry,
     stream: &mut BitWriteStream<LittleEndian>,
@@ -646,6 +658,7 @@ fn write_table_entry(
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_table_entry_roundtrip() {
     fn entry_roundtrip(entry: StringTableEntry, fixed_bits: Option<u8>) {
         let table_meta = StringTableMeta {
@@ -722,6 +735,7 @@ pub fn read_var_int(stream: &mut Stream) -> ReadResult<u32> {
     Ok(result)
 }
 
+#[cfg(feature = "write")]
 pub fn write_var_int(mut int: u32, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
     while int > 0x7F {
         let byte: u8 = int as u8 & 0x7F;
@@ -733,6 +747,7 @@ pub fn write_var_int(mut int: u32, stream: &mut BitWriteStream<LittleEndian>) ->
 
 // encode the int in such a way that it has a fixed size, but still decodes the same
 // result is the first 40 bits of the return value
+#[cfg(feature = "write")]
 pub fn encode_var_int_fixed(mut int: u32) -> u64 {
     let mut out = 0;
     for i in 0..4 {
@@ -745,6 +760,7 @@ pub fn encode_var_int_fixed(mut int: u32) -> u64 {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_var_int_roundtrip() {
     fn var_int_roundtrip(int: u32) {
         let mut data = Vec::new();
@@ -767,6 +783,7 @@ fn test_var_int_roundtrip() {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_var_int_fixed_roundtrip() {
     fn var_int_roundtrip(int: u32) {
         let mut data = Vec::new();

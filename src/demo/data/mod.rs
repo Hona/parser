@@ -1,3 +1,5 @@
+pub mod attributes;
+mod cond;
 pub mod game_state;
 pub mod userinfo;
 
@@ -123,11 +125,11 @@ impl<'de> Deserialize<'de> for MaybeUtf8String {
 
 #[cfg(feature = "schema")]
 impl schemars::JsonSchema for MaybeUtf8String {
-    fn schema_name() -> String {
+    fn schema_name() -> std::borrow::Cow<'static, str> {
         String::schema_name()
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         String::json_schema(gen)
     }
 }

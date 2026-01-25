@@ -1,7 +1,11 @@
-use crate::demo::sendprop::{read_bit_coord, write_bit_coord};
+use crate::demo::sendprop::read_bit_coord;
+#[cfg(feature = "write")]
+use crate::demo::sendprop::write_bit_coord;
 use crate::demo::vector::Vector;
 use crate::{ReadResult, Stream};
-use bitbuffer::{BitRead, BitWrite, BitWriteSized, BitWriteStream, LittleEndian};
+use bitbuffer::{BitRead, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteSized, BitWriteStream};
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -44,6 +48,7 @@ impl BitRead<'_, LittleEndian> for BSPDecalMessage {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for BSPDecalMessage {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         let has_x = self.position.x != 0.0;
@@ -75,6 +80,7 @@ impl BitWrite<LittleEndian> for BSPDecalMessage {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_decal_roundtrip() {
     crate::test_roundtrip_write(BSPDecalMessage {
         position: Vector::default(),

@@ -6,10 +6,11 @@ use crate::demo::packet::datatable::SendTableName;
 use crate::demo::parser::MalformedSendPropDefinitionError;
 use crate::demo::sendprop_gen::get_prop_names;
 use crate::{ParseError, ReadResult, Result, Stream};
-use bitbuffer::{
-    BitRead, BitReadStream, BitWrite, BitWriteSized, BitWriteStream, Endianness, LittleEndian,
-};
+use bitbuffer::{BitRead, BitReadStream, Endianness, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteSized, BitWriteStream};
 use enumflags2::{bitflags, BitFlags};
+#[cfg(feature = "write")]
 use num_traits::Signed;
 use parse_display::Display;
 use serde::de::Error;
@@ -22,9 +23,8 @@ use std::hash::Hash;
 use std::ops::{BitOr, Deref};
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(
-    BitWrite, PartialEq, Eq, Hash, Debug, Display, Clone, Serialize, Deserialize, Ord, PartialOrd,
-)]
+#[derive(PartialEq, Eq, Hash, Debug, Display, Clone, Serialize, Deserialize, Ord, PartialOrd)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct SendPropName(Cow<'static, str>);
 
 impl SendPropName {
@@ -242,6 +242,7 @@ impl RawSendPropDefinition {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for RawSendPropDefinition {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         self.prop_type.write(stream)?;
@@ -267,7 +268,8 @@ impl BitWrite<LittleEndian> for RawSendPropDefinition {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Copy, Clone, PartialEq, Debug, Display, Serialize, Deserialize)]
+#[derive(BitRead, Copy, Clone, PartialEq, Debug, Display, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 #[discriminant_bits = 5]
 pub enum SendPropType {
     Int = 0,
@@ -330,11 +332,11 @@ pub struct SendPropFlags(BitFlags<SendPropFlag>);
 
 #[cfg(feature = "schemars")]
 impl schemars::JsonSchema for SendPropFlags {
-    fn schema_name() -> String {
+    fn schema_name() -> std::borrow::Cow<'static, str> {
         "SendPropFlags".into()
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         u16::json_schema(gen)
     }
 }
@@ -355,7 +357,7 @@ impl fmt::Display for SendPropFlags {
             .skip_while(|c| *c != '[')
             .take_while(|c| *c != ')')
             .collect();
-        write!(f, "{}", flags)
+        write!(f, "{flags}")
     }
 }
 
@@ -376,6 +378,7 @@ impl BitRead<'_, LittleEndian> for SendPropFlags {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for SendPropFlags {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         self.0.bits().write(stream)
@@ -632,7 +635,7 @@ impl fmt::Display for SendPropValue {
             SendPropValue::Array(array) => {
                 write!(f, "[")?;
                 for child in array {
-                    write!(f, "{}", child)?;
+                    write!(f, "{child}")?;
                 }
                 write!(f, "]")
             }
@@ -651,7 +654,13 @@ impl SendPropValue {
             SendPropParseDefinition::NormalVarInt { unsigned, .. } => {
                 read_var_int(stream, !*unsigned)
                     .map_err(ParseError::from)
-                    .map(|int| int as i64)
+                    .map(|int| {
+                        if *unsigned {
+                            int as u32 as i64
+                        } else {
+                            int as i64
+                        }
+                    })
                     .map(SendPropValue::from)
             }
             SendPropParseDefinition::UnsignedInt { bit_count, .. } => {
@@ -675,12 +684,30 @@ impl SendPropValue {
             SendPropParseDefinition::Vector {
                 definition: float_definition,
                 ..
-            } => Ok(Vector {
-                x: Self::read_float(stream, float_definition)?,
-                y: Self::read_float(stream, float_definition)?,
-                z: Self::read_float(stream, float_definition)?,
+            } => {
+                let x = Self::read_float(stream, float_definition)?;
+                let y = Self::read_float(stream, float_definition)?;
+                let z = match float_definition {
+                    FloatDefinition::NormalVarFloat => {
+                        let is_negative = stream.read()?;
+                        let x2y2 = x * x + y * y;
+                        let z = if x2y2 < 1.0f32 {
+                            f32::sqrt(1.0f32 - x2y2)
+                        } else {
+                            0.0f32
+                        };
+
+                        if is_negative {
+                            -z
+                        } else {
+                            z
+                        }
+                    }
+                    _ => Self::read_float(stream, float_definition)?,
+                };
+
+                Ok(Vector { x, y, z }.into())
             }
-            .into()),
             SendPropParseDefinition::VectorXY {
                 definition: float_definition,
                 ..
@@ -705,6 +732,8 @@ impl SendPropValue {
             }
         }
     }
+
+    #[cfg(feature = "write")]
     pub fn encode(
         &self,
         stream: &mut BitWriteStream<LittleEndian>,
@@ -802,6 +831,7 @@ impl SendPropValue {
         }
     }
 
+    #[cfg(feature = "write")]
     fn write_float(
         val: f32,
         stream: &mut BitWriteStream<LittleEndian>,
@@ -839,6 +869,7 @@ impl SendPropValue {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_send_prop_value_roundtrip() {
     use bitbuffer::{BitReadBuffer, BitReadStream};
 
@@ -878,7 +909,7 @@ fn test_send_prop_value_roundtrip() {
         SendPropValue::Integer(-12),
         SendPropParseDefinition::NormalVarInt {
             changes_often: false,
-            unsigned: true,
+            unsigned: false,
         },
     );
     send_prop_value_roundtrip(
@@ -1039,6 +1070,19 @@ impl TryFrom<&SendPropValue> for i64 {
     }
 }
 
+impl TryFrom<&SendPropValue> for bool {
+    type Error = MalformedSendPropDefinitionError;
+    fn try_from(value: &SendPropValue) -> std::result::Result<Self, Self::Error> {
+        match value {
+            SendPropValue::Integer(val) => Ok(*val > 0),
+            _ => Err(MalformedSendPropDefinitionError::WrongPropType {
+                expected: "boolean",
+                value: value.clone(),
+            }),
+        }
+    }
+}
+
 impl TryFrom<&SendPropValue> for Vector {
     type Error = MalformedSendPropDefinitionError;
     fn try_from(value: &SendPropValue) -> std::result::Result<Self, Self::Error> {
@@ -1156,7 +1200,7 @@ impl From<SendPropIdentifier> for u64 {
 impl Display for SendPropIdentifier {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match get_prop_names(*self) {
-            Some((table, prop)) => write!(f, "{}.{}", table, prop),
+            Some((table, prop)) => write!(f, "{table}.{prop}"),
             None => write!(f, "Prop name {} not known", self.0),
         }
     }
@@ -1171,7 +1215,7 @@ impl<'de> Deserialize<'de> for SendPropIdentifier {
         #[serde(untagged)]
         enum Options<'a> {
             Num(u64),
-            Str(&'a str),
+            Str(Cow<'a, str>),
         }
 
         let raw = Options::deserialize(deserializer)?;
@@ -1196,11 +1240,11 @@ impl Serialize for SendPropIdentifier {
 
 #[cfg(feature = "schema")]
 impl schemars::JsonSchema for SendPropIdentifier {
-    fn schema_name() -> String {
+    fn schema_name() -> std::borrow::Cow<'static, str> {
         "SendPropIdentifier".into()
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         <String as schemars::JsonSchema>::json_schema(gen)
     }
 }
@@ -1230,6 +1274,7 @@ pub fn read_var_int(stream: &mut Stream, signed: bool) -> ReadResult<i32> {
     }
 }
 
+#[cfg(feature = "write")]
 pub fn write_var_int(
     int: i32,
     stream: &mut BitWriteStream<LittleEndian>,
@@ -1246,6 +1291,7 @@ pub fn write_var_int(
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_var_int_roundtrip() {
     use bitbuffer::{BitReadBuffer, BitReadStream};
 
@@ -1303,6 +1349,7 @@ pub fn read_bit_coord(stream: &mut Stream) -> ReadResult<f32> {
     })
 }
 
+#[cfg(feature = "write")]
 pub fn write_bit_coord(val: f32, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
     let has_int = val.abs() >= 1.0;
     has_int.write(stream)?;
@@ -1325,6 +1372,7 @@ pub fn write_bit_coord(val: f32, stream: &mut BitWriteStream<LittleEndian>) -> R
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn bit_coord_roundtrip() {
     use bitbuffer::BitReadBuffer;
 
@@ -1393,6 +1441,7 @@ pub fn read_bit_coord_mp(
     Ok(value)
 }
 
+#[cfg(feature = "write")]
 pub fn write_bit_coord_mp(
     val: f32,
     stream: &mut BitWriteStream<LittleEndian>,
@@ -1424,6 +1473,7 @@ pub fn write_bit_coord_mp(
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_bit_coord_mp_roundtrip() {
     use bitbuffer::{BitReadBuffer, BitReadStream};
 
@@ -1475,6 +1525,7 @@ pub fn read_bit_normal(stream: &mut Stream) -> ReadResult<f32> {
     }
 }
 
+#[cfg(feature = "write")]
 pub fn write_bit_normal(val: f32, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
     val.is_sign_negative().write(stream)?;
     let frac_val = (val.abs().fract() / get_frac_factor(11)) as u16;
@@ -1482,6 +1533,7 @@ pub fn write_bit_normal(val: f32, stream: &mut BitWriteStream<LittleEndian>) -> 
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_bit_normal_roundtrip() {
     use bitbuffer::{BitReadBuffer, BitReadStream};
 
@@ -1500,4 +1552,33 @@ fn test_bit_normal_roundtrip() {
     roundtrip_normal(-0.0);
     roundtrip_normal(0.5);
     roundtrip_normal(-0.5);
+}
+
+#[test]
+fn test_vector_normal_var_float() {
+    use bitbuffer::BitReadBuffer;
+
+    let data: Vec<u8> = vec![0, 0, 0, 0];
+    let mut buffer = BitReadBuffer::new(&data, LittleEndian);
+    // (1 (sign bit) + 11 (frac val)) * 2 (NormalVarFloat) + 1 (z sign bit)
+    buffer.truncate(25).unwrap();
+    let mut read = BitReadStream::new(buffer);
+
+    let vector = SendPropValue::parse(
+        &mut read,
+        &SendPropParseDefinition::Vector {
+            changes_often: false,
+            definition: FloatDefinition::NormalVarFloat,
+        },
+    )
+    .unwrap();
+
+    assert_eq!(
+        SendPropValue::Vector(Vector {
+            x: 0.0f32,
+            y: 0.0f32,
+            z: 1.0f32
+        }),
+        vector
+    );
 }

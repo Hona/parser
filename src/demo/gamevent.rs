@@ -3,6 +3,7 @@ use crate::demo::data::MaybeUtf8String;
 use crate::demo::message::gameevent::GameEventTypeId;
 use crate::{GameEventError, Result, Stream};
 use bitbuffer::{BitRead, BitWrite, BitWriteStream, LittleEndian};
+use const_fnv1a_hash::fnv1a_hash_str_64;
 use parse_display::Display;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -16,8 +17,8 @@ pub struct GameEventDefinition {
 }
 
 impl GameEventDefinition {
-    pub fn get_entry(&self, name: &str) -> Option<&GameEventEntry> {
-        self.entries.iter().find(|entry| entry.name == name)
+    pub fn get_entry(&self, hash: u64) -> Option<&GameEventEntry> {
+        self.entries.iter().find(|entry| entry.hash == hash)
     }
 }
 
@@ -44,8 +45,23 @@ impl Ord for GameEventDefinition {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GameEventEntry {
+    #[cfg(any(feature = "codegen", feature = "write"))]
     pub name: String,
+    pub hash: u64,
     pub kind: GameEventValueType,
+}
+
+impl GameEventEntry {
+    pub fn new<S: AsRef<str>>(name: S, kind: GameEventValueType) -> Self {
+        let name = name.as_ref();
+        let hash = fnv1a_hash_str_64(name);
+        GameEventEntry {
+            #[cfg(any(feature = "codegen", feature = "write"))]
+            name: name.into(),
+            hash,
+            kind,
+        }
+    }
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

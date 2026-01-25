@@ -1,14 +1,14 @@
-use bitbuffer::{
-    BitRead, BitReadSized, BitReadStream, BitWrite, BitWriteSized, BitWriteStream, Endianness,
-    LittleEndian,
-};
+use bitbuffer::{BitRead, BitReadSized, BitReadStream, Endianness, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteSized, BitWriteStream};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::borrow::Cow;
 
-use crate::demo::message::stringtable::log_base2;
 use crate::demo::packet::datatable::{ClassId, SendTable};
-use crate::demo::parser::{Encode, ParseBitSkip};
+#[cfg(feature = "write")]
+use crate::demo::parser::Encode;
+use crate::demo::parser::ParseBitSkip;
 use crate::demo::sendprop::{SendProp, SendPropIdentifier, SendPropValue};
 use crate::{Parse, ParseError, ParserState, ReadResult, Result, Stream};
 use parse_display::{Display, FromStr};
@@ -76,13 +76,12 @@ impl PartialOrd<u32> for EntityId {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema_repr))]
-#[derive(
-    BitRead, BitWrite, Clone, Copy, Debug, PartialEq, Eq, Serialize_repr, Deserialize_repr,
-)]
+#[derive(BitRead, Clone, Copy, Debug, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 #[discriminant_bits = 2]
 #[repr(u8)]
 pub enum UpdateType {
-    Preserve = 0b00,
+    Delta = 0b00,
     Leave = 0b01,
     Enter = 0b10,
     Delete = 0b11,
@@ -129,6 +128,7 @@ impl<E: Endianness> BitRead<'_, E> for BaselineIndex {
     }
 }
 
+#[cfg(feature = "write")]
 impl<E: Endianness> BitWrite<E> for BaselineIndex {
     fn write(&self, stream: &mut BitWriteStream<E>) -> ReadResult<()> {
         let val = match self {
@@ -157,7 +157,7 @@ impl fmt::Display for PacketEntity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "{}({}) {{", self.entity_index, self.server_class)?;
         for child in self.props.iter() {
-            writeln!(f, "\t{}", child)?;
+            writeln!(f, "\t{child}")?;
         }
         write!(f, "}}")
     }
@@ -175,6 +175,17 @@ impl PacketEntity {
     ) -> Option<SendProp> {
         self.props(parser_state)
             .find(|prop| prop.identifier == *index)
+    }
+
+    pub fn get_own_prop_value_by_identifier<T: for<'a> TryFrom<&'a SendPropValue>>(
+        &self,
+        index: SendPropIdentifier,
+    ) -> Option<T> {
+        self.props
+            .iter()
+            .find(|prop| prop.identifier == index)
+            .map(|prop| &prop.value)
+            .and_then(|value| value.try_into().ok())
     }
 
     pub fn apply_update(&mut self, props: &[SendProp]) {
@@ -246,6 +257,7 @@ fn read_bit_var<'a, T: BitReadSized<'a, LittleEndian>>(stream: &mut Stream<'a>) 
     stream.read_sized(bits)
 }
 
+#[cfg(feature = "write")]
 fn write_bit_var(var: u32, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
     let (ty, bits): (u8, usize) = if var >= 2u32.pow(12) {
         (3, 32)
@@ -262,6 +274,7 @@ fn write_bit_var(var: u32, stream: &mut BitWriteStream<LittleEndian>) -> ReadRes
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_bit_var_roundtrip() {
     use bitbuffer::{BitReadBuffer, BitReadStream};
 
@@ -318,9 +331,10 @@ fn get_entity_for_update(
     update_type: UpdateType,
     delta: Option<ServerTick>,
 ) -> Result<PacketEntity> {
-    let class_id = *state
+    let class_id = state
         .entity_classes
         .get(&entity_index)
+        .copied()
         .ok_or(ParseError::UnknownEntity(entity_index))?;
 
     Ok(PacketEntity {
@@ -340,10 +354,21 @@ impl Parse<'_> for PacketEntitiesMessage {
     fn parse(stream: &mut Stream, state: &ParserState) -> Result<Self> {
         let max_entries = stream.read_sized(11)?;
         let delta: Option<ServerTick> = stream.read()?;
-        let base_line = stream.read()?;
-        let updated_entries: u16 = stream.read_sized(11)?;
-        let length: u32 = stream.read_sized(20)?;
-        let updated_base_line = stream.read()?;
+        #[derive(BitRead)]
+        struct Header {
+            base_line: BaselineIndex,
+            #[bitbuffer(size = 11)]
+            updated_entries: u16,
+            #[bitbuffer(size = 20)]
+            length: u32,
+            updated_base_line: bool,
+        }
+        let Header {
+            base_line,
+            updated_entries,
+            length,
+            updated_base_line,
+        } = stream.read()?;
 
         let mut data = stream.read_bits(length as usize)?;
 
@@ -354,13 +379,14 @@ impl Parse<'_> for PacketEntitiesMessage {
 
         for _ in 0..updated_entries {
             let diff: u32 = read_bit_var(&mut data)?;
-            last_index = last_index.saturating_add(diff as i32).saturating_add(1);
-            if last_index >= 2048 {
+            let index = last_index.saturating_add(diff as i32).saturating_add(1);
+            if index >= 2048 {
                 return Err(ParseError::InvalidDemo("invalid entity index"));
             }
-            let entity_index = EntityId::from(last_index as u32);
+            let entity_index = EntityId::from(index as u32);
 
             let update_type = data.read()?;
+
             if update_type == UpdateType::Enter {
                 let mut entity =
                     Self::read_enter(&mut data, entity_index, state, base_line, delta)?;
@@ -368,7 +394,7 @@ impl Parse<'_> for PacketEntitiesMessage {
                 Self::read_update(&mut data, send_table, &mut entity.props, entity_index)?;
 
                 entities.push(entity);
-            } else if update_type == UpdateType::Preserve {
+            } else if update_type == UpdateType::Delta {
                 let mut entity = get_entity_for_update(state, entity_index, update_type, delta)?;
                 let send_table = get_send_table(state, entity.server_class)?;
 
@@ -392,6 +418,8 @@ impl Parse<'_> for PacketEntitiesMessage {
                     baseline_index: BaselineIndex::First,
                 });
             }
+
+            last_index = index;
         }
 
         if delta.is_some() {
@@ -411,6 +439,7 @@ impl Parse<'_> for PacketEntitiesMessage {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for PacketEntitiesMessage {
     fn encode(&self, stream: &mut BitWriteStream<LittleEndian>, state: &ParserState) -> Result<()> {
         self.max_entries.write_sized(stream, 11)?;
@@ -441,7 +470,7 @@ impl Encode for PacketEntitiesMessage {
                         Self::write_enter(entity, stream, state)?;
                         Self::write_update(&entity.props, stream, send_table, entity.entity_index)?;
                     }
-                    UpdateType::Preserve => {
+                    UpdateType::Delta => {
                         Self::write_update(&entity.props, stream, send_table, entity.entity_index)?;
                     }
                     _ => {}
@@ -471,10 +500,16 @@ impl PacketEntitiesMessage {
         baseline_index: BaselineIndex,
         delta: Option<ServerTick>,
     ) -> Result<PacketEntity> {
-        let bits = log_base2(state.server_classes.len()) + 1;
-        let class_index: ClassId = stream.read_sized::<u16>(bits as usize)?.into();
-
-        let serial = stream.read_sized(10)?;
+        let bits = state.server_class_bits;
+        #[derive(BitReadSized)]
+        struct Data {
+            #[bitbuffer(size = "input_size")]
+            raw_index: u16,
+            #[bitbuffer(size = 10)]
+            serial: u32,
+        }
+        let Data { raw_index, serial } = stream.read_sized(bits)?;
+        let class_index: ClassId = raw_index.into();
 
         Ok(PacketEntity {
             server_class: class_index,
@@ -489,13 +524,13 @@ impl PacketEntitiesMessage {
         })
     }
 
+    #[cfg(feature = "write")]
     fn write_enter(
         entity: &PacketEntity,
         stream: &mut BitWriteStream<LittleEndian>,
         state: &ParserState,
     ) -> Result<()> {
-        let bits = log_base2(state.server_classes.len()) + 1;
-        u16::from(entity.server_class).write_sized(stream, bits as usize)?;
+        u16::from(entity.server_class).write_sized(stream, state.server_class_bits)?;
         entity.serial_number.write_sized(stream, 10)?;
 
         Ok(())
@@ -549,6 +584,7 @@ impl PacketEntitiesMessage {
         Ok(())
     }
 
+    #[cfg(feature = "write")]
     pub fn write_update<'a, Props: IntoIterator<Item = &'a SendProp>>(
         props: Props,
         stream: &mut BitWriteStream<LittleEndian>,
@@ -598,12 +634,13 @@ impl ParseBitSkip<'_> for PacketEntitiesMessage {
 }
 
 #[test]
-fn test_packet_entitier_message_roundtrip() {
+#[cfg(feature = "write")]
+fn test_packet_entity_message_roundtrip() {
     use crate::demo::packet::datatable::{SendTable, SendTableName, ServerClass, ServerClassName};
     use crate::demo::sendprop::{FloatDefinition, SendPropDefinition, SendPropParseDefinition};
 
     let mut state = ParserState::new(24, |_| false, false);
-    state.server_classes = vec![
+    state.set_server_classes(vec![
         ServerClass {
             id: ClassId::from(0),
             name: ServerClassName::from("class1"),
@@ -614,7 +651,7 @@ fn test_packet_entitier_message_roundtrip() {
             name: ServerClassName::from("class2"),
             data_table: SendTableName::from("table2"),
         },
-    ];
+    ]);
     state.send_tables = vec![
         SendTable {
             name: SendTableName::from("table1"),
@@ -713,7 +750,7 @@ fn test_packet_entitier_message_roundtrip() {
                         },
                     ],
                     in_pvs: true,
-                    update_type: UpdateType::Preserve,
+                    update_type: UpdateType::Delta,
                     serial_number: 0,
                     delay: None,
                     delta: None,

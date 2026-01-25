@@ -1,14 +1,14 @@
 [package]
 name = "tf-demo-parser"
 description = "parser for tf2 demo files"
-version = "0.5.1"
+version = "0.7.0"
 authors = ["Robin Appelman <robin@icewind.nl>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/demostf/parser"
+repository = "https://codeberg.org/demostf/parser"
 exclude = ["tests/fuzz", "test_data"]
 default-run = "parse_demo"
-rust-version = "1.74.0"
+rust-version = "1.75.0"
 
 [lib]
 name = "tf_demo_parser"
@@ -22,6 +22,7 @@ path = "src/bin/main.rs"
 [[bin]]
 name = "reencode_demo"
 path = "src/bin/reencode.rs"
+required-features = ["write"]
 
 [[bin]]
 name = "gamestate"
@@ -46,7 +47,7 @@ name = "direct_hits"
 path = "src/bin/direct_hits.rs"
 
 [dependencies]
-bitbuffer = { version = "0.11.0", features = ["serde"] }
+bitbuffer = { version = "0.11.3", features = ["serde"] }
 num_enum = "0.7.2"
 num-traits = "0.2.19"
 enumflags2 = { version = "0.7.10", features = ["serde"] }
@@ -59,15 +60,14 @@ parse-display = "0.9.1"
 main_error = "0.1.2"
 jemallocator = { version = "0.5.4", optional = true }
 better-panic = { version = "0.3.0", optional = true }
-no-panic = { version = "0.1.30", optional = true }
 fnv = "1.0.7"
-steamid-ng = "1.0.0"
 tracing = { version = "0.1.40", optional = true }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"], optional = true }
-itertools = "0.13.0"
+itertools = "0.14.0"
+const-fnv1a-hash = "1.1.0"
 
 # schema
-schemars = { version = "0.8.21", optional = true }
+schemars = { version = "1.0.4", optional = true }
 
 # codegen
 quote = { version = "1", optional = true }
@@ -78,33 +78,30 @@ tempfile = { version = "3", optional = true }
 lazy_static = { version = "1", optional = true }
 prettyplease = { version = "0.2", optional = true }
 
+log = { version = "0.4.21", features = [] }
+
 [features]
-schema = ["schemars", "bitbuffer/schemars"]
+schema = ["schemars", "bitbuffer/schemars_1"]
 trace = ["tracing", "tracing-subscriber"]
 codegen = ["better-panic", "quote", "syn", "Inflector", "proc-macro2", "tempfile", "lazy_static", "prettyplease"]
+write = []
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"
 test-case = "3.3.1"
-iai = "0.1.1"
-criterion = "0.5.1"
+iai-callgrind = "0.15.2"
 insta = { version = "1.39.0", features = ["json"] }
 
 [profile.release]
 lto = "thin"
 
+[profile.bench]
+debug = true
+
 [profile.dev]
 opt-level = 2
 
 [[bench]]
-name = "iai"
-harness = false
-
-[[bench]]
-name = "allmessages"
-harness = false
-
-[[bench]]
-name = "bench"
+name = "parse"
 harness = false
 

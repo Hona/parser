@@ -365,7 +365,7 @@ impl PlayerSummaryAnalyzer {
                             ..
                         }) = packet.get_prop_by_name(
                             "m_iUserID",
-                            format!("{:0>3}", i).as_str(),
+                            format!("{i:0>3}").as_str(),
                             parser_state,
                         ) {
                             let entity_id = EntityId::from(i as u32);

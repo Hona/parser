@@ -1,7 +1,10 @@
+#[cfg(feature = "write")]
+use crate::demo::parser::Encode;
+use crate::demo::parser::ParseBitSkip;
+use crate::{Parse, ParserState, Result, Stream};
+#[cfg(feature = "write")]
 use bitbuffer::{BitWriteStream, LittleEndian};
 use serde::{Deserialize, Serialize};
-use crate::{Parse, ParserState, Stream, Result};
-use crate::demo::parser::{Encode, ParseBitSkip};
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
@@ -28,6 +31,7 @@ impl<'a> Parse<'a> for PreFetchMessage {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for PreFetchMessage {
     fn encode(&self, stream: &mut BitWriteStream<LittleEndian>, state: &ParserState) -> Result<()> {
         let size = Self::bit_size(state.protocol_version);

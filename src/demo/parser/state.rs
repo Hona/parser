@@ -8,7 +8,7 @@ use crate::demo::message::packetentities::{
     BaselineIndex, EntityId, PacketEntitiesMessage, PacketEntity, UpdateType,
 };
 use crate::demo::message::stringtable::StringTableMeta;
-use crate::demo::message::{Message, MessageType};
+use crate::demo::message::{log_base2, Message, MessageType};
 use crate::demo::packet::datatable::{
     ClassId, ParseSendTable, SendTable, SendTableName, ServerClass,
 };
@@ -40,6 +40,7 @@ pub struct ParserState {
     // indexed by ClassId
     pub send_tables: Vec<SendTable>,
     pub server_classes: Vec<ServerClass>,
+    pub server_class_bits: usize,
     pub instance_baselines: [Baseline; 2],
     pub demo_meta: DemoMeta,
     analyser_handles: fn(message_type: MessageType) -> bool,
@@ -85,6 +86,7 @@ impl ParserState {
             entity_classes: HashMap::with_hasher(NullHasherBuilder),
             send_tables: Vec::new(),
             server_classes: Vec::new(),
+            server_class_bits: 0,
             instance_baselines: [Baseline::default(), Baseline::default()],
             demo_meta: DemoMeta::default(),
             analyser_handles,
@@ -92,6 +94,11 @@ impl ParserState {
             parse_all,
             protocol_version,
         }
+    }
+
+    pub fn set_server_classes(&mut self, server_classes: Vec<ServerClass>) {
+        self.server_class_bits = log_base2(server_classes.len()) as usize + 1;
+        self.server_classes = server_classes;
     }
 
     pub fn get_static_baseline(
@@ -193,7 +200,7 @@ impl ParserState {
                 })
                 .collect::<Result<_>>()?;
 
-            self.server_classes = server_classes;
+            self.set_server_classes(server_classes);
 
             self.send_tables.reserve(self.server_classes.len());
 

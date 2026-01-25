@@ -28,7 +28,7 @@ pub enum PVSCompat {
 impl From<UpdateType> for PVSCompat {
     fn from(pvs: UpdateType) -> Self {
         match pvs {
-            UpdateType::Preserve => PVSCompat::Preserve,
+            UpdateType::Delta => PVSCompat::Preserve,
             UpdateType::Leave => PVSCompat::Leave,
             UpdateType::Enter => PVSCompat::Enter,
             UpdateType::Delete => PVSCompat::Delete,
@@ -63,7 +63,7 @@ impl EntityDump {
                 .props(state)
                 .map(|prop| {
                     let (table_name, prop_name) = &prop_names[&prop.identifier];
-                    (format!("{}.{}", table_name, prop_name), prop.value)
+                    (format!("{table_name}.{prop_name}"), prop.value)
                 })
                 .collect(),
         }

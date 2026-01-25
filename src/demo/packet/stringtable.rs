@@ -1,16 +1,20 @@
-use bitbuffer::{BitRead, BitWrite, BitWriteStream, LittleEndian};
+use bitbuffer::{BitRead, LittleEndian};
+#[cfg(feature = "write")]
+use bitbuffer::{BitWrite, BitWriteStream};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
 use crate::demo::data::DemoTick;
 use crate::demo::message::stringtable::StringTableMeta;
+#[cfg(feature = "write")]
 use crate::demo::parser::Encode;
 use crate::{Parse, ParseError, ParserState, ReadResult, Result, Stream};
 use std::borrow::{Borrow, Cow};
 use std::cmp::min;
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 pub struct FixedUserDataSize {
     #[size = 12]
     pub size: u16,
@@ -78,6 +82,7 @@ impl<'a> BitRead<'a, LittleEndian> for StringTable<'a> {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for StringTable<'_> {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         self.name.as_ref().write(stream)?;
@@ -97,6 +102,7 @@ impl BitWrite<LittleEndian> for StringTable<'_> {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_string_table_roundtrip() {
     crate::test_roundtrip_write(StringTable {
         name: "foo".into(),
@@ -149,12 +155,13 @@ fn test_string_table_roundtrip() {
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[derive(BitRead, BitWrite, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(BitRead, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "write", derive(BitWrite))]
 #[endianness = "LittleEndian"]
 #[serde(bound(deserialize = "'a: 'static"))]
 pub struct ExtraData<'a> {
     pub byte_len: u16,
-    #[size = "byte_len.saturating_mul(8)"]
+    #[size = "(byte_len as usize).saturating_mul(8)"]
     pub data: Stream<'a>,
 }
 
@@ -205,6 +212,7 @@ impl<'a> BitRead<'a, LittleEndian> for StringTableEntry<'a> {
     }
 }
 
+#[cfg(feature = "write")]
 impl BitWrite<LittleEndian> for StringTableEntry<'_> {
     fn write(&self, stream: &mut BitWriteStream<LittleEndian>) -> ReadResult<()> {
         self.text.as_deref().unwrap_or_default().write(stream)?;
@@ -254,6 +262,7 @@ impl<'a> Parse<'a> for StringTablePacket<'a> {
     }
 }
 
+#[cfg(feature = "write")]
 impl Encode for StringTablePacket<'_> {
     fn encode(
         &self,
@@ -271,6 +280,7 @@ impl Encode for StringTablePacket<'_> {
 }
 
 #[test]
+#[cfg(feature = "write")]
 fn test_string_table_packet_roundtrip() {
     let state = ParserState::new(24, |_| false, false);
     crate::test_roundtrip_encode(

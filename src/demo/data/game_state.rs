@@ -1,18 +1,31 @@
+pub use super::cond::PlayerCondition;
 use crate::demo::data::DemoTick;
 use crate::demo::gameevent_gen::PlayerDeathEvent;
 use crate::demo::gamevent::GameEvent;
 use crate::demo::message::packetentities::EntityId;
 use crate::demo::packet::datatable::{ClassId, ServerClass, ServerClassName};
 use crate::demo::parser::analyser::{Class, Team, UserId, UserInfo};
+use crate::demo::parser::MalformedSendPropDefinitionError;
+use crate::demo::sendprop::SendPropValue;
 use crate::demo::vector::Vector;
+use num_enum::TryFromPrimitive;
 use parse_display::Display;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
+use std::ops::Rem;
 
 #[derive(Default, Serialize, Deserialize, Debug, Copy, Clone, Eq, PartialEq, Hash, Display)]
 pub struct Handle(pub i64);
 
+impl TryFrom<&SendPropValue> for Handle {
+    type Error = MalformedSendPropDefinitionError;
+    fn try_from(value: &SendPropValue) -> Result<Self, Self::Error> {
+        i64::try_from(value).map(Handle)
+    }
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Default)]
+#[non_exhaustive]
 pub enum PlayerState {
     #[default]
     Alive = 0,
@@ -54,6 +67,7 @@ impl Box {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[non_exhaustive]
 pub struct Player {
     pub entity: EntityId,
     pub position: Vector,
@@ -65,12 +79,61 @@ pub struct Player {
     pub pitch_angle: f32,
     pub state: PlayerState,
     pub info: Option<UserInfo>,
-    pub charge: u8,
-    pub simtime: u16,
+    pub class_data: PlayerClassData,
+    pub simulation_time: u16,
     pub ping: u16,
     pub in_pvs: bool,
     pub bounds: Box,
     pub weapons: [Handle; 3],
+    pub handle: Handle,
+    pub(crate) conditions: [u8; 20],
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Default, TryFromPrimitive)]
+#[serde(rename_all = "lowercase")]
+#[repr(u8)]
+pub enum MedigunType {
+    #[default]
+    Uber,
+    Kritzkrieg,
+    Quickfix,
+    Vaccinator,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub enum PlayerClassData {
+    #[default]
+    None,
+    Medic {
+        charge: u8,
+        medigun: MedigunType,
+        target: Option<EntityId>,
+        last_target: Option<EntityId>,
+    },
+    Spy {
+        disguise_team: Team,
+        disguise_class: Class,
+        cloak: f32,
+    },
+}
+
+impl PlayerClassData {
+    pub fn default_for_class(class: Class) -> PlayerClassData {
+        match class {
+            Class::Medic => PlayerClassData::Medic {
+                charge: 0,
+                medigun: MedigunType::Uber,
+                target: None,
+                last_target: None,
+            },
+            Class::Spy => PlayerClassData::Spy {
+                disguise_team: Team::Other,
+                disguise_class: Class::Other,
+                cloak: 100.0,
+            },
+            _ => PlayerClassData::None,
+        }
+    }
 }
 
 pub const PLAYER_BOX_DEFAULT: Box = Box {
@@ -106,9 +169,35 @@ impl Player {
             }
         }
     }
+
+    pub fn conditions(&self) -> impl Iterator<Item = PlayerCondition> + '_ {
+        (1..=(PlayerCondition::MAX as u8)).filter_map(|cond_int| {
+            let byte = cond_int / 8;
+            let bit = cond_int.rem(8);
+            let cond_byte = *self.conditions.get(byte as usize)?;
+            if (cond_byte >> bit as usize) == 1 {
+                PlayerCondition::try_from(cond_byte).ok()
+            } else {
+                None
+            }
+        })
+    }
+
+    pub fn has_condition(&self, condition: PlayerCondition) -> bool {
+        let cond_int = condition as u8;
+        let byte = cond_int / 8;
+        let bit = cond_int.rem(8);
+        let cond_byte = self
+            .conditions
+            .get(byte as usize)
+            .copied()
+            .unwrap_or_default();
+        cond_byte >> bit as usize == 1
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[non_exhaustive]
 pub struct Sentry {
     pub entity: EntityId,
     pub builder: UserId,
@@ -120,14 +209,18 @@ pub struct Sentry {
     pub sapped: bool,
     pub team: Team,
     pub angle: f32,
+    pub yaw: f32,
     pub player_controlled: bool,
-    pub auto_aim_target: UserId,
+    pub auto_aim_target: Handle,
     pub shells: u16,
     pub rockets: u16,
     pub is_mini: bool,
+    pub shield: bool,
+    pub construction_progress: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[non_exhaustive]
 pub struct Dispenser {
     pub entity: EntityId,
     pub builder: UserId,
@@ -141,9 +234,11 @@ pub struct Dispenser {
     pub angle: f32,
     pub healing: Vec<UserId>,
     pub metal: u16,
+    pub construction_progress: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[non_exhaustive]
 pub struct Teleporter {
     pub entity: EntityId,
     pub builder: UserId,
@@ -161,9 +256,11 @@ pub struct Teleporter {
     pub recharge_duration: f32,
     pub times_used: u16,
     pub yaw_to_exit: f32,
+    pub construction_progress: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[non_exhaustive]
 pub enum Building {
     Sentry(Sentry),
     Dispenser(Dispenser),
@@ -267,8 +364,26 @@ impl Building {
             Building::Teleporter(_) => BuildingClass::Teleporter,
         }
     }
+
+    pub fn construction_progress(&self) -> f32 {
+        match self {
+            Building::Sentry(Sentry {
+                construction_progress,
+                ..
+            })
+            | Building::Dispenser(Dispenser {
+                construction_progress,
+                ..
+            })
+            | Building::Teleporter(Teleporter {
+                construction_progress,
+                ..
+            }) => *construction_progress,
+        }
+    }
 }
 
+#[non_exhaustive]
 pub enum BuildingClass {
     Sentry,
     Dispenser,
@@ -276,6 +391,7 @@ pub enum BuildingClass {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Projectile {
     pub id: EntityId,
     pub team: Team,
@@ -286,6 +402,7 @@ pub struct Projectile {
     pub bounds: Option<Box>,
     pub launcher: Handle,
     pub ty: ProjectileType,
+    pub critical: bool,
 }
 
 impl Projectile {
@@ -300,11 +417,13 @@ impl Projectile {
             bounds: None,
             launcher: Handle::default(),
             ty: ProjectileType::new(class_name, None),
+            critical: false,
         }
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum PipeType {
     Regular = 0,
     Sticky = 1,
@@ -376,6 +495,7 @@ impl From<u8> for ProjectileType {
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct Collision {
     pub tick: DemoTick,
     pub target: EntityId,
@@ -383,12 +503,14 @@ pub struct Collision {
 }
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[non_exhaustive]
 pub struct World {
     pub boundary_min: Vector,
     pub boundary_max: Vector,
 }
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[non_exhaustive]
 pub struct Kill {
     pub attacker_id: u16,
     pub assister_id: u16,
@@ -410,6 +532,33 @@ impl Kill {
 }
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+pub struct Cart {
+    pub position: Vector,
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+pub struct ControlPoint {
+    pub owner: Team,
+    pub cap_percentage: f32,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub enum Objective {
+    Cart(Cart),
+    ControlPoint(ControlPoint),
+}
+
+impl Objective {
+    pub fn as_cart(&self) -> Option<&Cart> {
+        match self {
+            Objective::Cart(cart) => Some(cart),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, PartialEq)]
+#[non_exhaustive]
 pub struct GameState {
     pub players: Vec<Player>,
     pub buildings: BTreeMap<EntityId, Building>,
@@ -420,8 +569,8 @@ pub struct GameState {
     pub tick: DemoTick,
     pub server_classes: Vec<ServerClass>,
     pub interval_per_tick: f32,
-    pub outer_map: HashMap<Handle, EntityId>,
     pub events: Vec<(DemoTick, GameEvent)>,
+    pub objectives: BTreeMap<EntityId, Objective>,
 }
 
 impl GameState {
@@ -480,5 +629,17 @@ impl GameState {
 
     pub fn remove_building(&mut self, entity_id: EntityId) {
         self.buildings.remove(&entity_id);
+    }
+
+    pub fn get_player_by_weapon_handle(&mut self, handle: Handle) -> Option<&mut Player> {
+        self.players
+            .iter_mut()
+            .find(|player| player.weapons.contains(&handle))
+    }
+
+    pub fn get_player_by_handle(&mut self, handle: Handle) -> Option<&mut Player> {
+        self.players
+            .iter_mut()
+            .find(|player| player.handle == handle)
     }
 }
