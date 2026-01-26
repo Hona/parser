@@ -21,6 +21,7 @@ pub fn handle_player_entity(
         SendPropIdentifier::new("DT_BasePlayer", "m_iMaxHealth");
     const LIFE_STATE_PROP: SendPropIdentifier =
         SendPropIdentifier::new("DT_BasePlayer", "m_lifeState");
+    const FLAGS_PROP: SendPropIdentifier = SendPropIdentifier::new("DT_BasePlayer", "m_fFlags");
 
     const LOCAL_ORIGIN: SendPropIdentifier =
         SendPropIdentifier::new("DT_TFLocalPlayerExclusive", "m_vecOrigin");
@@ -81,6 +82,7 @@ pub fn handle_player_entity(
             LIFE_STATE_PROP => {
                 player.state = PlayerState::new(i64::try_from(&prop.value).unwrap_or_default())
             }
+            FLAGS_PROP => player.flags = i64::try_from(&prop.value).unwrap_or_default() as u32,
             LOCAL_ORIGIN | NON_LOCAL_ORIGIN => {
                 let pos_xy = VectorXY::try_from(&prop.value).unwrap_or_default();
                 player.position.x = pos_xy.x;
@@ -174,6 +176,9 @@ pub fn handle_player_resource(
                     .find(|player| player.entity == entity_id)
                 {
                     match table_name.as_str() {
+                        "m_bConnected" => {
+                            player.connected = i64::try_from(&prop.value).unwrap_or_default() != 0
+                        }
                         "m_iTeam" => {
                             player.team = Team::new(i64::try_from(&prop.value).unwrap_or_default())
                         }

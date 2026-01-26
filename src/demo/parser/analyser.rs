@@ -37,7 +37,7 @@ impl ChatMessage {
                 .as_ref()
                 .map(|s| s.to_string())
                 .unwrap_or_default(),
-            text: message.plain_text(),
+            text: message.text.as_ref().to_string(),
             tick,
             client: Some(message.client),
         }
@@ -47,7 +47,7 @@ impl ChatMessage {
         ChatMessage {
             kind: ChatMessageKind::Empty,
             from: String::new(),
-            text: message.plain_text(),
+            text: message.text.as_ref().to_string(),
             tick,
             client: None,
         }

@@ -1,76 +1,56 @@
-# Moved to https://codeberg.org/demostf/parser
+# tf-demo-parser (tf2jump fork)
 
-# TF Demo Parser
+This repository is a fork of the TF2 demo parser from demostf.
 
-![Build Status](https://github.com/demostf/parser/workflows/CI/badge.svg)
+Upstream:
 
-Parsing of tf2 demo files
+- Codeberg: https://codeberg.org/demostf/parser
+- GitHub mirror: https://github.com/demostf/parser
+
+This fork:
+
+- https://github.com/Hona/parser
+
+This fork exists to power tf2jump.xyz (dribble.tf fork) with a fast Rust/WASM parser that emits viewer-ready typed-array caches.
+
+## What's different from upstream
+
+- Adds a `wasm-bindgen` API (`parse_demo_cache`, `parse_demo_cache_with_progress`) that returns a cache object tailored for the web viewer.
+- Uses server ticks (~66.67Hz) as the internal timeline and fills SourceTV snapshot gaps by interpolation so caches have no holes.
+- Exports additional per-player caches used by the viewer:
+  - `connected` (from player resource `m_bConnected`)
+  - `duck` (from `DT_BasePlayer::m_fFlags` using `FL_DUCKING` / `FL_ANIMDUCKING`)
+- Preserves inline TF2 chat color markup in SayText2/TextMessage output:
+  - TextColor control codes `\x01..\x09`
+  - Hex colors `\x07RRGGBB` and `\x08RRGGBBAA` (commonly used by server plugins)
+- Exposes analyser accessors on `DemoHandler` to support the custom packet loop used by the wasm cache builder.
 
 ## Building
 
-This project is build using rust and requires `cargo` and friends, see
-[the rust website](https://www.rust-lang.org/) for how to get started.
-
-Once rust is setup building is as simple as
+Rust:
 
 ```bash
 cargo build --release
 ```
 
-which will place the binary at `target/release/parse_demo`
+WASM (for dribble.tf):
 
-## Usage
-
-Basic usage is as simple as `parse_demo demofile.dem` which will output a
-"summary" of the demo file in JSON format.
-
-Passing the `detailed_summary` argument to the end of `parse_demo` will output a
-table with scoreboard information for all players who were ever on the server
-while the demo was being recorded. The player who created the demo will be
-highlighted in the output.
-
-## Advanced usage
-
-### Loop through every packet
-
-```rust
-use bitbuffer::BitRead;
-use main_error::MainError;
-use std::fs;
-use tf_demo_parser::demo::header::Header;
-use tf_demo_parser::demo::parser::{DemoHandler, RawPacketStream};
-use tf_demo_parser::Demo;
-
-fn main() -> Result<(), MainError> {
-    let file = fs::read("demofile.dem")?;
-
-    let demo = Demo::new(&file);
-    let mut handler = DemoHandler::default();
-
-    let mut stream = demo.get_stream();
-    let header = Header::read(&mut stream)?;
-    handler.handle_header(&header);
-
-    let mut packets = RawPacketStream::new(stream);
-
-    while let Some(packet) = packets.next(&handler.state_handler)? {
-        handler.handle_packet(packet).unwrap();
-    }
-    assert_eq!(false, packets.incomplete);
-
-    Ok(())
-}
+```bash
+wasm-pack build --target web --out-dir "C:\\Repositories\\dribble.tf\\src\\libs\\parser2" --out-name parser2 --release
 ```
 
-### Handle demo data with a custom analyser
+Note: dribble.tf commits the generated wasm artifacts under `src/libs/parser2`, so CI/Pages doesn't need to run `wasm-pack`.
 
-Sometimes it's easier to create a custom `Analyser` to handle the demo data as
-it comes along.
+## Syncing with upstream
 
-See `src/demo/parser/analyser.rs` for an example.  
-Once you have a custom analyser you can use it with:
+This repo has an `upstream` remote pointing at `demostf/parser`.
 
-```rust
-DemoParser::new_all_with_analyser(demo.get_stream(), CustomAnalyser::new());
-let (header, state) = parser.parse()?;
+```bash
+git fetch upstream
+git merge upstream/master
 ```
+
+## API notes
+
+The wasm output shape is not intended as a stable public API; it's tailored for the tf2jump viewer.
+See `C:\\Repositories\\dribble.tf\\src\\components\\Analyse\\Data\\ParseWorker.ts` for the exact JS types.

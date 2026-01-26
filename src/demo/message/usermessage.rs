@@ -297,15 +297,17 @@ impl BitRead<'_, LittleEndian> for SayText2Message {
     fn read(stream: &mut Stream) -> ReadResult<Self> {
         let client = EntityId::from(stream.read::<u8>()? as u32);
         let raw = stream.read()?;
+        // Most TF2 SayText2 messages are encoded as three strings:
+        //   kind, from, text, (optional u16 terminator)
+        // Some plugins send the full formatted message as a single string with
+        // inline color codes. Those typically begin with a TextColor control code.
+        let marker = stream.read::<u8>()?;
+        stream.set_pos(stream.pos() - 8)?;
         let (kind, from, text): (ChatMessageKind, Option<MaybeUtf8String>, MaybeUtf8String) =
-            if stream.read::<u8>()? == 1 {
-                stream.set_pos(stream.pos() - 8)?;
-
+            if marker > 0 && marker < 10 {
                 let text: MaybeUtf8String = stream.read()?;
                 (ChatMessageKind::ChatAll, None, text)
             } else {
-                stream.set_pos(stream.pos() - 8)?;
-
                 let kind = stream.read()?;
                 let from = stream.read()?;
                 let text = stream.read()?;

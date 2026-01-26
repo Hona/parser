@@ -208,6 +208,14 @@ impl<'a, T: MessageHandler> DemoHandler<'a, T> {
     pub fn get_parser_state(&self) -> &ParserState {
         &self.state_handler
     }
+
+    pub fn analyser(&self) -> &T {
+        &self.analyser
+    }
+
+    pub fn analyser_mut(&mut self) -> &mut T {
+        &mut self.analyser
+    }
 }
 
 impl<T: MessageHandler + BorrowMessageHandler> DemoHandler<'_, T> {

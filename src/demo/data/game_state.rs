@@ -87,6 +87,8 @@ pub struct Player {
     pub weapons: [Handle; 3],
     pub handle: Handle,
     pub(crate) conditions: [u8; 20],
+    pub connected: bool,
+    pub flags: u32,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Default, TryFromPrimitive)]
@@ -153,6 +155,7 @@ impl Player {
     pub fn new(entity: EntityId) -> Player {
         Player {
             entity,
+            connected: false,
             bounds: PLAYER_BOX_DEFAULT,
             ..Player::default()
         }
