@@ -576,8 +576,8 @@ fn parse_demo_cache_internal(
                     Some(builder.position_offset),
                 );
                 let view = crate::demo::vector::Vector {
-                    x: sample.view_angle,
-                    y: sample.pitch_angle,
+                    x: sample.pitch_angle,
+                    y: sample.view_angle,
                     z: 0.0,
                 };
                 CacheBuilder::set_vec(&mut builder.view_angles[index], tick, view, None);

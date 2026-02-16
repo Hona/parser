@@ -365,6 +365,10 @@ impl SendPropFlags {
     pub fn contains(self, other: SendPropFlag) -> bool {
         self.0.contains(other)
     }
+
+    pub fn bits(self) -> u16 {
+        self.0.bits()
+    }
 }
 
 impl BitRead<'_, LittleEndian> for SendPropFlags {
