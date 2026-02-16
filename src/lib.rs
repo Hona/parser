@@ -408,8 +408,19 @@ fn parse_demo_cache_internal(
 
     let tick_capacity = header.ticks.max(1) as usize;
     let mut start_server_tick: u32 = 0;
+    let mut start_demo_tick: u32 = 0;
+    let mut start_tick_base: i64 = 0;
     let mut started = false;
     let mut warmup_frames = 0u32;
+
+    let mut tick_base_samples: u32 = 0;
+    let mut tick_base_changes: u32 = 0;
+    let mut tick_base_last: Option<i64> = None;
+    let mut tick_base_min: i64 = 0;
+    let mut tick_base_max: i64 = 0;
+    let mut tick_skew_min: i64 = 0;
+    let mut tick_skew_max: i64 = 0;
+    let mut tick_skew_abs_max: i64 = 0;
 
     let mut cache_builder =
         CacheBuilder::new(tick_capacity, crate::demo::vector::Vector::default());
@@ -473,11 +484,43 @@ fn parse_demo_cache_internal(
             if warmup_frames >= 100 && world_ready {
                 started = true;
                 start_server_tick = server_tick;
+                start_demo_tick = packet_tick;
+                start_tick_base = server_tick as i64 - packet_tick as i64;
                 cache_builder.position_offset = world.boundary_min;
             } else {
                 continue;
             }
         }
+
+        // Track how demo ticks map onto server ticks during the cached window.
+        let tick_base_current = server_tick as i64 - packet_tick as i64;
+        if let Some(prev) = tick_base_last {
+            if prev != tick_base_current {
+                tick_base_changes += 1;
+            }
+        }
+        tick_base_last = Some(tick_base_current);
+
+        if tick_base_samples == 0 {
+            tick_base_min = tick_base_current;
+            tick_base_max = tick_base_current;
+        } else {
+            tick_base_min = tick_base_min.min(tick_base_current);
+            tick_base_max = tick_base_max.max(tick_base_current);
+        }
+
+        let tick_skew = tick_base_current - start_tick_base;
+        if tick_base_samples == 0 {
+            tick_skew_min = tick_skew;
+            tick_skew_max = tick_skew;
+            tick_skew_abs_max = tick_skew.abs();
+        } else {
+            tick_skew_min = tick_skew_min.min(tick_skew);
+            tick_skew_max = tick_skew_max.max(tick_skew);
+            tick_skew_abs_max = tick_skew_abs_max.max(tick_skew.abs());
+        }
+
+        tick_base_samples += 1;
 
         if server_tick < start_server_tick {
             continue;
@@ -804,7 +847,12 @@ fn parse_demo_cache_internal(
     let output_state = handler.into_output();
     let users_by_id: BTreeMap<_, _> = output_state.match_state.users.clone();
     let output_ticks = ((max_written_tick + 1) as usize).max(1);
-    let tick_base = server_tick_base.unwrap_or(0);
+    let tick_base_first = server_tick_base.unwrap_or(start_tick_base);
+    let tick_base = if started {
+        start_tick_base
+    } else {
+        tick_base_first
+    };
     let mut deaths_by_tick: BTreeMap<u32, Vec<CachedDeathEntry>> = BTreeMap::new();
 
     for death in output_state.match_state.deaths.iter() {
@@ -941,6 +989,56 @@ fn parse_demo_cache_internal(
         &result,
         &JsValue::from_str("startTick"),
         &JsValue::from_f64(start_server_tick as f64),
+    );
+    let _ = Reflect::set(
+        &result,
+        &JsValue::from_str("startDemoTick"),
+        &JsValue::from_f64(start_demo_tick as f64),
+    );
+    let _ = Reflect::set(
+        &result,
+        &JsValue::from_str("tickBase"),
+        &JsValue::from_f64(tick_base as f64),
+    );
+    let _ = Reflect::set(
+        &result,
+        &JsValue::from_str("tickBaseFirst"),
+        &JsValue::from_f64(tick_base_first as f64),
+    );
+    let _ = Reflect::set(
+        &result,
+        &JsValue::from_str("tickBaseSamples"),
+        &JsValue::from_f64(tick_base_samples as f64),
+    );
+    let _ = Reflect::set(
+        &result,
+        &JsValue::from_str("tickBaseChanges"),
+        &JsValue::from_f64(tick_base_changes as f64),
+    );
+    let _ = Reflect::set(
+        &result,
+        &JsValue::from_str("tickBaseMin"),
+        &JsValue::from_f64(tick_base_min as f64),
+    );
+    let _ = Reflect::set(
+        &result,
+        &JsValue::from_str("tickBaseMax"),
+        &JsValue::from_f64(tick_base_max as f64),
+    );
+    let _ = Reflect::set(
+        &result,
+        &JsValue::from_str("tickSkewMin"),
+        &JsValue::from_f64(tick_skew_min as f64),
+    );
+    let _ = Reflect::set(
+        &result,
+        &JsValue::from_str("tickSkewMax"),
+        &JsValue::from_f64(tick_skew_max as f64),
+    );
+    let _ = Reflect::set(
+        &result,
+        &JsValue::from_str("tickSkewAbsMax"),
+        &JsValue::from_f64(tick_skew_abs_max as f64),
     );
     let _ = Reflect::set(
         &result,
