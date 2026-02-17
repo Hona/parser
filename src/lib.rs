@@ -324,13 +324,16 @@ fn match_team_to_id(team: crate::demo::parser::analyser::Team) -> u8 {
     }
 }
 
-fn to_u32(value: f32) -> u32 {
+fn to_fixed_u32(value: f32, scale: f32) -> u32 {
     if !value.is_finite() {
         return 0;
     }
-    let truncated = value.trunc() as i64;
-    truncated as u32
+    let fixed = (value * scale).round() as i64;
+    fixed as u32
 }
+
+const POSITION_FIXED_SCALE: f32 = 32.0;
+const ANGLE_FIXED_SCALE: f32 = 256.0;
 
 const TELEPORT_DISTANCE: f32 = 4096.0;
 const FL_DUCKING: u32 = 1 << 1;
@@ -617,13 +620,20 @@ fn parse_demo_cache_internal(
                     tick,
                     sample.position,
                     Some(builder.position_offset),
+                    POSITION_FIXED_SCALE,
                 );
                 let view = crate::demo::vector::Vector {
                     x: sample.pitch_angle,
                     y: sample.view_angle,
                     z: 0.0,
                 };
-                CacheBuilder::set_vec(&mut builder.view_angles[index], tick, view, None);
+                CacheBuilder::set_vec(
+                    &mut builder.view_angles[index],
+                    tick,
+                    view,
+                    None,
+                    ANGLE_FIXED_SCALE,
+                );
                 CacheBuilder::set_u16(&mut builder.health[index], tick, sample.health, 2);
                 CacheBuilder::set_sparse_u8(
                     &mut builder.meta[index],
@@ -660,12 +670,14 @@ fn parse_demo_cache_internal(
                 tick,
                 sample.position,
                 Some(builder.position_offset),
+                POSITION_FIXED_SCALE,
             );
             CacheBuilder::set_vec(
                 &mut builder.projectile_rotations[index],
                 tick,
                 sample.rotation,
                 None,
+                ANGLE_FIXED_SCALE,
             );
             CacheBuilder::set_sparse_u8(
                 &mut builder.projectile_team[index],
@@ -1045,6 +1057,16 @@ fn parse_demo_cache_internal(
         &JsValue::from_str("intervalPerTick"),
         &JsValue::from_f64(interval_per_tick as f64),
     );
+    let _ = Reflect::set(
+        &result,
+        &JsValue::from_str("positionScale"),
+        &JsValue::from_f64(POSITION_FIXED_SCALE as f64),
+    );
+    let _ = Reflect::set(
+        &result,
+        &JsValue::from_str("angleScale"),
+        &JsValue::from_f64(ANGLE_FIXED_SCALE as f64),
+    );
     let world_js = JsWorld {
         boundary_min: world.boundary_min,
         boundary_max: world.boundary_max,
@@ -1320,6 +1342,7 @@ impl CacheBuilder {
         tick: usize,
         vector: crate::demo::vector::Vector,
         offset: Option<crate::demo::vector::Vector>,
+        quantize_scale: f32,
     ) {
         let base = tick * 3;
         let (x, y, z) = (vector.x, vector.y, vector.z);
@@ -1328,9 +1351,9 @@ impl CacheBuilder {
         } else {
             (x, y, z)
         };
-        target[base + 0] = to_u32(x);
-        target[base + 1] = to_u32(y);
-        target[base + 2] = to_u32(z);
+        target[base + 0] = to_fixed_u32(x, quantize_scale);
+        target[base + 1] = to_fixed_u32(y, quantize_scale);
+        target[base + 2] = to_fixed_u32(z, quantize_scale);
     }
 
     fn set_u16(target: &mut [u16], tick: usize, value: u16, shift: u8) {
